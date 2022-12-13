@@ -374,6 +374,43 @@ export class VolEditComponent implements OnInit {
         return !this.volcopy.copyStatIsMagic(copy.status());
     }
 
+    checkBarcode(barcode: string): boolean {
+        if (barcode !== Number(barcode).toString()) { return false; }
+
+        const bc = barcode.toString();
+
+        // "16.00" == Number("16.00"), but the . is bad.
+        // Throw out any barcode that isn't just digits
+        if (bc.search(/\D/) !== -1) { return false; }
+
+        const lastDigit = bc.substr(bc.length - 1);
+        const strippedBarcode = bc.substr(0, bc.length - 1);
+        return this.barcodeCheckdigit(strippedBarcode).toString() === lastDigit;
+    }
+
+    barcodeCheckdigit(bc: string): number {
+        let checkSum = 0;
+        let multiplier = 2;
+        const reverseBarcode = bc.toString().split('').reverse();
+
+        reverseBarcode.forEach(ch => {
+            let tempSum = 0;
+            const product = (Number(ch) * multiplier) + '';
+            product.split('').forEach(num => tempSum += Number(num));
+            checkSum += Number(tempSum);
+            multiplier = multiplier === 2 ? 1 : 2;
+        });
+
+        const cSumStr = checkSum.toString();
+        const nextMultipleOf10 =
+            (Number(cSumStr.match(/(\d*)\d$/)[1]) * 10) + 10;
+
+        let checkDigit = nextMultipleOf10 - Number(cSumStr);
+        if (checkDigit === 10) { checkDigit = 0; }
+
+        return checkDigit;
+    }
+
     generateBarcodes() {
         this.autoBarcodeInProgress = true;
 
@@ -450,6 +487,12 @@ export class VolEditComponent implements OnInit {
                     if (resp) { copy._dupe_barcode = true; }
                 }, error: (err: unknown) => {}, complete: () => this.emitSaveChange() }
             );
+
+            // Assume the barcode is good before checking if it's bad
+            copy._bad_barcode = false;
+            if (this.volcopy.defaults.values.use_checkdigit && this.checkBarcode(barcode) == false) {
+            copy._bad_barcode = true;
+            }
         }
     }
 
@@ -616,7 +659,8 @@ export class VolEditComponent implements OnInit {
         const copies = this.context.copyList();
 
         const badCopies = copies.filter(copy => {
-            if (copy._dupe_barcode ||
+
+            if (copy._dupe_barcode || copy._bad_barcode
                 (!copy.isnew() && !copy.barcode())
             ) {
                 return true;
