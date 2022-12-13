@@ -487,7 +487,7 @@
                         placeholder="New Barcode..." i18n-placeholder
                         [disabled]="volcopy.copyStatIsMagic(copyNode.target.status())"
               [ngClass]="{
-                'text-danger': copyNode.target._dupe_barcode,
+                'text-danger': copyNode.target._dupe_barcode || copyNode.target._bad_barcode,
                 'invalid': !copyNode.target.barcode() && !copyNode.target.isnew()
               }"
                         (change)="barcodeChanged(copyNode.target, $event.target.value)"
@@ -503,9 +503,13 @@
                       <div
                         class="alert alert-danger fst-italic p-1" i18n>
                                    Duplicate Barcode
-          </div>
-                      }
-                    </div>
+                      </div>
+                      <div *ngIf="copyNode.target._bad_barcode"
+                        class="alert alert-danger font-italic p-1" i18n>
+                        Invalid Barcode
+                      </div>
+                    }
+                  </div>
                     <div class="p-1" [ngStyle]="{flex: flexAt(9)}">
                       @if (displayColumn('copy_number_vc')) {
                         <input type="number" min="1" class="form-control form-control-sm"
