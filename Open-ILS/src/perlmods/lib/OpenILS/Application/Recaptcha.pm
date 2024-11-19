@@ -25,6 +25,14 @@ __PACKAGE__->register_method(
     stream => 0 # It's not a streaming method
 );
 
+# Retrieve the reCAPTCHA secret key from library settings
+sub get_secret_key {
+    my ($org) = @_;
+    my $mgr = OpenSRF::Utils::SettingsClient->new;
+    my $secret_key = $mgr->ou_ancestor_setting_value($org, 'recaptcha.secret_key');
+    return $secret_key;
+}
+
 sub recaptcha_verify {
     my ($self, $client, $recaptcha_response) = @_;
 
@@ -39,7 +47,13 @@ sub recaptcha_verify {
 sub send_recaptcha_request {
     my ($recaptcha_response) = @_;
 
-    my $secret = 'GET_FROM_LIBRARY_SETTING';    # Your reCAPTCHA secret key
+    my $secret = get_secret_key($client->session->requestor->home_ou);
+
+    unless ($secret) {
+        $logger->error("reCAPTCHA secret key not found in library settings");
+        return { success => 0, error => 'reCAPTCHA secret key not found' };
+    }
+
     my $url = 'https://www.google.com/recaptcha/api/siteverify';
 
     my $ua = LWP::UserAgent->new(timeout => 10);
