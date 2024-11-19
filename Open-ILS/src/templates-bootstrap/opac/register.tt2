@@ -106,7 +106,6 @@ END;
                             valid_org_list=ctx.register.valid_orgs
                     %]
                 </div>
-                [% INCLUDE "opac/parts/recaptcha-placeholder.tt2" %]
                 <div class="col-md-4">
                     [% IF ctx.register.invalid.bad_home_ou %]
                     <span class='patron-reg-invalid'>
@@ -312,4 +311,8 @@ $(document).ready(function(){
     $('.datepicker').datepicker("setDate", "");
 });
 </script>
-[% INCLUDE "opac/parts/recaptcha.tt2" %]
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="register"
+    submit_action="submit"
+    target_element_id="registration-form" 
+%]

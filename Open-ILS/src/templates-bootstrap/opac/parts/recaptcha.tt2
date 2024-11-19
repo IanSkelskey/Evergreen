@@ -1,5 +1,9 @@
 [% 
+   # Retrieve the reCAPTCHA site key from library settings
    recaptcha_site_key = ctx.get_org_setting(ctx.search_ou, 'recaptcha.site_key');
+   action_name = action_name || 'register';        # Default action name if none is provided
+   submit_action = submit_action || 'submit';      # Default submit action if none is provided
+   target_element_id = target_element_id || 'recaptcha-form'; # Default target element ID
 %]
 
 <!-- reCAPTCHA -->
@@ -10,11 +14,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const registrationForm = document.getElementById("registration-form");
+        const form = document.getElementById('[% target_element_id %]');
+        if (!form) { return; }
 
-        if (!registrationForm) {
-            return;
-        }
+        // Dynamically insert the reCAPTCHA container div within the form
+        const recaptchaContainer = document.createElement('div');
+        recaptchaContainer.id = 'recaptcha-container';
+        form.appendChild(recaptchaContainer);
 
         // ReCAPTCHA form validation
         function handleRecaptchaAndSubmit(token) {
@@ -34,7 +40,7 @@
                     }
 
                     if (responseContent && responseContent.success === 1) {
-                        registrationForm.submit();
+                        form.submit();
                     } else {
                         alert("reCAPTCHA validation failed. Please try again.");
                     }
@@ -44,18 +50,18 @@
             req.send();
         }
 
-        registrationForm.addEventListener('submit', function (event) {
+        form.addEventListener('[% submit_action %]', function (event) {
             event.preventDefault();
 
-            if (registrationForm.checkValidity()) {
+            if (form.checkValidity()) {
                 grecaptcha.ready(function () {
-                    grecaptcha.execute('[% recaptcha_site_key %]', { action: 'register' })
+                    grecaptcha.execute('[% recaptcha_site_key %]', { action: '[% action_name %]' })
                         .then(function (token) {
                             handleRecaptchaAndSubmit(token);
                         });
                 });
             } else {
-                registrationForm.classList.add('was-validated');
+                form.classList.add('was-validated');
             }
         });
     });
