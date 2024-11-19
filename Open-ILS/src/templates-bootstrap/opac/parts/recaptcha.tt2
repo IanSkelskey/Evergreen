@@ -1,0 +1,69 @@
+<!-- reCAPTCHA -->
+<script src="https://www.google.com/recaptcha/api.js?render=SITE_KEY"></script>
+<!-- OpenSRF -->
+<script type='text/javascript' src='/opac/common/js/opensrf.js'></script>
+<script type='text/javascript' src='/opac/common/js/opensrf_xhr.js'></script>
+<script type='text/javascript' src='/opac/common/js/JSON_v1.js'></script>
+<!-- Form Validation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const registrationForm = document.getElementById("registration-form");
+
+        if (!registrationForm) {
+            return;
+        }
+
+        // ReCAPTCHA form validation
+        function handleRecaptchaAndSubmit(token) {
+            // Create a session for the reCAPTCHA service
+            var ses = new OpenSRF.ClientSession('biblio.recaptcha');
+
+            // Send a request to verify the reCAPTCHA token
+            var req = ses.request('biblio.recaptcha.verify', token);
+
+            // Handle the response
+            req.oncomplete = function (r) {
+                var msg;
+                while (msg = r.recv()) {
+                    var responseContent;
+                    try {
+                        responseContent = JSON.parse(msg.content());
+                    } catch (e) {
+                        console.error("Error parsing reCAPTCHA response content as JSON: ", e);
+                        alert("Error in reCAPTCHA validation. Please try again.");
+                        return;
+                    }
+
+                    if (responseContent && responseContent.success === 1) {
+                        registrationForm.submit();
+                    } else {
+                        alert("reCAPTCHA validation failed. Please try again.");
+                    }
+                }
+            };
+
+            // Send the request
+            req.send();
+        }
+
+        // Handle form submission
+        registrationForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // First check if the form is valid
+            if (registrationForm.checkValidity()) {
+                // Execute reCAPTCHA v3 to generate a token
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('SITE_KEY', { action: 'register' })
+                        .then(function (token) {
+                            // Send the token for verification with OpenSRF
+                            handleRecaptchaAndSubmit(token);
+                        });
+                });
+            } else {
+                registrationForm.classList.add('was-validated');
+            }
+        });
+    });
+
+</script>
