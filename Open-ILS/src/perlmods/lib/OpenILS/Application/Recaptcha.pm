@@ -25,7 +25,6 @@ __PACKAGE__->register_method(
     stream => 0 # It's not a streaming method
 );
 
-# Retrieve the reCAPTCHA secret key from library settings
 sub get_secret_key {
     my ($org) = @_;
     my $mgr = OpenSRF::Utils::SettingsClient->new;
@@ -41,7 +40,7 @@ sub recaptcha_verify {
     my $response = send_recaptcha_request($recaptcha_response);
     my $result = process_recaptcha_response($response);
 
-    return encode_json($result);    # Always return encoded JSON
+    return encode_json($result);
 }
 
 sub send_recaptcha_request {
@@ -80,15 +79,14 @@ sub process_recaptcha_response {
     eval {
         $json = decode_json($content);
     };
-    if ($@) { # Catch JSON decoding errors
+    if ($@) {
         $logger->error("Error decoding JSON response from Google: $@");
         return { success => 0, error => 'Invalid JSON response from Google' };
     }
-    unless ($json->{'success'}) { # reCAPTCHA failed
+    unless ($json->{'success'}) {
         $logger->error("reCAPTCHA failed: " . join(", ", @{$json->{'error-codes'}}));
         return { success => 0, 'error-codes' => $json->{'error-codes'} };
     }
-    # reCAPTCHA verified successfully
     if ($json->{'score'} < 0.5) {
         $logger->warn("reCAPTCHA score is below threshold: " . $json->{'score'});
         return { success => 0, error => 'reCAPTCHA score is below threshold' };
