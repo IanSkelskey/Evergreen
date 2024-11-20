@@ -1,5 +1,11 @@
+<!--------------------------------------------------------------------------------
+    Module:       templates-bootstrap/opac/parts/recaptcha.tt2
+    Author:       Ian Skelskey <ianskelskey@gmail.com>
+    Organization: Bibliomation, Inc.
+    Year:         2024
+    Description:  Template Toolkit file for reCAPTCHA form validation in the OPAC.
+-------------------------------------------------------------------------------->
 [% 
-   # Retrieve the reCAPTCHA site key from library settings
    recaptcha_site_key = ctx.get_org_setting(ctx.search_ou, 'recaptcha.site_key');
    action_name = action_name || 'register';        # Default action name if none is provided
    submit_action = submit_action || 'submit';      # Default submit action if none is provided
