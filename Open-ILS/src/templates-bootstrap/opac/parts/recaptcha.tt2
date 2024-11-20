@@ -6,13 +6,14 @@
     Description:  Template Toolkit file for reCAPTCHA form validation in the OPAC.
 -------------------------------------------------------------------------------->
 [% 
-   recaptcha_site_key = ctx.get_org_setting(ctx.search_ou, 'recaptcha.site_key');
+   org_unit = ctx.search_ou;
+   recaptcha_site_key = ctx.get_org_setting(org_unit, 'recaptcha.site_key');
    action_name = action_name || 'register';        # Default action name if none is provided
    submit_action = submit_action || 'submit';      # Default submit action if none is provided
    target_element_id = target_element_id || 'recaptcha-form'; # Default target element ID
 %]
 
-<!-- reCAPTCHA -->
+<!-- Dependencies -->
 <script src="https://www.google.com/recaptcha/api.js?render=[% recaptcha_site_key %]"></script>
 <script type='text/javascript' src='/opac/common/js/opensrf.js'></script>
 <script type='text/javascript' src='/opac/common/js/opensrf_xhr.js'></script>
@@ -20,7 +21,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('org_unit:', '[% org_unit %]');
+        console.log('site_key:', '[% recaptcha_site_key %]');
+        console.log('action_name:', '[% action_name %]');
+        console.log('submit_action:', '[% submit_action %]');
+        console.log('target_element_id:', '[% target_element_id %]');
         const form = document.getElementById('[% target_element_id %]');
+        console.log('form:', form);
         if (!form) { return; }
 
         // Dynamically insert the reCAPTCHA container div within the form
@@ -30,13 +37,20 @@
 
         // ReCAPTCHA form validation
         function handleRecaptchaAndSubmit(token) {
+            console.log('reCAPTCHA token:', token);
             var ses = new OpenSRF.ClientSession('biblio.recaptcha');
-            var req = ses.request('biblio.recaptcha.verify', token);
+            var req = ses.request('biblio.recaptcha.verify', { 
+                token: token,
+                org_unit: '[% org_unit %]' // Pass the org_unit as a parameter
+            });
 
+            console.log('Sending reCAPTCHA verification request...');
             req.oncomplete = function (r) {
+                console.log('reCAPTCHA verification request complete.');
                 var msg;
                 while (msg = r.recv()) {
                     var responseContent;
+                    console.log('reCAPTCHA response:', msg.content());
                     try {
                         responseContent = JSON.parse(msg.content());
                     } catch (e) {
@@ -46,6 +60,7 @@
                     }
 
                     if (responseContent && responseContent.success === 1) {
+                        console.log('reCAPTCHA validation successful. Submitting form...');
                         form.submit();
                     } else {
                         alert("reCAPTCHA validation failed. Please try again.");
@@ -54,6 +69,7 @@
             };
 
             req.send();
+            console.log('reCAPTCHA verification request sent.');
         }
 
         form.addEventListener('[% submit_action %]', function (event) {
