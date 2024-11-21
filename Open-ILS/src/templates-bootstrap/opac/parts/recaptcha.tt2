@@ -12,71 +12,71 @@
    submit_action = submit_action || 'submit';      # Default submit action if none is provided
    target_element_id = target_element_id || 'recaptcha-form'; # Default target element ID
    recaptcha_enabled = ctx.get_org_setting(ctx.search_ou, 'recaptcha.enable');
-   IF recaptcha_enabled && recaptcha_enabled == 1;
 %]
+[% IF recaptcha_enabled && recaptcha_enabled == 1 %]
     <!-- Dependencies -->
     <script src="https://www.google.com/recaptcha/api.js?render=[% recaptcha_site_key %]"></script>
-    <script type='text/javascript' src='/opac/common/js/opensrf.js'></script>
-    <script type='text/javascript' src='/opac/common/js/opensrf_xhr.js'></script>
-    <script type='text/javascript' src='/opac/common/js/JSON_v1.js'></script>
+    <script src="/opac/common/js/opensrf.js"></script>
+    <script src="/opac/common/js/opensrf_xhr.js"></script>
+    <script src="/opac/common/js/JSON_v1.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('[% target_element_id %]');
-            if (!form) { return; }
+            if (!form) return;
 
-            // Dynamically insert the reCAPTCHA container div within the form
-            const recaptchaContainer = document.createElement('div');
-            recaptchaContainer.id = 'recaptcha-container';
+            // Create and append reCAPTCHA container dynamically
+            const recaptchaContainer = createRecaptchaContainer();
             form.appendChild(recaptchaContainer);
 
-            // ReCAPTCHA form validation
-            function handleRecaptchaAndSubmit(token) {
-                var ses = new OpenSRF.ClientSession('biblio.recaptcha');
-                var req = ses.request('biblio.recaptcha.verify', { 
-                    token: token,
-                    org_unit: '[% org_unit %]' // Pass the org_unit as a parameter
+            // Add event listener to the form for reCAPTCHA validation
+            form.addEventListener('[% submit_action %]', event => {
+                event.preventDefault();
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                grecaptcha.ready(() => {
+                    grecaptcha.execute('[% recaptcha_site_key %]', { action: '[% action_name %]' })
+                        .then(handleRecaptchaToken);
                 });
+            });
 
-                console.log('Sending reCAPTCHA verification request...');
-                req.oncomplete = function (r) {
-                    var msg;
-                    while (msg = r.recv()) {
-                        var responseContent;
-                        console.log('reCAPTCHA response:', msg.content());
-                        try {
-                            responseContent = JSON.parse(msg.content());
-                        } catch (e) {
-                            console.error("Error parsing reCAPTCHA response content as JSON: ", e);
-                            alert("Error in reCAPTCHA validation. Please try again.");
-                            return;
-                        }
-
-                        if (responseContent && responseContent.success === 1) {
-                            form.submit();
-                        } else {
-                            alert("reCAPTCHA validation failed. Please try again.");
-                        }
-                    }
-                };
-
-                req.send();
+            function createRecaptchaContainer() {
+                const container = document.createElement('div');
+                container.id = 'recaptcha-container';
+                return container;
             }
 
-            form.addEventListener('[% submit_action %]', function (event) {
-                event.preventDefault();
+            function handleRecaptchaToken(token) {
+                console.log('Sending reCAPTCHA verification request...');
+                const session = new OpenSRF.ClientSession('biblio.recaptcha');
+                const request = session.request('biblio.recaptcha.verify', {
+                    token,
+                    org_unit: '[% org_unit %]'
+                });
 
-                if (form.checkValidity()) {
-                    grecaptcha.ready(function () {
-                        grecaptcha.execute('[% recaptcha_site_key %]', { action: '[% action_name %]' })
-                            .then(function (token) {
-                                handleRecaptchaAndSubmit(token);
-                            });
-                    });
-                } else {
-                    form.classList.add('was-validated');
+                request.oncomplete = response => processRecaptchaResponse(response, form);
+                request.send();
+            }
+
+            function processRecaptchaResponse(response, form) {
+                let msg;
+                while ((msg = response.recv())) {
+                    try {
+                        const responseContent = JSON.parse(msg.content());
+                        console.log('reCAPTCHA response:', responseContent);
+                        if (responseContent.success === 1) {
+                            form.submit();
+                        } else {
+                            alert('reCAPTCHA validation failed. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error parsing reCAPTCHA response as JSON:', error);
+                        alert('Error in reCAPTCHA validation. Please try again.');
+                    }
                 }
-            });
+            }
         });
     </script>
 [% ELSE %]
