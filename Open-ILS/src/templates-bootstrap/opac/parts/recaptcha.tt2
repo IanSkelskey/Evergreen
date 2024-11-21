@@ -22,13 +22,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log('org_unit:', '[% org_unit %]');
-            console.log('site_key:', '[% recaptcha_site_key %]');
-            console.log('action_name:', '[% action_name %]');
-            console.log('submit_action:', '[% submit_action %]');
-            console.log('target_element_id:', '[% target_element_id %]');
             const form = document.getElementById('[% target_element_id %]');
-            console.log('form:', form);
             if (!form) { return; }
 
             // Dynamically insert the reCAPTCHA container div within the form
@@ -38,7 +32,6 @@
 
             // ReCAPTCHA form validation
             function handleRecaptchaAndSubmit(token) {
-                console.log('reCAPTCHA token:', token);
                 var ses = new OpenSRF.ClientSession('biblio.recaptcha');
                 var req = ses.request('biblio.recaptcha.verify', { 
                     token: token,
@@ -47,7 +40,6 @@
 
                 console.log('Sending reCAPTCHA verification request...');
                 req.oncomplete = function (r) {
-                    console.log('reCAPTCHA verification request complete.');
                     var msg;
                     while (msg = r.recv()) {
                         var responseContent;
@@ -61,7 +53,6 @@
                         }
 
                         if (responseContent && responseContent.success === 1) {
-                            console.log('reCAPTCHA validation successful. Submitting form...');
                             form.submit();
                         } else {
                             alert("reCAPTCHA validation failed. Please try again.");
@@ -70,7 +61,6 @@
                 };
 
                 req.send();
-                console.log('reCAPTCHA verification request sent.');
             }
 
             form.addEventListener('[% submit_action %]', function (event) {
