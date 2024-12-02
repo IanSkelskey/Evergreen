@@ -121,7 +121,10 @@ image::booking/booking-grid-actions-button.png[Actions button in the Holdings Vi
 indexterm:[booking,pull list] indexterm:[pull list,booking]
 
 1. Click **Booking → Pull List**.
-    [Placeholder: Screenshot of the pull list interface.]
+
+image::booking/booking-pull-list-options.png[Pull List options.]
+
+[start=2]
 2. Specify the number of days in advance to generate the list (e.g., 1 for
    items needed today).
 3. Review the pull list.
@@ -137,7 +140,10 @@ The standard Check In function does not process reservations correctly.
 
 1. Click **Booking → Capture Resources**.
 2. Scan or enter the item barcode, then press Enter.
-    [Placeholder: Screenshot of capture resources interface.]
+
+image::booking/booking-capture-resource-by-barcode.png[Capture Resources screen with barcode field.,width=500]
+
+[start=3]
 3. A "Capture succeeded" message will appear.
     - Click **Print** to generate a reservation slip.
     [Placeholder: Screenshot of successful capture message and print
