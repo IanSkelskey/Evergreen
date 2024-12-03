@@ -45,7 +45,7 @@ barcode is not known.
 === From a Patron Record ===
 
 1. Retrieve the patron's record.
-2. Click **Other → Booking → Create Reservations**.
+2. Click **Other → Booking: Create Reservations**.
    This opens the Create Reservations screen.
 
 image::booking/booking-create-from-patron-1.png[Drop-down menu showing the path to create reservations from a patron record.,width=250]
@@ -157,7 +157,7 @@ indexterm:[booking,picking up reservations]
 Always use the dedicated Booking Module interfaces for tasks related to reservations. Items that have been captured for a reservation cannot be checked out using the Check Out interface, even if the patron is the reservation recipient.
 
 1. Navigate to **Booking → Pick Up Reservations** or access it from a patron
-   record (**Other → Booking → Pick Up Reservations**).
+   record (**Other → Booking: Pick Up Reservations**).
 2. Scan the patron barcode if needed.
 3. Select the reservation(s) to pick up and confirm.
     [Placeholder: Screenshot showing the reservation pickup confirmation
@@ -181,7 +181,7 @@ Always use the Booking Module to return reserved items.
 4. The screen updates to reflect returned items.
 
 [NOTE]
-You can also return reservations from the patron record (**Other → Booking →
+You can also return reservations from the patron record (**Other → Booking:
 Return Reservations**).
 
 == Cancelling a Reservation ==
@@ -189,7 +189,7 @@ Return Reservations**).
 indexterm:[booking,canceling reservations]
 
 1. Retrieve the reservation via **Booking → Manage Reservations** or from
-   the patron record (**Other → Booking → Manage Reservations**).
+   the patron record (**Other → Booking: Manage Reservations**).
 2. Highlight the reservation and click **Actions → Cancel Selected**.
 3. Confirm cancellation in the pop-up.
     The reservation disappears from the list.
