@@ -1,0 +1,86 @@
+= Hooks, Reactors, and Validators for Action Triggers =
+:toc:
+
+[[hooks]]
+== Hooks ==
+
+Hooks define the Fieldmapper class in the `core_type` column, which serves as the foundation for other field definitions.
+
+=== Table 1: Hooks ===
+
+|=======================
+| *Field*        | *Description*
+| Hook Key       | A unique name given to the hook.
+| Core Type      | Used to link the action trigger to the IDL class in `fm_IDL.xml`.
+| Description    | Text to describe the purpose of the hook.
+| Passive        | Indicates whether or not an event is created by direct user action or is circumstantial.
+|=======================
+
+=== Managing Hooks ===
+
+You can create, edit, and delete hooks. However, the `Core Type` must refer to an IDL class in the `fm_IDL.xml` file.
+
+[[reactors]]
+== Reactors ==
+
+Reactors link the trigger definition to the action to be executed.
+
+=== Table 2: Action Trigger Reactors ===
+
+|=======================
+| *Field*        | *Description*
+| Module Name    | The name of the module to run if the action trigger is validated. It must be defined as a subroutine in `/openils/lib/perl5/OpenILS/Application/Trigger/Reactor.pm` or as a module in `/openils/lib/perl5/OpenILS/Application/Trigger/Reactor/*.pm`.
+| Description    | Description of the action to be carried out.
+|=======================
+
+=== Special Reactor: CallHTTP ===
+
+The CallHTTP reactor allows an Evergreen administrator to create event definitions that notify external services using HTTP or HTTPS when something happens in Evergreen. For instance, a discovery layer can be informed when a bibliographic record is updated.
+
+==== Example Template Syntax ====
+
+The reactor module uses a template to define its behavior. The template is processed by Template Toolkit and outputs data in a format that can be parsed by the `Config::General` Perl module.
+
+Here is an example template:
+
+[source,conf]
+----
+method   post
+url      https://example.com/api/incoming-update
+agent    MySpecialAgent/0.1
+
+user     updater
+password uPd4t3StufF
+realm    "Secret area"
+location example.com:443
+
+<Headers>
+  Accept-Language en
+</Headers>
+
+<Parameters>
+  type bib
+  id   [% target.id %]
+</Parameters>
+
+content <<MARC
+[% target.marc %]
+MARC
+----
+
+[[validators]]
+== Validators ==
+
+Validators define the tests performed to determine whether an action trigger is executed.
+
+=== Table 3: Action Trigger Validators ===
+
+|=======================
+| *Field*         | *Description*
+| Module Name     | The name of the subroutine in `/openils/lib/perl5/OpenILS/Application/Trigger/Reactor.pm` to validate the action trigger.
+| Description     | Description of the validation test to run.
+|=======================
+
+=== Managing Validators ===
+
+You can create, edit, and delete validators. Each validator must have an associated subroutine in the `Reactor.pm` Perl module.

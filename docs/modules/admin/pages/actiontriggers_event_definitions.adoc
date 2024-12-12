@@ -1,0 +1,29 @@
+== Editing Event Definitions ==
+
+Double-click on the action trigger you wish to edit or right-click on the line of the action trigger you wish to edit, and choose _Edit Event Definition_.
+
+The Edit Definition screen will appear. When you are finished editing, click _Save_ at the bottom of the form. Or click _Back to Notification/Action Triggers_ to exit without saving.
+
+== Deleting Event Definitions ==
+
+1. Right-click on the line of the action trigger you wish to delete.
+2. Choose _Delete Selected_ from the action menu.
+
+[NOTE]
+====
+Before deleting an action trigger, you should consider disabling it through the editing form. This way you can keep it for future use or cloning.
+====
+
+== Testing Event Definitions ==
+
+Go to the list of action triggers.
+
+1. Double-click on the action trigger you wish to edit or right-click on the line of the action trigger you wish to edit, and choose _Edit Event Definition_.
+2. Go to the _Run Tests_ tab.
+3. If there is a test available, fill in the required information and click _Go_.
+4. View the output of the test.
+
+[WARNING]
+====
+If you are testing an email or SMS notification, use a test account and email as an example. Using the Test feature will actually result in the notification being sent if configured correctly. Similarly, use a test item or barcode when testing a circulation-based event like Mark Lost since the test will mark the item as lost.
+====

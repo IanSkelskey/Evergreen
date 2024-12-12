@@ -1,0 +1,157 @@
+= Advanced Features and Localization for Action Triggers =
+:toc:
+
+[[creating_alternate_message_templates]]
+== Creating Alternate Message Templates ==
+indexterm:[Localization, Notices, Localized Notices]
+
+As of version 3.9, you can create alternate templates for Action Triggers to generate locale-specific output. This is especially useful if you send notices in multiple languages. 
+
+=== Steps to Create Alternate Templates ===
+
+. Double-click on an Event Definition under *Notifications / Action Triggers* to edit it.
+. Go to the _Edit Alternate Template_ tab if the reactor is *ProcessTemplate*, *SendEmail*, or *SendSMS*.
+. Create new alternate templates for each desired locale. 
+
+[NOTE]
+=========
+This feature does not automatically translate existing templates. An Evergreen administrator must create alternate templates manually.
+=========
+
+=== User Locale Settings ===
+
+* In the Patron Registration and Patron Editor screens, staff members can set a patron’s locale in the _Patron Preferred Language_ field.
+* Patrons can set their locale via the OPAC My Account interface under _Preferences --> Personal Information --> Preferred Language_.
+
+=== Locale Matching Logic ===
+
+The system uses the following order for locale matching:
+
+1. Exact match (e.g., `fr-CA` matches `fr-CA`).
+2. Base language match (e.g., `fr-CA` falls back to `fr-FR` if `fr-CA` is unavailable).
+3. Default template if no matching locale is found.
+
+Valid locales are defined in the `i18n_locale` table in the config schema.
+
+=== Example Scenario ===
+
+If a patron has a locale of `fr-CA` and templates exist for both `fr-CA` and `fr-FR`:
+
+- The `fr-CA` template is used.
+- If the `fr-CA` template is deleted, the system falls back to the `fr-FR` template.
+
+[[processing_action_triggers]]
+== Processing Action Triggers ==
+
+To run Action Triggers, use the trigger processing script. It is recommended to set up a cron job for periodic execution.
+
+=== Command Syntax ===
+
+Run the script with the following command:
+
+[source,shell]
+----
+/openils/bin/action_trigger_runner.pl --process-hooks --run-pending
+----
+
+=== Command Options ===
+
+* `--run-pending`: Run pending events to send emails or take other actions.
+* `--process-hooks`: Create hook events.
+* `--osrf-config=[config_file]`: Specifies the OpenSRF core config file (default: `/openils/conf/opensrf_core.xml`).
+* `--custom-filters=[filter_file]`: Specifies a JSON filter file for custom hooks (default: `/openils/conf/action_trigger_filters.json`).
+* `--max-sleep=[seconds]`: Sets the maximum wait time for the lock file (default: 3600 seconds).
+* `--hooks=hook1[,hook2,...]`: Defines specific hooks to process (requires `--process-hooks`).
+* `--granularity=[label]`: Limits events to those with a specified granularity.
+* `--debug-stdout`: Outputs debugging information to STDOUT.
+* `--lock-file=[file_name]`: Specifies a custom lock file.
+* `--verbose`: Enables verbose output.
+* `--help`: Displays help information.
+
+=== Custom Filter Example ===
+
+Custom filters can be created to cut down on the number of action trigger events created for a group of action triggers by granularity, especially when it is known that those events will fail. The filters are written in JSON, and are stored in `/openils/conf`. This example filter is for the `checkout.due` hook and is used to filter out events that will fail due to the presence of a `stop_fines` value of `MAXFINES` or `null` and the absence of an `auto_renewal_remaining` value of `null`.
+
+[source,json]
+----
+{
+	"checkout.due" : {
+    	"context_org" : "circ_lib",
+    	"filter" : {
+        	"checkin_time" : null,
+        	"-or" : [
+            	{ "stop_fines" : ["MAXFINES"] },
+            	{ "stop_fines" : null }
+        	],
+         	"-not" : [ { "auto_renewal_remaining" : null } ]
+    	}
+ 	}
+}
+----
+
+=== Examples ===
+
+* Run all pending events without granularity:
++
+[source,shell]
+----
+perl action_trigger_runner.pl --run-pending
+----
+
+* Create events for `checkout.due` hooks:
++
+[source,shell]
+----
+perl action_trigger_runner.pl --hooks=checkout.due --process-hooks
+----
+
+* Process events for a specific granularity:
++
+[source,shell]
+----
+perl action_trigger_runner.pl --run-pending --granularity=Hourly --process-hooks
+----
+
+[[configure_opac_email_print]]
+== Configuring OPAC Record Email and Print ==
+
+=== Default Configuration ===
+
+By default, email and print notifications include the following bibliographic information:
+
+* Bibliographic Record ID
+* Title statement
+* Author
+* Item Type
+* Publisher
+* Publication Date
+* ISBN
+* ISSN
+* UPC
+
+If *Full display* is selected, additional holdings information may be included:
+
+* Circulating Library
+* Item Location
+* Call Number (including prefix and suffix)
+* Monograph Parts
+* Item Status
+* Item Barcode
+
+=== Customizing Templates ===
+
+To customize bibliographic and item information:
+
+. Go to *Administration -> Local Administration -> Notifications / Action Triggers*.
+. Double-click the desired action trigger.
+. Select the _Edit Parameters_ tab.
+. Click *New Parameter* and configure as follows:
+
+- _Parameter Name_: `holdings_limit`
+- _Parameter Value_: Maximum number of copies per record
+
+. Save your changes.
+
+=== Example Parameter Configuration ===
+
+image::actiontriggers/ope_event_params.png[Email and Print Event Parameters]
