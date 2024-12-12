@@ -4,7 +4,7 @@
 == Additional Resources ==
 
 The Booking module is managed through the Booking Administration module.
- See <<docs-modules-admin-pages-booking-admin.adoc,Booking Administration>>
+See link:../admin/booking-admin.html[Booking Administration]
 for more details.
 
 == Overview ==
@@ -146,8 +146,8 @@ image::booking/booking-capture-resource-by-barcode.png[Capture Resources screen 
 [start=3]
 3. A "Capture succeeded" message will appear.
     - Click **Print** to generate a reservation slip.
-    [Placeholder: Screenshot of successful capture message and print
-    button.]
+    
+image::booking/booking-reservation-slip.png[Reservation slip showing reservation details.,width=600]
 
 == Picking Up Reservations ==
 
@@ -159,10 +159,14 @@ Always use the dedicated Booking Module interfaces for tasks related to reservat
 1. Navigate to **Booking → Pick Up Reservations** or access it from a patron
    record (**Other → Booking: Pick Up Reservations**).
 2. Scan the patron barcode if needed.
+
+image::booking/booking-pickup-1.png[Pick Up Reservations screen with patron barcode field.]
+
+[start=3]
 3. Select the reservation(s) to pick up and confirm.
-    [Placeholder: Screenshot showing the reservation pickup confirmation
-    screen.]
 4. The screen refreshes, displaying the updated reservation status.
+
+image::booking/booking-pickup-2.png[Pick Up Reservations screen showing selected reservations.]
 
 == Returning Reservations ==
 
@@ -176,9 +180,14 @@ Always use the Booking Module to return reserved items.
     - By **item barcode**: Scan/enter barcode and click **Go**.
     - By **patron barcode**: Scan/enter barcode to display active
       reservations, then select the items to return.
+
+image::booking/booking-return-1.png[Return Reservations screen with barcode fields.]
+
+[start=3]
 3. Confirm the return in the pop-up window.
-    [Placeholder: Screenshot of return reservations confirmation.]
 4. The screen updates to reflect returned items.
+
+image::booking/booking-return-2.png[Return Reservations screen showing returned items.]
 
 [NOTE]
 You can also return reservations from the patron record (**Other → Booking:
