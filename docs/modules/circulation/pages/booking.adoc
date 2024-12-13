@@ -13,8 +13,10 @@ The Booking module allows libraries to manage reservations for bookable resource
 
 **Booking Module Menu**
 
+.Booking Module Menu Item
 image::booking/booking-menu-item.png[Booking module top menu option.,width=100]
 
+.Booking Submenu
 image::booking/booking-submenu.png[Booking module menu options.,width=200]
 
 The booking module menu includes the following options:
@@ -48,12 +50,14 @@ barcode is not known.
 2. Click **Other → Booking: Create Reservations**.
    This opens the Create Reservations screen.
 
+.Other → Booking: Create Reservations
 image::booking/booking-create-from-patron-1.png[Drop-down menu showing the path to create reservations from a patron record.,width=250]
 
 [start=3]
-3. Choose a reservation type:
+3. Choose reservation type and date:
 
-image::booking/booking-create-reservation.png[Create Reservations screen with reservation type, date(s), and resource selection.]
+.Reservation Type and Date Fields
+image::booking/booking-create-reservation.png[Reservation type and date fields., width=650]
 
     - **Single-day reservation**: For reservations lasting less than a day
       (e.g., a study room).
@@ -62,6 +66,10 @@ image::booking/booking-create-reservation.png[Create Reservations screen with re
 
 [start=4]
 4. Specify the resource:
+
+.Reservation Details Fields
+image::booking/booking-create-reservation-2.png[Reservation details fields.,width=650]
+
     - **Choose resource by barcode**: If you know the barcode.
     - **Choose resource by type**: To select by type if the barcode is
     unknown.
@@ -74,7 +82,8 @@ image::booking/booking-create-reservation.png[Create Reservations screen with re
     (e.g., PC vs.
     Mac laptop).
 
-image::booking/booking-schedule-grid.png[Schedule grid showing available times and resources.]
+.Schedule Grid
+image::booking/booking-schedule-grid.png[Schedule grid showing available times., width=350]
 
 [start=6]
 6. Create the reservation using one of the following:
@@ -90,6 +99,7 @@ image::booking/booking-schedule-grid.png[Schedule grid showing available times a
     - Notify patron by email (optional)
     - Notes (optional)
     
+.Confirm Reservation Modal
 image::booking/booking-confirm-reservation.png[Confirm reservation modal showing reservation details.,width=650]
 
 [start=8]
@@ -102,6 +112,7 @@ image::booking/booking-confirm-reservation.png[Confirm reservation modal showing
 2. Open the **Holdings View** tab and select the relevant row.
 3. Right-click the row and choose **Book Item Now**.
 
+.Book Item Now Option
 image::booking/booking-book-from-catalog.png[Book Item Now option in the Holdings View tab.,width=550]
 
 [NOTE]
@@ -109,6 +120,7 @@ You can also accomplish this by selecting the row and clicking the Actions butto
 
 **Action Button**
 
+.Booking Grid Actions Button
 image::booking/booking-grid-actions-button.png[Actions button in the Holdings View tab.,width=200]
 
 [start=4]
@@ -122,11 +134,19 @@ indexterm:[booking,pull list] indexterm:[pull list,booking]
 
 1. Click **Booking → Pull List**.
 
-image::booking/booking-pull-list-options.png[Pull List options.]
+- Choose your library if it is not already selected.
+
+.Pull List Library Selector
+image::booking/booking-pull-list-options.png[Library selector, width=250]
 
 [start=2]
 2. Specify the number of days in advance to generate the list (e.g., 1 for
    items needed today).
+
+.Pull List Days in Advance Field
+image::booking/booking-pull-list-options-2.png[Pull List days in advance field.,width=450]
+
+[start=3]
 3. Review the pull list.
 4. Click **Actions → Print Pull List** to print the list.
 
@@ -141,12 +161,14 @@ The standard Check In function does not process reservations correctly.
 1. Click **Booking → Capture Resources**.
 2. Scan or enter the item barcode, then press Enter.
 
+.Capture Resources by Barcode
 image::booking/booking-capture-resource-by-barcode.png[Capture Resources screen with barcode field.,width=500]
 
 [start=3]
 3. A "Capture succeeded" message will appear.
     - Click **Print** to generate a reservation slip.
-    
+
+.Booking Reservation Slip
 image::booking/booking-reservation-slip.png[Reservation slip showing reservation details.,width=600]
 
 == Picking Up Reservations ==
@@ -160,13 +182,19 @@ Always use the dedicated Booking Module interfaces for tasks related to reservat
    record (**Other → Booking: Pick Up Reservations**).
 2. Scan the patron barcode if needed.
 
-image::booking/booking-pickup-1.png[Pick Up Reservations screen with patron barcode field.]
+.Patron Barcode Field for Pick Up
+image::booking/booking-pickup-patron-barcode.png[Patron barcode field., width=450]
 
 [start=3]
 3. Select the reservation(s) to pick up and confirm.
+
+.Reservation Grid for Pick Up
+image::booking/booking-pickup-1.png[Reservation grid showing available reservations., width=650]
+
+[start=4]
 4. The screen refreshes, displaying the updated reservation status.
 
-image::booking/booking-pickup-2.png[Pick Up Reservations screen showing selected reservations.]
+    - The reservation will move from the **Ready for pickup** grid to the **Already picked up** grid.
 
 == Returning Reservations ==
 
@@ -175,19 +203,24 @@ indexterm:[booking,returning reservations]
 [CAUTION]
 Always use the Booking Module to return reserved items.
 
+Returning reservations works similarly to picking up reservations. The main difference is that you can return reservations by resource or by patron.
+
 1. Click **Booking → Return Reservations**.
 2. Choose a return method:
-    - By **item barcode**: Scan/enter barcode and click **Go**.
+
+.Booking Return Controls
+image::booking/booking-return.png[Booking return controls.,width=450]
+
+    - By **resource**: Scan/enter barcode to display active reservations,
+      then select the items to return.
     - By **patron barcode**: Scan/enter barcode to display active
       reservations, then select the items to return.
 
-image::booking/booking-return-1.png[Return Reservations screen with barcode fields.]
-
 [start=3]
-3. Confirm the return in the pop-up window.
+3. Select the reservation(s) to return and confirm.
 4. The screen updates to reflect returned items.
 
-image::booking/booking-return-2.png[Return Reservations screen showing returned items.]
+    - The reservation will move from the **Ready for return** grid to the **Returned today** grid.
 
 [NOTE]
 You can also return reservations from the patron record (**Other → Booking:
@@ -202,4 +235,6 @@ indexterm:[booking,canceling reservations]
 2. Highlight the reservation and click **Actions → Cancel Selected**.
 3. Confirm cancellation in the pop-up.
     The reservation disappears from the list.
-    [Placeholder: Screenshot of cancellation confirmation dialog.]
+
+.Cancel Reservation Confirmation Modal
+image::booking/booking-cancel-confirm.png[Cancel reservation confirmation modal.,width=450] 
