@@ -48,7 +48,7 @@ image::booking/booking-create-from-patron-1.png[Drop-down menu showing the path 
 3. Choose reservation type and date:
 
 .Reservation Type and Date Fields
-image::booking/booking-create-reservation.png[Reservation type and date fields., width=650]
+image::booking/booking-create-reservation-type-date.png[Reservation type and date fields., width=650]
 
     - **Single-day reservation**: For reservations lasting less than a day
       (e.g., a study room).
@@ -59,7 +59,7 @@ image::booking/booking-create-reservation.png[Reservation type and date fields.,
 4. Specify the resource:
 
 .Reservation Details Fields
-image::booking/booking-create-reservation-2.png[Reservation details fields.,width=650]
+image::booking/booking-create-reservation-details.png[Reservation details fields.,width=650]
 
     - **Choose resource by barcode**: If you know the barcode.
     - **Choose resource by type**: To select by type if the barcode is
@@ -180,7 +180,7 @@ image::booking/booking-pickup-patron-barcode.png[Patron barcode field., width=45
 3. Select the reservation(s) to pick up and confirm.
 
 .Reservation Grid for Pick Up
-image::booking/booking-pickup-1.png[Reservation grid showing available reservations., width=650]
+image::booking/booking-pickup-grid.png[Reservation grid showing available reservations., width=650]
 
 [start=4]
 4. The screen refreshes, displaying the updated reservation status.
