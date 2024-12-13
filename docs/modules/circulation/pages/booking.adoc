@@ -19,15 +19,6 @@ image::booking/booking-menu-item.png[Booking module top menu option.,width=100]
 .Booking Submenu
 image::booking/booking-submenu.png[Booking module menu options.,width=200]
 
-The booking module menu includes the following options:
-
-- **Create Reservations**: Create a new reservation.
-- **Pull List**: Generate a list of reservations to pull.
-- **Capture Resources**: Capture items for reservations.
-- **Pick Up Reservations**: Pick up reserved items.
-- **Return Reservations**: Return reserved items.
-- **Manage Reservations**: View and manage reservations.
-
 == Creating a Booking Reservation ==
 
 indexterm:[scheduling,resources using the booking module]
