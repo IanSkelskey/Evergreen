@@ -49,7 +49,7 @@ To run Action Triggers, use the trigger processing script. It is recommended to 
 
 Run the script with the following command:
 
-[source,shell]
+[source, bash]
 ----
 /openils/bin/action_trigger_runner.pl --process-hooks --run-pending
 ----
@@ -93,21 +93,21 @@ Custom filters can be created to cut down on the number of action trigger events
 
 * Run all pending events without granularity:
 +
-[source,shell]
+[source, bash]
 ----
 perl action_trigger_runner.pl --run-pending
 ----
 
 * Create events for `checkout.due` hooks:
 +
-[source,shell]
+[source, bash]
 ----
 perl action_trigger_runner.pl --hooks=checkout.due --process-hooks
 ----
 
 * Process events for a specific granularity:
 +
-[source,shell]
+[source, bash]
 ----
 perl action_trigger_runner.pl --run-pending --granularity=Hourly --process-hooks
 ----
