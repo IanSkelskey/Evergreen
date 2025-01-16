@@ -4,16 +4,15 @@
 == Additional Resources ==
 
 Managing booking reservations is done through the Booking module.
-See xref:circulation:booking.adoc[Booking Module]
-for more details.
+See xref:circulation:booking.adoc[Booking Module] for more details.
 
 == Overview ==
 
-The Booking Administration module is designed to help library staff manage the various aspects of bookable resources. This includes defining resource types, attributes, and values, as well as creating and managing individual resources. The module also allows staff to map attributes and values to resources, ensuring that each item is accurately described and easily searchable.
+The Booking Administration module helps library staff manage bookable resources. This includes defining resource types, attributes, and values, as well as creating and managing individual resources. Staff can map attributes and values to resources, ensuring accurate descriptions and easy searchability.
 
 === Accessing Booking Administration ===
 
-You can access the Booking Administration from the top menu bar in the staff client by navigating to Administration -> Booking Administration.
+Access the Booking Administration from the top menu bar in the staff client by navigating to *Administration -> Booking Administration*.
 
 .Administration Menu Item
 image::booking/admin-menu-item.png[Administration top menu option.,width=120]
@@ -22,13 +21,13 @@ image::booking/admin-menu-item.png[Administration top menu option.,width=120]
 image::booking/admin-submenu.png[Administration menu options.,width=240]
 
 .Booking Administration Menu
-image::booking/booking-admin-menu.png["Options in the Booking Administration menu which include Resources, Resource Attribute Values, Resource Types, Resource Attribute Maps, and Resource Attributes."]
+image::booking/booking-admin-menu.png[Options in the Booking Administration menu which include Resources, Resource Attribute Values, Resource Types, Resource Attribute Maps, and Resource Attributes.]
 
 === Non-Bibliographic Resources ===
 
-A non-bibliographic resource is a bookable item that is not a traditional library material, such as a laptop, projector, or meeting room. These resources can be managed through the Booking Administration module.
+Non-bibliographic resources are bookable items that are not traditional library materials, such as laptops, projectors, or meeting rooms. These resources can be managed through the Booking Administration module.
 
-Non-bibliographic resources are made up of several components, including resource types, attributes, and values. Each resource type can have multiple attributes, and each attribute can have multiple values. Individual resources are then created and linked to their attributes and values using a resource attribute map.
+Non-bibliographic resources consist of resource types, attributes, and values. Each resource type can have multiple attributes, and each attribute can have multiple values. Individual resources are created and linked to their attributes and values using a resource attribute map.
 
 .Hierarchy Example
 image::booking/booking-hierarchy-diagram.png[Hierarchy example of a resource with its mapped attributes and values.,width=500]
@@ -61,30 +60,23 @@ image::booking/booking-hierarchy-diagram.png[Hierarchy example of a resource wit
 A staff account with circulator permissions or higher is required to create bookable non-bibliographic resources, such as laptops, projectors, and meeting rooms.
 ====
 
-Before creating resources (bookable items), you must first define resource types and their attributes. Each resource type can have multiple attributes, and each attribute can have multiple values. Once you have defined the resource types and attributes, you can create individual resources and link them to their attributes and values using the Resource Attribute Map.
+Before creating resources, define resource types and their attributes. Each resource type can have multiple attributes, and each attribute can have multiple values. Once defined, create individual resources and link them to their attributes and values using the Resource Attribute Map.
 
 === Create New Resource Type ===
 
-. Select Administration -> Booking Administration -> Resource Types.
-
+. Select *Administration -> Booking Administration -> Resource Types*.
 . A list of current resource types will appear (if any).
-
 +
 [NOTE]
 You may also see cataloged items in the list. Those items have been marked bookable or booked before.
-
-. To create a new resource type, click New Resource Type located just below the library selector at the top of the screen.
-
+. To create a new resource type, click *New Resource Type* located just below the library selector at the top of the screen.
 +
 .New Resource Type Button
 image::booking/new_resource_type_button.png[Button for creating a new resource type located between Remove Filters and Apply Transitions buttons.,width=450]
-
-. A box will appear in which you create your new type of resource.
-
+. A box will appear to create your new type of resource.
 +
 .New Resource Type Form
-image::booking/new_resource_type_form.png["Form for creating a new resource type with fields for catalog item, fine amount, fine interval, max fine amount, owning library, resource type name, and transferable option."]
-
+image::booking/new_resource_type_form.png[Form for creating a new resource type with fields for catalog item, fine amount, fine interval, max fine amount, owning library, resource type name, and transferable option.]
 +
 .Table of Resource Type Fields
 [cols="1,3"]
@@ -95,22 +87,22 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 | Whether the resource is a cataloged item.
 
 | Fine Amount
-| The amount that will be charged at each Fine Interval.
+| The amount charged at each Fine Interval.
 
 | Fine Interval
-| How often will fines be charged? See xref:#_time_formatting_options[Time Formatting Options] for accepted formats.
+| How often fines are charged. See xref:#_time_formatting_options[Time Formatting Options] for accepted formats.
 
 | Inter-booking and Inter-circulation Interval
 | _need an explanation_
 
 | Max Fine Amount
-| The maximum amount that can be charged for fines.
+| The maximum amount charged for fines.
 
 | Owning Library
 | The home library of the resource.
 
 | Resource Type ID
-| A unique identifier for the resource type. This will populate automatically after saving.
+| A unique identifier for the resource type. This populates automatically after saving.
 
 | Resource Type Name
 | The name of the resource type.
@@ -119,8 +111,7 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 | Whether the resource can be transferred between libraries.
 |===
 
-. Click Save when you have entered the needed information.
-
+. Click *Save* when you have entered the needed information.
 . The new resource type will appear in the list.
 
 ==== Time Formatting Options ====
@@ -138,20 +129,15 @@ The following formats are accepted for the Fine Interval field:
 
 === Create New Resource Attribute ===
 
-. Select Administration -> Booking Administration -> Resource Attributes.
-
-. Click New Resource Attribute in the top right corner.
-
+. Select *Administration -> Booking Administration -> Resource Attributes*.
+. Click *New Resource Attribute* in the top right corner.
 +
 .New Resource Attribute Button
 image::booking/new_resource_attr_button.png[Button for creating a new resource attribute.,width=450]
-
-. A box will appear in which you can add the attributes of the resource. Attributes are categories of descriptive information that are provided to the staff member when the booking request is made. For example, an attribute of a laptop may be the type of laptop. Other attributes might be the number of seats available in a room, or a kind of projector.
-
+. A box will appear to add the attributes of the resource. Attributes are categories of descriptive information provided to the staff member when the booking request is made. For example, an attribute of a laptop may be the operating system. Other attributes might be the number of seats available in a room, or a kind of projector.
 +
 .New Resource Attribute Form
-image::booking/resource_attr_form.png["Form for assigning a value to a resource attribute with fields for is required, owning library, resource attribute ID, resource attribute name, and resource type."]
-
+image::booking/resource_attr_form.png[Form for assigning a value to a resource attribute with fields for is required, owning library, resource attribute ID, resource attribute name, and resource type.]
 +
 .Table of Resource Attribute Fields
 [cols="1,3"]
@@ -165,7 +151,7 @@ image::booking/resource_attr_form.png["Form for assigning a value to a resource 
 | The home library of the resource.
 
 | Resource Attribute ID
-| This will populate when the form is saved.
+| This populates when the form is saved.
 
 | Resource Attribute Name
 | Choose a unique name for the attribute.
@@ -174,30 +160,23 @@ image::booking/resource_attr_form.png["Form for assigning a value to a resource 
 | Choose the resource type that the attribute will be associated with.
 |===
 
-. Click Save when the necessary information has been entered.
-
+. Click *Save* when the necessary information has been entered.
 . The added attribute will appear in the list.
-
 +
 [NOTE]
-One resource type may have multiple attributes. You may repeat the above procedure to add more.
+One resource type may have multiple attributes. Repeat the above procedure to add more.
 
 === Create New Resource Attribute Value ===
 
-. One resource attribute may have multiple values. To add new attribute value, select Administration -> Booking Administration -> Resource Attribute Values.
-
-. Click New Resource Attribute Value in the top right corner.
-
+. One resource attribute may have multiple values. To add a new attribute value, select *Administration -> Booking Administration -> Resource Attribute Values*.
+. Click *New Resource Attribute Value* in the top right corner.
 +
 .New Resource Attribute Value Button
 image::booking/new_resource_attr_value_button.png[Button for creating a new resource attribute value.,width=450]
-
-. A box will appear in which you assign a value to a particular attribute. Values can be numbers, words, or a combination of them, that describe the particular aspects of the resource that have been defined as Attributes. As all values appear on the same list for selection, values should be as unique as possible. For example, a laptop may have a computing platform that is either PC or Mac.
-
+. A box will appear to assign a value to a particular attribute. Values can be numbers, words, or a combination of them, that describe the particular aspects of the resource that have been defined as Attributes. As all values appear on the same list for selection, values should be as unique as possible. For example, a laptop may have a computing platform that is either PC or Mac.
 +
 .New Resource Attribute Value Form
-image::booking/resource_attr_value_form.png["Form for assigning a value to a resource attribute with fields for owning library, resource attribute, and valid value."]
-
+image::booking/resource_attr_value_form.png[Form for assigning a value to a resource attribute with fields for owning library, resource attribute, and valid value.]
 +
 .Table of Resource Attribute Value Fields
 [cols="1,3"]
@@ -211,34 +190,27 @@ image::booking/resource_attr_value_form.png["Form for assigning a value to a res
 | The attribute you wish to assign the value to.
 
 | Resource Attribute Value ID
-| This will populate after you save.
+| This populates after you save.
 
 | Valid Value
 | Enter the value for your attribute.
 |===
 
-. Click Save when the required information has been added.
-
+. Click *Save* when the required information has been added.
 . The attribute value will appear in the list. Each attribute should have at least two values attached to it; repeat this process for all applicable attribute values.
 
 === Create New Resource ===
 
-. Select Administration -> Booking Administration -> Resource.
-
+. Select *Administration -> Booking Administration -> Resource*.
 . A list of current resources will appear (if any).
-
-. To create a new resource type, click New Resource towards the top of the screen.
-
+. To create a new resource type, click *New Resource* towards the top of the screen.
 +
 .New Resource Button
 image::booking/new_resource_button.png[Button for creating a new resource.,width=450]
-
-. A box will appear in which you create your new type of resource.
-
+. A box will appear to create your new type of resource.
 +
 .New Resource Form
-image::booking/new_resource_form.png["Form for creating a new resource with fields for barcode, deposit amount, deposit required status, overbook status, owning library, resource type, and user fee."]
-
+image::booking/new_resource_form.png[Form for creating a new resource with fields for barcode, deposit amount, deposit required status, overbook status, owning library, resource type, and user fee.]
 +
 .Table of Resource Fields
 [cols="1,3"]
@@ -270,34 +242,26 @@ image::booking/new_resource_form.png["Form for creating a new resource with fiel
 | Enter a fee if needed.
 |===
 
-. Click Save when you have entered the needed information.
-
+. Click *Save* when you have entered the needed information.
 . The resource will appear in the list.
-
 +
 .Booking Resource List with New Resource
 image::booking/resource_config.png[Resource Configuration]
-
 +
 [NOTE]
 One resource type may have multiple resources attached.
 
 === Map Resource Attributes and Values to Resources ===
 
-. Use Resource Attribute Maps to bring together the resources and their attributes and values. Select Administration -> Booking Administration -> Resource Attribute Maps.
-
-. Click New Resource Attribute Map in the right top corner.
-
+. Use Resource Attribute Maps to bring together the resources and their attributes and values. Select *Administration -> Booking Administration -> Resource Attribute Maps*.
+. Click *New Resource Attribute Map* in the top right corner.
 +
 .New Resource Attribute Map Button
 image::booking/new_map_button.png[Button for creating a new resource attribute map.,width=450]
-
-. A box will appear in which you will map your attributes and values to your resources.
-
+. A box will appear to map your attributes and values to your resources.
 +
 .New Resource Attribute Map Form
-image::booking/new_map_form.png["Form for mapping attributes and values to resources with fields for attribute value, resource, and resource attribute."]
-
+image::booking/new_map_form.png[Form for mapping attributes and values to resources with fields for attribute value, resource, and resource attribute.]
 +
 .Table of Resource Attribute Map Fields
 [cols="1,3"]
@@ -314,43 +278,33 @@ image::booking/new_map_form.png["Form for mapping attributes and values to resou
 | The attribute you are mapping.
 
 | Resource Attribute Map ID
-| This will populate after saving.
+| This populates after saving.
 |===
 
-. Click Save once you have entered the required information.
-
+. Click *Save* once you have entered the required information.
 +
-[NOTE]    
+[NOTE]
 A resource may have multiple attributes and values. Repeat the above steps to map all.
-
 . The resource attribute map will appear in the list.
-
 . See the xref:#_non_bibliographic_resources[Hierarchy Example] for a visual representation of the resource structure.
 
 == Editing Non-Bibliographic Resources ==
 
-Staff with the required permissions can edit aspects of existing non-bibliographic resources. For example, resource type can be edited in the event that the fine amount for a laptop changes from $2.00 to $5.00.
+Staff with the required permissions can edit aspects of existing non-bibliographic resources. For example, resource type can be edited if the fine amount for a laptop changes from $2.00 to $5.00.
 
 === Editing Resource Types ===
 
-. Bring up your list of resource types. Select Administration -> Booking Administration -> Resource Types.
-
+. Bring up your list of resource types. Select *Administration -> Booking Administration -> Resource Types*.
 . A list of current resource types will appear.
+. Double-click anywhere on the line of the resource type you would like to edit.
+. The resource type box will appear. Make your changes and click *Save*.
+. Following the same procedure, you may edit Resource Attributes, Attribute Values, Resources, and Attribute Maps by selecting them in *Administration -> Booking Administration*.
 
-. Double click anywhere on the line of the resource type you would like to edit.
+== Deleting Non-Bibliographic Resources ==
 
-. The resource type box will appear. Make your changes and click Save.
-
-. Following the same procedure you may edit Resource Attributes, Attributes Values, Resources and Attribute Map by selecting them on Administration -> Booking Administration.
-
-== Deleting Non-bibliographic Resources ==
-
-. To delete a booking resource, go to Administration -> Booking Administration -> Resources.
-
-. Select the checkbox in front the resource you want to delete. Click Delete Selected. The resource will disappear from the list.
-
-Following the same procedure you may delete Resource Attributes Maps.
-
-You may also delete Resource Attribute Values, Resource Attributes and Resource Types. But you have to delete them in the reverse order when you create them to make sure the entry is not in use when you try to delete it.
+. To delete a booking resource, go to *Administration -> Booking Administration -> Resources*.
+. Select the checkbox in front of the resource you want to delete. Click *Delete Selected*. The resource will disappear from the list.
+. Following the same procedure, you may delete Resource Attribute Maps.
+. You may also delete Resource Attribute Values, Resource Attributes, and Resource Types. But you have to delete them in the reverse order when you create them to ensure the entry is not in use when you try to delete it.
 
 This is the deletion order: Resource Attribute Map/Resources -> Resource Attribute Values -> Resource Attributes -> Resource Types.
