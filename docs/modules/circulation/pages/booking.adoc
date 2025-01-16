@@ -3,15 +3,13 @@
 
 == Additional Resources ==
 
-The Booking module is managed through the Booking Administration module.
-See xref:admin:booking-admin.adoc[Booking Administration]
-for more details.
+The Booking module's functionality is extended and managed through the Booking Administration module. This module allows library staff to define and manage bookable resources, their attributes, and values. For more details, see xref:admin:booking-admin.adoc[Booking Administration].
 
 == Overview ==
 
 The Booking module allows libraries to manage reservations for bookable resources, such as study rooms, equipment, and other items. This module is useful for libraries that offer resources that can be reserved in advance. The booking module can be accessed from the top menu bar in the staff client.
 
-**Booking Module Menu**
+=== Booking Module Menu ===
 
 .Booking Module Menu Item
 image::booking/booking-menu-item.png[Booking module top menu option.,width=100]

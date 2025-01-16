@@ -3,8 +3,7 @@
 
 == Additional Resources ==
 
-Managing booking reservations is done through the Booking module.
-See xref:circulation:booking.adoc[Booking Module] for more details.
+The Booking module allows library staff to manage reservations for various bookable resources. For detailed instructions on creating, managing, and utilizing these reservations, see xref:circulation:booking.adoc[Booking Module].
 
 == Overview ==
 
