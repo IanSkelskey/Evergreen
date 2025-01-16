@@ -11,7 +11,7 @@ for more details.
 
 The Booking Administration module is designed to help library staff manage the various aspects of bookable resources. This includes defining resource types, attributes, and values, as well as creating and managing individual resources. The module also allows staff to map attributes and values to resources, ensuring that each item is accurately described and easily searchable.
 
-**Administration Menu**
+=== Accessing Booking Administration ===
 
 You can access the Booking Administration from the top menu bar in the staff client by navigating to Administration -> Booking Administration.
 
@@ -24,11 +24,14 @@ image::booking/admin-submenu.png[Administration menu options.,width=240]
 .Booking Administration Menu
 image::booking/booking-admin-menu.png["Options in the Booking Administration menu which include Resources, Resource Attribute Values, Resource Types, Resource Attribute Maps, and Resource Attributes."]
 
-**Non-Bibliographic Resources**
+=== Non-Bibliographic Resources ===
 
 A non-bibliographic resource is a bookable item that is not a traditional library material, such as a laptop, projector, or meeting room. These resources can be managed through the Booking Administration module.
 
-The following pieces make up a non-bibliographic resource:
+Non-bibliographic resources are made up of several components, including resource types, attributes, and values. Each resource type can have multiple attributes, and each attribute can have multiple values. Individual resources are then created and linked to their attributes and values using a resource attribute map.
+
+.Hierarchy Example
+image::booking/booking-hierarchy-diagram.png[Hierarchy example of a resource with its mapped attributes and values.,width=500]
 
 .Components of a Non-Bibliographic Resource
 [cols="1,3"]
@@ -89,7 +92,7 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 | Field | Description
 
 | Catalog Item
-| Boolean checkbox.
+| Whether the resource is a cataloged item.
 
 | Fine Amount
 | The amount that will be charged at each Fine Interval.
@@ -117,7 +120,7 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 | The name of the resource type.
 
 | Transferable
-| Boolean checkbox.
+| Whether the resource can be transferred between libraries.
 |===
 
 . Click Save when you have entered the needed information.
@@ -147,7 +150,7 @@ image::booking/resource_attr_form.png["Form for assigning a value to a resource 
 | Field | Description
 
 | Is Required
-| Boolean checkbox.
+| Whether the attribute is required for the resource.
 
 | Owning Library
 | The home library of the resource.
@@ -159,7 +162,7 @@ image::booking/resource_attr_form.png["Form for assigning a value to a resource 
 | Choose a unique name for the attribute.
 
 | Resource Type
-| Dropdown selection.
+| Choose the resource type that the attribute will be associated with.
 |===
 
 . Click Save when the necessary information has been entered.
@@ -178,7 +181,7 @@ One resource type may have multiple attributes. You may repeat the above procedu
 
 +
 .New Resource Attribute Value Button
-image::booking/new_resource_attr_value_button.png[Button for creating a new resource attribute value.]
+image::booking/new_resource_attr_value_button.png[Button for creating a new resource attribute value.,width=450]
 
 . A box will appear in which you assign a value to a particular attribute. Values can be numbers, words, or a combination of them, that describe the particular aspects of the resource that have been defined as Attributes. As all values appear on the same list for selection, values should be as unique as possible. For example, a laptop may have a computing platform that is either PC or Mac.
 
@@ -219,27 +222,52 @@ image::booking/resource_attr_value_form.png["Form for assigning a value to a res
 
 +
 .New Resource Button
-image::booking/new_resource_button.png[Button for creating a new resource.]
+image::booking/new_resource_button.png[Button for creating a new resource.,width=450]
 
 . A box will appear in which you create your new type of resource.
 
 +
 .New Resource Form
-image::booking/record_edit_resource.png["Form for creating a new resource with fields for barcode, deposit amount, deposit required status, overbook status, owning library, resource type, and user fee."]
+image::booking/new_resource_form.png["Form for creating a new resource with fields for barcode, deposit amount, deposit required status, overbook status, owning library, resource type, and user fee."]
 
 +
-* *Barcode*: Enter the barcode of the item.
-* *Deposit Amount*: If a deposit is needed to book, enter it here.
-* *Is Deposit Required?*: Boolean checkbox.
-* *Overbook*: Boolean checkbox.
-* *Owning Library*: The home library of the resource.
-* *Resource ID*: This populates after saving.
-* *Resource Type*: Dropdown list.
-* *User Fee*: Enter a fee if needed.
+.Table of Resource Fields
+[cols="1,3"]
+|===
+| Field | Description
+
+| Barcode
+| Enter the barcode of the item.
+
+| Deposit Amount
+| If a deposit is needed to book, enter it here.
+
+| Is Deposit Required?
+| Whether a deposit is required to book.
+
+| Overbook
+| Whether the resource can be overbooked.
+
+| Owning Library
+| The home library of the resource.
+
+| Resource ID
+| This populates after saving.
+
+| Resource Type
+| Choose the resource type that the resource will be associated with.
+
+| User Fee
+| Enter a fee if needed.
+|===
 
 . Click Save when you have entered the needed information.
 
 . The resource will appear in the list.
+
++
+.Booking Resource List with New Resource
+image::booking/resource_config.png[Resource Configuration]
 
 +
 [NOTE]
@@ -253,19 +281,32 @@ One resource type may have multiple resources attached.
 
 +
 .New Resource Attribute Map Button
-image::booking/new_map_button.png[Button for creating a new resource attribute map.]
+image::booking/new_map_button.png[Button for creating a new resource attribute map.,width=450]
 
 . A box will appear in which you will map your attributes and values to your resources.
 
 +
 .New Resource Attribute Map Form
-image::booking/map_forms.png["Form for mapping attributes and values to resources with fields for attribute value, resource, and resource attribute."]
+image::booking/new_map_form.png["Form for mapping attributes and values to resources with fields for attribute value, resource, and resource attribute."]
 
 +
-* *Attribute Value*: Dropdown menu.
-* *Resource*: Dropdown menu.
-* *Resource Attribute*: Dropdown menu.
-* *Resource Attribute Map ID*: Populates after you save.
+.Table of Resource Attribute Map Fields
+[cols="1,3"]
+|===
+| Field | Description
+
+| Attribute Value
+| The value of the attribute.
+
+| Resource
+| The resource you are mapping.
+
+| Resource Attribute
+| The attribute you are mapping.
+
+| Resource Attribute Map ID
+| This will populate after saving.
+|===
 
 . Click Save once you have entered the required information.
 
@@ -275,10 +316,7 @@ A resource may have multiple attributes and values. Repeat the above steps to ma
 
 . The resource attribute map will appear in the list.
 
-Once all attributes have been mapped your resource will be part of a hierarchy similar to the example below.
-
-.Hierarchy Example
-image::booking/booking-hierarchy-diagram.png[Hierarchy example of a resource with its mapped attributes and values.,width=600]
+. See the xref:#_non_bibliographic_resources[Hierarchy Example] for a visual representation of the resource structure.
 
 == Editing Non-Bibliographic Resources ==
 
