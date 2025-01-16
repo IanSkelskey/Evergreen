@@ -98,11 +98,7 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 | The amount that will be charged at each Fine Interval.
 
 | Fine Interval
-| How often will fines be charged? This period can be input in several ways:
-** second(s), minute(s), hour(s), day(s), week(s), month(s), year(s)
-** sec(s), min(s)
-** s, m, h
-** 00:30:00, 00:01:00, 01:00:00
+| How often will fines be charged? See xref:#_time_formatting_options[Time Formatting Options] for accepted formats.
 
 | Inter-booking and Inter-circulation Interval
 | _need an explanation_
@@ -126,6 +122,19 @@ image::booking/new_resource_type_form.png["Form for creating a new resource type
 . Click Save when you have entered the needed information.
 
 . The new resource type will appear in the list.
+
+==== Time Formatting Options ====
+
+The following formats are accepted for the Fine Interval field:
+
+* **Full words:** second(s), minute(s), hour(s), day(s), week(s), month(s), year(s)
+** Example: `2 days` (2 days)
+* **Abbreviations:** sec(s), min(s)
+** Example: `5 mins` (5 minutes)
+* **Single letters:** s (seconds), m (minutes), h (hours)
+** Example: `3 h` (3 hours)
+* **Time format:** hh:mm:ss
+** Example: `01:30:00` (1 hour 30 minutes)
 
 === Create New Resource Attribute ===
 
