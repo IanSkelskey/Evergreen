@@ -1,29 +1,35 @@
+'use strict';
+
 const gulp = require('gulp');
-const browserSync = require('browser-sync').create();
+const connect = require('gulp-connect');
 const { exec } = require('child_process');
 
-// Task to build the documentation
-gulp.task('build-docs', (cb) => {
+const buildDir = 'build/local';
+
+// Task to build Antora documentation
+gulp.task('build', (done) => {
   exec('antora site-local.yml', (err, stdout, stderr) => {
     console.log(stdout);
     console.error(stderr);
-    cb(err);
+    done(err);
   });
 });
 
-// Task to serve the documentation with live reload
-gulp.task('serve', gulp.series('build-docs', () => {
-  browserSync.init({
-    server: {
-      baseDir: './build/local'
-    }
+// Task to serve files with live reload
+gulp.task('serve', (done) => {
+  connect.server({
+    root: buildDir,
+    livereload: true,
+    port: 8080
   });
+  done();
+});
 
-  gulp.watch(['./docs/**/*.adoc', './site-local.yml'], gulp.series('build-docs', (done) => {
-    browserSync.reload();
-    done();
-  }));
-}));
+// Watch for changes and rebuild
+gulp.task('watch', (done) => {
+  gulp.watch(['**/*.adoc', 'site-local.yml'], gulp.series('build'));
+  done();
+});
 
 // Default task
-gulp.task('default', gulp.series('serve'));
+gulp.task('preview', gulp.series('build', gulp.parallel('serve', 'watch')));
