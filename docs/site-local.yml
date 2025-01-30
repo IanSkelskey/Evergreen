@@ -1,0 +1,21 @@
+site:
+  title: Evergreen Documentation (Local)
+  start_page: docs:shared:about_this_documentation.adoc
+  url: http://localhost:8080
+content:
+  sources:
+  - url: ../
+    branches: [main]
+    start_path: docs
+ui:
+  bundle:
+    url: https://github.com/IanSkelskey/eg-antora/releases/latest/download/ui-bundle.zip
+    snapshot: true
+
+output:
+  dir: ./build/local
+
+antora:
+  extensions:
+  - require: '@antora/lunr-extension'
+    index_latest_only: true
