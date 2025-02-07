@@ -69,7 +69,7 @@ Event Definitions is the main tab and contains the key fields when working with 
 
 === Hooks ===
 
-Hooks define the Fieldmapper class in the core_type column off of which the rest of the field definitions "hang".
+Hooks define the class in the Fieldmapper that an action trigger will listen for. Essentially, a hook represents an event that may occur in the system.
 
 .Hook Fields
 [cols="1,3"]
@@ -80,6 +80,22 @@ Hooks define the Fieldmapper class in the core_type column off of which the rest
 | Description    | Text to describe the purpose of the hook.
 | Passive        | Indicates whether or not an event is created by direct user action or is circumstantial.
 |===
+
+==== Passive vs. Active Hooks ====
+
+*Passive Hooks*: These hooks require a periodic check by a cron job to determine whether an event has occurred. Examples include:
+
+* Checking if an item is overdue by a certain number of days.
+* Sending notifications for upcoming due dates.
+
+These hooks rely on background jobs to scan the database and create relevant events when conditions are met.
+
+*Active Hooks*: These hooks are triggered automatically when a predefined event occurs. Examples include:
+
+* A hold becoming available.
+* An item being checked in.
+
+Since these events are already occurring within the system’s normal workflow, the action trigger framework can immediately create an event without requiring a periodic check.
 
 === Reactors ===
 
@@ -95,7 +111,7 @@ Reactors link the trigger definition to the action to be carried out.
 
 ==== CallHTTP Reactor ====
 
-This Action/Trigger reactor module allows an Evergreen administrator to create event definitions that use HTTP (or HTTPS) to contact external services.
+The CallHTTP reactor allows Evergreen to send HTTP or HTTPS requests to an external service. This is useful for integrations, such as sending push notifications or making API calls to external applications. The HTTP request is configured using a Template Toolkit template that formats the request.
 
 ===== CallHTTP Reactor Template Syntax =====
 
@@ -152,12 +168,14 @@ Validators set the validation test to be performed to determine whether the acti
 | Description   | Description of validation test to run.
 |===
 
+A validator function runs when the action trigger executes and returns either true or false. For example, a validator for overdue notices may check whether the item is still checked out before sending the notification.
+
 == Creating Action Triggers ==
 
 . From the top menu, select *Administration* -> *Local Administration* -> *Notifications / Action triggers*.
 . Select the _New Event Definition_ button.
 +
-image::actiontriggers/new_event_def.png[New Event Definition]
+image::actiontriggers/new_event_def.png[New Event Definition, width=450]
 +
 . Select an _Owning Library_.
 . Create a unique _Name_ for your new action trigger.
@@ -274,19 +292,22 @@ To run action triggers, an Evergreen administrator will need to run the trigger 
 /openils/bin/action_trigger_runner.pl --process-hooks --run-pending
 ----
 
-You have several options when running the script:
-
-* --run-pending: Run pending events to send emails or take other actions as specified by the reactor in the event definition.
-* --process-hooks: Create hook events
-* --osrf-config=[config_file]: OpenSRF core config file. Defaults to: /openils/conf/opensrf_core.xml
-* --custom-filters=[filter_file]: File containing a JSON Object which describes any hooks that should use a user-defined filter to find their target objects. Defaults to: /openils/conf/action_trigger_filters.json
-* --max-sleep=[seconds]: When in process-hooks mode, wait up to [seconds] for the lock file to go away. Defaults to 3600 (1 hour).
-* --hooks=hook1[,hook2,hook3,...]: Define which hooks to create events for. If none are defined, it defaults to the list of hooks defined in the --custom-filters option. Requires --process-hooks.
-* --granularity=[label]: Limit creating events and running pending events to those only with [label] granularity setting.
-* --debug-stdout: Print server responses to STDOUT (as JSON) for debugging.
-* --lock-file=[file_name]: Sets the lock file for the process.
-* --verbose: Show details of script processing.
-* --help: Show help information.
+.Table of Script Options
+[cols="1,3"]
+|===
+| *Option* | *Description*
+| --run-pending | Run pending events to send emails or take other actions as specified by the reactor in the event definition.
+| --process-hooks | Create hook events.
+| --osrf-config=[config_file] | OpenSRF core config file. Defaults to: /openils/conf/opensrf_core.xml.
+| --custom-filters=[filter_file] | File containing a JSON Object which describes any hooks that should use a user-defined filter to find their target objects. Defaults to: /openils/conf/action_trigger_filters.json.
+| --max-sleep=[seconds] | When in process-hooks mode, wait up to [seconds] for the lock file to go away. Defaults to 3600 (1 hour).
+| --hooks=hook1[,hook2,hook3,...] | Define which hooks to create events for. If none are defined, it defaults to the list of hooks defined in the --custom-filters option. Requires --process-hooks.
+| --granularity=[label] | Limit creating events and running pending events to those only with [label] granularity setting.
+| --debug-stdout | Print server responses to STDOUT (as JSON) for debugging.
+| --lock-file=[file_name] | Sets the lock file for the process.
+| --verbose | Show details of script processing.
+| --help | Show help information.
+|===
 
 Examples:
 
@@ -307,6 +328,55 @@ perl action_trigger_runner.pl --hooks=checkout.due --process-hooks
 ----
 perl action_trigger_runner.pl --run-pending --granularity=Hourly --process-hooks
 ----
+
+=== Setting Up Cron Jobs ===
+
+Many action triggers are processed using cron jobs. Passive hooks require periodic execution, typically scheduled at intervals such as hourly or daily. Stock Evergreen runs the action trigger runner every 30 minutes to process pending events.
+
+==== Example Cron Job ====
+
+To periodically check for events and execute action triggers, administrators can set up a cron job with the following command:
+
+----
+/openils/bin/action_trigger_runner.pl --process-hooks --run-pending
+----
+
+This command:
+
+* Processes hooks (--process-hooks) to create new events.
+* Runs pending events (--run-pending) to execute any triggered actions.
+
+==== Example Cron Job Setup ====
+
+A standard Evergreen setup might include cron jobs like:
+
+----
+0 * * * * perl /openils/bin/action_trigger_runner.pl --run-pending
+30 * * * * perl /openils/bin/action_trigger_runner.pl --process-hooks
+----
+
+This means:
+
+* Every hour on the hour (0 * * * *), Evergreen processes pending actions.
+* Every 30 minutes past the hour (30 * * * *), Evergreen scans for new events.
+
+==== Granularity in Cron Jobs ====
+
+Granularity settings allow different types of events to run at different frequencies:
+
+----
+perl action_trigger_runner.pl --run-pending --granularity=Hourly
+----
+
+This ensures that only events tagged with Hourly granularity will be executed.
+
+== Key Takeaways ==
+
+* Passive hooks require cron jobs; active hooks do not.
+* Reactors determine what action to take when an event occurs.
+* Validators ensure conditions are met before executing an action.
+* The CallHTTP reactor is useful for making external API calls, such as push notifications.
+* Cron jobs periodically process events, ensuring that notifications and other triggers execute as expected.
 
 == Configure OPAC Record Email and Print ==
 
@@ -335,7 +405,7 @@ If *Full display* is selected by the OPAC user, the following holdings informati
 
 The bibliographic and item information included in the printout or email can be configured by modifying the respective Action Trigger templates.
 
-For the Full display, the maximum number of copies to be displayed per record can also be configured in the Action Trigger Event Parameter field. To set the maximum number of copies for display, go to *Administration -> Local Administration -> Notifications / Action Triggers* and find the print or email notification/action trigger to modify.
+For the Full display, the the maximum number of copies to be displayed per record can also be configured in the Action Trigger Event Parameter field. To set the maximum number of copies for display, go to *Administration -> Local Administration -> Notifications / Action Triggers* and find the print or email notification/action trigger to modify.
 
 . Double-click on the action trigger you wish to modify
 +
