@@ -186,16 +186,15 @@ image::actiontriggers/new_event_def.png[New Event Definition, width=450]
 . Select the _Reactor_ and _Validator_.
 . Set the _Event Repeatability Delay_.
 . Select the _Failure Cleanup_ and _Granularity_.
-+
-image::actiontriggers/event_def_details.png[Event Definition Details]
-+
 . Set the _Max Event Validity Delay_.
 . If you wish to send a User Message through the Message Center, set a _Message Library Path_. Enter text in the _Message Template_. Enter a title for this message in _Message Title_, and set a value in _Message User Path_.
 . Select the _Opt-In Setting Type_.
 . Set the _Opt-In User Field_.
 . Select the _Success Cleanup_.
-. Enter text in the _Template_ text box if required. These are for email messages. Here is a sample template for sending 90 day overdue notices:
-
+. Enter text in the _Template_ text box if required. These are for email messages. 
++
+Here is a sample template for sending 90 day overdue notices:
++
 [source,tt2]
 ----
 [%- USE date -%]
