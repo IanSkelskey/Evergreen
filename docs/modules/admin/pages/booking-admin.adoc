@@ -10,10 +10,10 @@ The Booking Administration module helps library staff manage bookable resources.
 Access the Booking Administration from the top menu bar in the staff client by navigating to *Administration -> Booking Administration*.
 
 .Administration Menu Item
-image::booking/admin-menu-item.png[Administration top menu option.,width=120]
+image::admin-menu-item.png[Administration top menu option.,width=120]
 
 .Administration Submenu
-image::booking/admin-submenu.png[Administration menu options.,width=240]
+image::admin-submenu.png[Administration menu options.,width=240]
 
 .Booking Administration Menu
 image::booking/booking-admin-menu.png[Options in the Booking Administration menu which include Resources, Resource Attribute Values, Resource Types, Resource Attribute Maps, and Resource Attributes.]

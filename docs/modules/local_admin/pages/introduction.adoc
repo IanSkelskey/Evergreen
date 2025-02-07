@@ -1,4 +1,146 @@
-= Introduction =
+= Local Administration =
 
 This part covers the options in the Local Administration menu found in the staff
 client.
+
+== Accessing Local Administration ==
+
+Access Local Administration from the top menu bar in the staff client by navigating to *Administration* -> *Local Administration*.
+
+.Administration Menu Item
+image::admin-menu-item.png[Administration top menu option.,width=120]
+
+.Select Local Administration from the drop-down menu.
+image::admin-submenu.png[Administration menu options.,width=240]
+
+== Contents ==
+
+The local administration menu contains many submodules that allow you to manage different aspects of Evergreen.
+
+.The Local Administration menu with some of its options
+image::local-admin-menu.png[Local Administration menu options.,width=450]
+
+The are currently 39 submodules in local administration. The full list is as follows:
+
+[cols="1,3", options="header"]
+|===
+| Option | Description
+
+| xref:local_admin:lsa-address_alert.adoc[Address Alerts]
+| Manage alerts for patron addresses. See xref:local_admin:lsa-address_alert.adoc[Address Alert].
+
+| Age Overdue Circulations to Lost
+| Automatically age overdue circulations to lost status.
+
+| Auto-Print Settings
+| Configure automatic printing settings for various operations.
+
+| xref:local_admin:lsa-barcode_completion.adoc[Barcode Completion]
+| Manage barcode completion settings. See xref:local_admin:lsa-barcode_completion.adoc[Barcode Completion].
+
+| Carousel Library Mappings
+| Configure mappings for carousel libraries.
+
+| xref:admin_initial_setup:carousels.adoc[Carousels]
+| Manage carousels for displaying items. See xref:admin_initial_setup:carousels.adoc[Carousels].
+
+| Cash Reports
+| Generate and manage cash reports.
+
+| Circulation Limit Sets
+| Define and manage circulation limit sets.
+
+| Circulation Policies
+| Configure circulation policies for the library.
+
+| xref:local_admin:emergency_closing_handler.adoc[Closed Dates Editor]
+| Manage closed dates for the library. See xref:local_admin:emergency_closing_handler.adoc[Closed Dates Editor].
+
+| Course Reserves List
+| Manage course reserves lists.
+
+| Event Definition Group Members
+| Manage members of event definition groups.
+
+| Event Definition Groups
+| Define and manage event definition groups.
+
+| Field Documentation
+| Documentation for various fields used in the system.
+
+| xref:local_admin:group_penalty_thresholds.adoc[Group Penalty Thresholds]
+| Manage penalty thresholds for groups. See xref:local_admin:group_penalty_thresholds.adoc[Group Penalty Thresholds].
+
+| Hold Policies
+| Define and manage hold policies.
+
+| Holdings Template Editor
+| Edit templates for holdings.
+
+| Hopeless Holds
+| Manage holds that are unlikely to be fulfilled.
+
+| Item Alert Suppression
+| Suppress alerts for specific items.
+
+| Item Alert Types
+| Define and manage types of item alerts.
+
+| xref:cataloging:item_tags_cataloging.adoc[Item Tags]
+| Manage tags for catalog items. See xref:cataloging:item_tags_cataloging.adoc[Item Tags].
+
+| xref:local_admin:librarysettings.adoc[Library Settings Editor]
+| Edit settings for the library. See xref:local_admin:librarysettings.adoc[Library Settings Editor].
+
+| Non-Cataloged Types Editor
+| Manage types for non-cataloged items.
+
+| xref:local_admin:actiontriggers.adoc[Notifications / Action Triggers]
+| Configure notifications and action triggers. See xref:local_admin:actiontriggers.adoc[Notifications / Action Triggers].
+
+| xref:local_admin:openathens.adoc[OpenAthens Sign-on]
+| Manage OpenAthens sign-on settings. See xref:local_admin:openathens.adoc[OpenAthens].
+
+| xref:local_admin:negative_balances.adoc[Patrons with Negative Balances]
+| Manage patrons with negative balances. See xref:local_admin:negative_balances.adoc[Patrons with Negative Balances].
+
+| Permission Tree Display Entries
+| Manage display entries for the permission tree.
+
+| Search Filter Groups
+| Define and manage search filter groups.
+
+| Shelving Location Groups
+| Manage groups of shelving locations.
+
+| Shelving Location Order
+| Define the order of shelving locations.
+
+| xref:admin:copy_locations.adoc[Shelving Locations Editor]
+| Edit shelving locations. See xref:admin:copy_locations.adoc[Shelving Locations Editor].
+
+| xref:local_admin:staff_portal_page.adoc[Staff Portal Page]
+| Manage the staff portal page. See xref:local_admin:staff_portal_page.adoc[Staff Portal Page].
+
+| xref:admin:lsa-standing_penalties.adoc[Standing Penalties]
+| Manage standing penalties for patrons. See xref:admin:lsa-standing_penalties.adoc[Standing Penalties].
+
+| xref:admin:lsa-statcat.adoc[Statistical Categories Editor - Item]
+| Manage statistical categories for items. See xref:admin:lsa-statcat.adoc[Statistical Categories Editor - Item].
+
+| xref:admin:lsa-statcat.adoc[Statistical Categories Editor - Patron]
+| Manage statistical categories for patrons. See xref:admin:lsa-statcat.adoc[Statistical Categories Editor - Patron].
+
+| xref:admin:popularity_badges_web_client.adoc[Statistical Popularity Badges]
+| Manage statistical popularity badges. See xref:admin:popularity_badges_web_client.adoc[Statistical Popularity Badges].
+
+| xref:admin:surveys.adoc[Surveys]
+| Manage surveys for patrons. See xref:admin:surveys.adoc[Surveys].
+
+| xref:local_admin:transit_list.adoc[Transit List]
+| Manage the transit list for items. See xref:local_admin:transit_list.adoc[Transit List].
+
+| xref:admin:lsa-work_log.adoc[Work Log]
+| Manage work logs for staff. See xref:admin:lsa-work_log.adoc[Work Log].
+
+|===

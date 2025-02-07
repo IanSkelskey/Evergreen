@@ -1,7 +1,7 @@
 = Accepting credit card payments =
 :toc:
 
-Evergreen can interface with services like Authorize.net, Stripe, PayPal, or Payflow to allow users to pay fines and other charges in the Public Catalog.  Credit card settings can be configured in the xref:admin:librarysettings.adoc[Library Settings Editor]. 
+Evergreen can interface with services like Authorize.net, Stripe, PayPal, or Payflow to allow users to pay fines and other charges in the Public Catalog.  Credit card settings can be configured in the xref:local_admin:librarysettings.adoc[Library Settings Editor]. 
 
 == Setting up credit card payments ==
 

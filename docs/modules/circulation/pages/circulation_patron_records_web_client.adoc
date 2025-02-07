@@ -646,7 +646,7 @@ The ability to merge patron accounds is controlled by the permission, 'MERGE_USE
 
 There are four Library Settings involved in data retention and behavior during
 a patron merge. For discussion of how to edit settings see the 
-xref:admin:librarysettings.adoc#_editing_library_settings[Library Settings Editor].
+xref:local_admin:librarysettings.adoc#_editing_library_settings[Library Settings Editor].
 
 * _Patron Merge Address Delete_ - Delete address(es) of subordinate user(s) in a
 patron merge.

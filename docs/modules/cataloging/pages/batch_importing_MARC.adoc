@@ -295,7 +295,7 @@ This interface shows a grid that includes:
 [[default_item_import_values]]
 == Default Values for Item Import ==
 
-The following xref:admin:librarysettings.adoc[Library Settings] can be configured to apply these default values to imported items:
+The following xref:local_admin:librarysettings.adoc[Library Settings] can be configured to apply these default values to imported items:
 
 * _Vandelay: Generate Default Barcodes_ - Auto-generate default item barcodes when no item barcode is present
 * _Vandelay: Default Barcode Prefix_ - Apply this prefix to any auto-generated item barcodes

@@ -1,7 +1,7 @@
 site:
   title: Evergreen Documentation (Local)
   start_page: docs:shared:about_this_documentation.adoc
-  url: http://localhost:8080
+  url: http://localhost:4040
 content:
   sources:
   - url: ../
