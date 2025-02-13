@@ -17,6 +17,9 @@ image::admin-menu-item.png[Administration top menu option.,width=120]
 .Administration Submenu
 image::admin-submenu.png[Administration menu options.,width=240]
 
+.Notification / Action Triggers Item in Local Administration
+image::actiontriggers/local_admin_option.png[Local Administration menu item for Notifications / Action Triggers.,width=300]
+
 [NOTE]
 ====
 You must have Local Administrator permissions to access the Notifications / Action Triggers Module.
@@ -24,22 +27,33 @@ You must have Local Administrator permissions to access the Notifications / Acti
 
 == Main Parts of Action Triggers ==
 
-Action triggers consist of four main parts: Event Definitions, Hooks, Reactors, and Validators.
+Action triggers are composed of four main components: Event Definitions, Hooks, Reactors, and Validators.
 
 .Table of Main Parts of Action Triggers
 [cols="1,3"]
 |===
 | *Part*            | *Description*
-| Event Definitions | Define the events and conditions that trigger actions.
+| Event Definitions | Define the events and conditions that initiate actions.
 | Hooks             | Specify the Fieldmapper class and link to the IDL class.
-| Reactors          | Link triggers to actions to be executed.
-| Validators        | Set validation tests to determine if actions should be executed.
+| Reactors          | Connect triggers to the actions to be executed.
+| Validators        | Establish validation tests to determine if actions should be executed.
 |===
+
+Each of these components has a corresponding tab in the Notifications / Action Triggers module. Selecting a tab displays a grid of relevant data with options to add, edit, or delete entries.
+
+.Action Trigger Module Tabs
+image::actiontriggers/tabs.png[Action Trigger Module Tabs, width=450]
 
 === Event Definitions ===
 
-Event Definitions is the main tab and contains the key fields when working with action triggers.
+Event Definitions is the main tab and contains the key fields when working with action triggers. An event definition is a set of fields that will be returned to the validators and/or reactors for processing. Normally, when you create a new action trigger, you will start here. Evergreen comes with a set of predefined hooks, validators, and reactors that can be used to create new action triggers.
 
+[TIP]
+====
+In most scenarios, you will not need to create new hooks, validators, or reactors, but advanced users may find it useful to do so to add custom functionality.
+====
+
+[[_event_definition_fields]]
 .Event Definition Fields
 [cols="1,3"]
 |===
@@ -172,57 +186,67 @@ A validator function runs when the action trigger executes and returns either tr
 
 == Creating Action Triggers ==
 
-. From the top menu, select *Administration* -> *Local Administration* -> *Notifications / Action triggers*.
+. Make sure you are in the Event Definitions tab of the Notifications / Action Triggers module.
 . Select the _New Event Definition_ button.
 +
-image::actiontriggers/new_event_def.png[New Event Definition, width=450]
+.New Event Definition Button
+image::actiontriggers/new_event_def_btn.png[New Event Definition Button, width=300]
 +
-. Select an _Owning Library_.
-. Create a unique _Name_ for your new action trigger.
-. Select the _Hook_.
-. Check the _Enabled_ check box.
-. Set the _Processing Delay_ in the appropriate format. E.g. _7 days_ to run 7 days from the trigger event or _00:01:00_ to run 1 hour after the _Processing Delay Context Field_.
-. Set the _Processing Delay Context Field_ and _Processing Group Context Field_.
-. Select the _Reactor_ and _Validator_.
-. Set the _Event Repeatability Delay_.
-. Select the _Failure Cleanup_ and _Granularity_.
-. Set the _Max Event Validity Delay_.
-. If you wish to send a User Message through the Message Center, set a _Message Library Path_. Enter text in the _Message Template_. Enter a title for this message in _Message Title_, and set a value in _Message User Path_.
-. Select the _Opt-In Setting Type_.
-. Set the _Opt-In User Field_.
-. Select the _Success Cleanup_.
-. Enter text in the _Template_ text box if required. These are for email messages. 
+. Fill out all fields for the event definition. Refer to the xref:#_event_definition_fields[Table 2. Event Definition Fields] for details.
 +
-Here is a sample template for sending 90 day overdue notices:
+Selecting the new event definition button will open the *Record Editor: Trigger Event Definition* form.
 +
+.The first few fields of the New Event Definition form.
+image::actiontriggers/new_event_def_modal.png[The first few fields of the New Event Definition form.]
++
+Here is an example of a simple event definition for sending a 3 Day Courtesy Notice via email:
++
+.Table of Event Definition Configuration
+[cols="1,3"]
+|===
+| *Field*                         | *Value*
+| Owning Library                 | CONS
+| Name                           | 3 Day Courtesy Notice
+| Hook                           | checkout.due
+| Enabled                        | Yes
+| Processing Delay               | -3 days
+| Processing Delay Context Field | due_date
+| Processing Group Context Field | usr
+| Reactor                        | SendEmail
+| Validator                      | CircIsOpen
+| Event Repeatability Delay      | -2 days
+| Definition ID                  | 6
+| Opt-In Setting Type            | circ.default_overdue_notices_enabled
+| Opt-In User Field              | usr
+| Template                       | xref:actiontriggers.adoc#_sample_template_for_sending_a_3_day_courtesy_notice_via_email[See sample template below.]
+|===
++
+Sample Template for Sending a 3 Day Courtesy Notice via Email:
++
+[[_sample_template_for_sending_a_3_day_courtesy_notice_via_email]]
 [source,tt2]
 ----
 [%- USE date -%]
 [%- user = target.0.usr -%]
 To: [%- params.recipient_email || user.email %]
-From: [%- helpers.get_org_setting(user.home_ou.id, 'org.bounced_emails') || lib.email || params.sender_email || default_sender %]
-Subject: Overdue Items Marked Lost
+From: [%- params.sender_email || default_sender %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Subject: Courtesy Notice
 Auto-Submitted: auto-generated
 
 Dear [% user.family_name %], [% user.first_given_name %]
-The following items are 90 days overdue and have been marked LOST.
-[%- params.recipient_email || user.email %][%- params.sender_email || default_sender %]
-[% FOR circ IN target %]
-  Title: [% circ.target_copy.call_number.record.simple_record.title %]
-  Barcode: [% circ.target_copy.barcode %]
-  Due: [% date.format(helpers.format_date(circ.due_date), '%Y-%m-%d') %]
-  Item Cost: [% helpers.get_copy_price(circ.target_copy) %]
-  Total Owed For Transaction: [% circ.billable_transaction.summary.total_owed %]
-  Library: [% circ.circ_lib.name %]
-[% END %]
+As a reminder, the following items are due in 3 days.
 
 [% FOR circ IN target %]
-  Title: [% circ.target_copy.call_number.record.simple_record.title %]
-  Barcode: [% circ.target_copy.barcode %]
-  Due: [% date.format(helpers.format_date(circ.due_date), '%Y-%m-%d') %]
-  Item Cost: [% helpers.get_copy_price(circ.target_copy) %]
-  Total Owed For Transaction: [% circ.billable_transaction.summary.total_owed %]
-  Library: [% circ.circ_lib.name %]
+    [%- copy_details = helpers.get_copy_bib_basics(circ.target_copy.id) -%]
+    Title: [% copy_details.title %]
+    Author: [% copy_details.author %]
+    Barcode: [% circ.target_copy.barcode %] 
+    Due: [% date.format(helpers.format_date(circ.due_date), '%Y-%m-%d') %]
+    Item Cost: [% helpers.get_copy_price(circ.target_copy) %]
+    Library: [% circ.circ_lib.name %]
+    Library Phone: [% circ.circ_lib.phone %]
+
 [% END %]
 ----
 
@@ -369,19 +393,11 @@ perl action_trigger_runner.pl --run-pending --granularity=Hourly
 
 This ensures that only events tagged with Hourly granularity will be executed.
 
-== Key Takeaways ==
-
-* Passive hooks require cron jobs; active hooks do not.
-* Reactors determine what action to take when an event occurs.
-* Validators ensure conditions are met before executing an action.
-* The CallHTTP reactor is useful for making external API calls, such as push notifications.
-* Cron jobs periodically process events, ensuring that notifications and other triggers execute as expected.
-
 == Configure OPAC Record Email and Print ==
 
-The information displayed in the printout and email is defined and generated by two new Notification/Action Triggers named `biblio.record_entry.print` and `biblio.record_entry.email`.
+The information displayed in the printout and email is defined and generated by two Notification/Action Triggers named `biblio.record_entry.print` and `biblio.record_entry.email`.
 
-The printout and email will include the following bibliographic information by default:
+By default, the printout and email will include the following bibliographic information:
 
 * Bibliographic Record ID
 * Title statement
@@ -393,7 +409,7 @@ The printout and email will include the following bibliographic information by d
 * ISSN
 * UPC
 
-If *Full display* is selected by the OPAC user, the following holdings information is included in the printout or email, if relevant:
+If the OPAC user selects *Full display*, the following holdings information is included in the printout or email, if relevant:
 
 * Circulating Library
 * Item Location
@@ -404,16 +420,21 @@ If *Full display* is selected by the OPAC user, the following holdings informati
 
 The bibliographic and item information included in the printout or email can be configured by modifying the respective Action Trigger templates.
 
-For the Full display, the the maximum number of copies to be displayed per record can also be configured in the Action Trigger Event Parameter field. To set the maximum number of copies for display, go to *Administration -> Local Administration -> Notifications / Action Triggers* and find the print or email notification/action trigger to modify.
+To configure the maximum number of copies displayed per record for the Full display, follow these steps:
 
-. Double-click on the action trigger you wish to modify
+1. Go to *Administration -> Local Administration -> Notifications / Action Triggers*.
+2. Find the print or email notification/action trigger you wish to modify.
 +
+.Email and Print Event Definitions
 image::actiontriggers/ope_event_defs.png[Email and Print Event Definitions]
+3. Double-click on the action trigger.
+4. Select the *Edit Parameters* tab.
+5. In the upper left-hand corner, select *New Parameter* to create a new Trigger Event Parameter.
 +
-. Select the *Edit Parameters* tab and in the upper left-hand corner, select *New Parameter* to create a new Trigger Event Parameter.
-. In the _Parameter Name_ field enter holdings_limit.
-. In the _Parameter Value_ field enter the maximum number of copies to be displayed per record.
-. Select *Save* to save your changes.
-+
+.Email and Print Event Parameters
 image::actiontriggers/ope_event_params.png[Email and Print Event Parameters]
-+
+6. In the _Parameter Name_ field, enter `holdings_limit`.
+7. In the _Parameter Value_ field, enter the maximum number of copies to be displayed per record.
+8. Select *Save* to save your changes.
+
+For more information on how to invoke this functionality from the front end, please refer to xref:opac:using_the_public_access_catalog.adoc#_printing_and_emailing_records[the section on printing and emailing records in the OPAC documentation].
