@@ -2042,7 +2042,9 @@ INSERT INTO permission.perm_list ( id, code, description ) VALUES
  ( 674, 'VIEW_CONTAINER_COPY_ORG_SHARE', oils_i18n_gettext(674,
      'Allow viewing of copy bucket user shares', 'ppl', 'description')),
  ( 675, 'VIEW_CONTAINER_USER_ORG_SHARE', oils_i18n_gettext(675,
-     'Allow viewing of user bucket user shares', 'ppl', 'description'))
+     'Allow viewing of user bucket user shares', 'ppl', 'description')),
+ ( 676, 'UPDATE_TOP_OF_QUEUE', oils_i18n_gettext(676,
+     'Allow setting and unsetting hold from top of hold queue (cut in line)', 'ppl', 'description'))
 ;
 
 SELECT SETVAL('permission.perm_list_id_seq'::TEXT, 1000);
@@ -2576,7 +2578,8 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
             'ABORT_TRANSIT_ON_LOST', 
             'ABORT_TRANSIT_ON_MISSING',
             'UPDATE_PATRON_COLLECTIONS_EXEMPT',
-			'VIEW_HOLD_MATRIX_MATCHPOINT');
+			'VIEW_HOLD_MATRIX_MATCHPOINT',
+            'UPDATE_TOP_OF_QUEUE');
 
 INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 	SELECT
@@ -12318,7 +12321,17 @@ $$
     </ol>
     
     <div> <!-- Summary of all the information -->
-       Payment Type: Credit Card <br />
+       Payment Type: [% SWITCH mp.payment_type -%]
+                    [% CASE "cash_payment" %]Cash
+                    [% CASE "check_payment" %]Check
+                    [% CASE "credit_card_payment" %]Credit Card
+                    [%- IF mp.credit_card_payment.cc_number %] ([% mp.credit_card_payment.cc_number %])[% END %]
+                    [% CASE "debit_card_payment" %]Debit Card
+                    [% CASE "credit_payment" %]Credit
+                    [% CASE "forgive_payment" %]Forgiveness
+                    [% CASE "goods_payment" %]Goods
+                    [% CASE "work_payment" %]Work
+                [%- END %] <br />
        Total:<strong> $[% grand_total | format("%.2f") %] </strong>  
     </div>
 
@@ -18393,6 +18406,27 @@ VALUES (
     ),
     'circ',
     'integer'
+);
+
+INSERT INTO config.org_unit_setting_type
+    (name, label, description, grp, datatype)
+VALUES (
+    'ui.staff.place_holds_for_recent_patrons',
+    oils_i18n_gettext(
+        'ui.staff.place_holds_for_recent_patrons',
+        'Place holds for recent patrons',
+        'coust',
+        'label'
+    ),
+    oils_i18n_gettext(
+        'ui.staff.place_holds_for_recent_patrons',
+        'Loading a patron in the place holds interface designates them as recent. ' ||
+        'Show the interface to load recent patrons when placing holds.',
+        'coust',
+        'description'
+    ),
+    'gui',
+    'bool'
 );
 
 --
@@ -24836,3 +24870,39 @@ VALUES (
     'bool'
 );
 
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'eg.admin.keyboard_shortcuts.disable_single',
+    'gui',
+    oils_i18n_gettext('eg.admin.keyboard_shortcuts.disable_single',
+        'Staff Client: disable single-letter keyboard shortcuts',
+        'coust', 'label'),
+    oils_i18n_gettext('eg.admin.keyboard_shortcuts.disable_single',
+        'Disables single-letter keyboard shortcuts if set to true. Screen reader users should set this to true to avoid interference with standard keyboard shortcuts.',
+        'coust', 'description'),
+    'bool'
+), (
+    'eg.grid.catalog.record.parts', 'gui',
+    oils_i18n_gettext(
+        'eg.grid.catalog.record.parts',
+        'Grid Config: catalog.record.parts',
+        'cwst', 'label'
+       ),
+    NULL, 'object'
+);
+
+
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'ui.staff.grid.density',
+    'gui',
+    oils_i18n_gettext('ui.staff.grid.density',
+        'Grid UI density',
+        'coust', 'label'),
+    oils_i18n_gettext('ui.staff.grid.density',
+        'Whitespace around table cells in staff UI data grids. Default is "standard".',
+        'coust', 'description'),
+    'string'
+);

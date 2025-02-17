@@ -720,6 +720,7 @@ export class GridContext {
     charWidth: number;
     currentResizeCol: GridColumn;
     currentResizeTarget: any;
+    grid_density: string;
 
     // Allow calling code to know when the select-all-rows-in-page
     // action has occurred.
@@ -790,6 +791,11 @@ export class GridContext {
                 this.applyToolbarActionVisibility(conf.hideToolbarActions);
             }
 
+            this.getGridDensity().then(
+                grid_density => {
+                    this.grid_density = grid_density ?? 'standard';
+                }
+            );
             // This is called regardless of the presence of saved
             // settings so defaults can be applied.
             this.columnSet.applyColumnSettings(columns);
@@ -1484,6 +1490,10 @@ export class GridContext {
     getGridConfig(persistKey: string): Promise<GridPersistConf> {
         if (!persistKey) { return Promise.resolve(null); }
         return this.store.getItem('eg.grid.' + persistKey);
+    }
+
+    getGridDensity() {
+        return this.store.getItem('ui.staff.grid.density');
     }
 
     columnHasTextGenerator(col: GridColumn): boolean {
