@@ -31,7 +31,7 @@ END;
 
 <div id="search-wrapper" class="container-fluid">
     [% UNLESS took_care_of_form -%]
-    <form action="[% ctx.opac_root %]/results" method="get">
+    <form id="opac-search-form" action="[% ctx.opac_root %]/results" method="get" data-org-unit="[% ctx.search_ou %]">
     [%- END %]
     [% IF ctx.page == 'rresult' && ctx.metarecord && search.metarecord_default %]
     <input type="hidden" name="modifier" value="metabib"/>
@@ -120,6 +120,12 @@ END;
             <img id='search-submit-spinner' src='[% ctx.media_prefix %]/opac/images/progressbar_green.gif[% ctx.cache_key %]' class='hidden' alt='[% l("Search In Progress") %]'/>
         </div>
     </div>
+
+    [% INCLUDE "opac/parts/recaptcha.tt2" 
+        action_name="opac_search"
+        submit_action="submit"
+        target_element_id="opac-search-form" 
+    %]
 
     [% IF ctx.bookbag %]
     <div id="search-only-bookbag-container" class="text-center">

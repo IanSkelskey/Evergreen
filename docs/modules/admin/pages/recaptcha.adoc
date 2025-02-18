@@ -11,7 +11,7 @@ To enable reCAPTCHA v3, follow these steps:
 
 1. **Obtain reCAPTCHA Keys**:
    - Register your site with Google reCAPTCHA to obtain the site key and secret key.
-   - Visit the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin) to register your site.
+- Visit the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^] to register your site.
 
 2. **Configure reCAPTCHA in Evergreen**:
    - Add the reCAPTCHA keys to your organizational settings in Evergreen.
@@ -52,6 +52,47 @@ Added the reCAPTCHA service to the list of services:
 
 ```xml
 <service>biblio.recaptcha</service>
+```
+
+== Adding Library Settings ==
+
+To enable reCAPTCHA v3, you need to add the following library settings to Evergreen:
+
+* `recaptcha.site_key`: The site key obtained from Google reCAPTCHA.
+* `recaptcha.secret_key`: The secret key obtained from Google reCAPTCHA.
+* `recaptcha.enabled`: A flag to enable or disable reCAPTCHA (set to true to enable).
+
+These settings should be applied at the consortium level and will automatically apply to all children. However, supplying different keys for different organizational units will override the consortial setting by default.
+
+Here are the SQL insert statements to create these library settings:
+
+```sql
+-- Insert reCAPTCHA site key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.site_key', 'reCAPTCHA site key', 'sec', 'The site key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA secret key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.secret_key', 'reCAPTCHA secret key', 'sec', 'The secret key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA enabled setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.enabled', 'Enable reCAPTCHA', 'sec', 'A flag to enable or disable reCAPTCHA (set to true to enable).', 'bool');
+
+SELECT * FROM config.settings_group
+SELECT * FROM actor.org_unit_setting
+
+-- Insert reCAPTCHA site key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.site_key', '6LeRiIUqAAAAANAjL3XH7Gnb4l1Fr5m5zA8fyFOt');
+
+-- Insert reCAPTCHA secret key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.secret_key', '6LeRiIUqAAAAAPp1ipltFGlnHZCRVqgudVBAbppU');
+
+-- Insert reCAPTCHA enabled setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.enabled', 'true');
 ```
 
 == Template Modifications ==
