@@ -79,9 +79,6 @@ INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatyp
 INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
 ('recaptcha.enabled', 'Enable reCAPTCHA', 'sec', 'A flag to enable or disable reCAPTCHA (set to true to enable).', 'bool');
 
-SELECT * FROM config.settings_group
-SELECT * FROM actor.org_unit_setting
-
 -- Insert reCAPTCHA site key setting
 INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
 (1, 'recaptcha.site_key', '6LeRiIUqAAAAANAjL3XH7Gnb4l1Fr5m5zA8fyFOt');

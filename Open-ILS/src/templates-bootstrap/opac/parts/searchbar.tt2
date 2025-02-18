@@ -31,7 +31,7 @@ END;
 
 <div id="search-wrapper" class="container-fluid">
     [% UNLESS took_care_of_form -%]
-    <form id="opac-search-form" action="[% ctx.opac_root %]/results" method="get" data-org-unit="[% ctx.search_ou %]">
+    <form id="opac-search-form" data-org-unit="[% ctx.search_ou %]">
     [%- END %]
     [% IF ctx.page == 'rresult' && ctx.metarecord && search.metarecord_default %]
     <input type="hidden" name="modifier" value="metabib"/>
@@ -110,12 +110,11 @@ END;
 
         <div class="col col-auto col-search-button">
             <input id="detail" type="hidden" name="detail_record_view" value="[% show_detail_view %]"/>
-            <button id='search-submit-go' type="submit" class="btn btn-sm btn-opac"
-                onclick='setTimeout(function(){$("search-submit-spinner").className=""; $("search-submit-go").className="hidden";[% IF ctx.depth_sel_button AND NOT took_care_of_form %] $("search-submit-go-depth").className="hidden";[% END %]}, 2000)'><i class="fas fa-search" aria-hidden="true"></i> [% l('Search') %]</button>
-            
+            <button id='search-submit-go' type="submit" class="btn btn-sm btn-opac">
+                <i class="fas fa-search" aria-hidden="true"></i> [% l('Search') %]
+            </button>
             [%- IF ctx.depth_sel_button AND NOT took_care_of_form %]
-            <button id='search-submit-go-depth' type="submit" value="[% ctx.depth_sel_depth %]" name="depth" class="btn btn-sm btn-opac"
-                onclick='setTimeout(function(){$("search-submit-spinner").className=""; $("search-submit-go").className="hidden"; $("search-submit-go-depth").className="hidden";}, 2000)' title="[% ctx.depth_sel_tooltip | html %]"><i class="fas fa-globe" aria-hidden="true"></i> [% ctx.depth_sel_button_label | html %]</button>
+            <button id='search-submit-go-depth' type="submit" value="[% ctx.depth_sel_depth %]" name="depth" class="btn btn-sm btn-opac" title="[% ctx.depth_sel_tooltip | html %]"><i class="fas fa-globe" aria-hidden="true"></i> [% ctx.depth_sel_button_label | html %]</button>
             [%- END %]
             <img id='search-submit-spinner' src='[% ctx.media_prefix %]/opac/images/progressbar_green.gif[% ctx.cache_key %]' class='hidden' alt='[% l("Search In Progress") %]'/>
         </div>
@@ -215,15 +214,31 @@ END;
         }
      }
      </script>
-    <!-- Canonicalized query:
 
-    [% ctx.canonicalized_query | html %]
+     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('opac-search-form');
+            if (!form) return;
 
-    -->
-    <!--
-    <div id="breadcrumb">
-        <a href="[% ctx.opac_root %]/home">[% l('Catalog Home') %]</a> &gt;
-    </div>
-    -->
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                setTimeout(() => {
+                    document.getElementById('search-submit-spinner').className = '';
+                    document.getElementById('search-submit-go').className = 'hidden';
+                    // If depth button exists
+                    const depthBtn = document.getElementById('search-submit-go-depth');
+                    if (depthBtn) depthBtn.className = 'hidden';
+                }, 2000);
+
+                // Construct the GET request URL
+                const formData = new FormData(form);
+                const queryString = new URLSearchParams(formData).toString();
+                const actionUrl = '[% ctx.opac_root %]/results?' + queryString;
+
+                // Redirect to the constructed URL
+                window.location.href = actionUrl;
+            });
+        });
+    </script>
 </div>
 </div>
