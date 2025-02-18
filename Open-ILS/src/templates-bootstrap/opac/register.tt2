@@ -95,7 +95,7 @@ END;
                 ) | html %]</h4>
         [% END %]
 
-        <form method='POST' id="registration-form" class="needs-validation" novalidate>
+        <form method='POST' id="registration-form" class="needs-validation" novalidate data-org-unit="[% ctx.search_ou %]">
             <div class="form-group row">
                 <label class="control-label col-md-2" for='stgu.home_ou'>[% l('Home Library') %]</label>
                 <div class="col-md-6">
