@@ -1,0 +1,162 @@
+= Google reCAPTCHA v3 Integration =
+:toc:
+
+== Overview ==
+
+This document describes the integration of Google reCAPTCHA v3 into the Evergreen ILS system. The reCAPTCHA service helps protect the system from spam and abuse by verifying that user interactions are performed by humans.
+
+== Enabling reCAPTCHA v3 ==
+
+To enable reCAPTCHA v3, follow these steps:
+
+1. **Obtain reCAPTCHA Keys**:
+   - Register your site with Google reCAPTCHA to obtain the site key and secret key.
+   - Visit the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin) to register your site.
+
+2. **Configure reCAPTCHA in Evergreen**:
+   - Add the reCAPTCHA keys to your organizational settings in Evergreen.
+   - Update the `opensrf.xml` and `opensrf_core.xml` configuration files to include the reCAPTCHA service.
+
+3. **Modify Templates**:
+   - Update the relevant template files to include reCAPTCHA validation.
+
+== Configuration Changes ==
+
+The following changes were made to integrate reCAPTCHA v3:
+
+=== `opensrf.xml` ===
+
+Added the reCAPTCHA service configuration:
+```xml
+<biblio.recaptcha>
+    <keepalive>3</keepalive>
+    <stateless>1</stateless>
+    <language>perl</language>
+    <implementation>OpenILS::Application::Recaptcha</implementation>
+    <max_requests>100</max_requests>
+    <unix_config>
+        <unix_log>biblio.recaptcha.log</unix_log>
+        <unix_sock>biblio.recaptcha.sock</unix_sock>
+        <unix_pid>biblio.recaptcha.pid</unix_pid>
+        <min_children>2</min_children>
+        <max_children>10</max_children>
+        <min_spare_children>1</min_spare_children>
+        <max_spare_children>3</max_spare_children>
+    </unix_config>
+</biblio.recaptcha>
+```
+
+=== `opensrf_core.xml` ===
+
+Added the reCAPTCHA service to the list of services:
+
+```xml
+<service>biblio.recaptcha</service>
+```
+
+== Template Modifications ==
+
+The following template files were modified to include reCAPTCHA validation:
+
+=== recaptcha.tt2 ===
+
+A new template file was created to handle reCAPTCHA validation:
+
+```tt2
+<!--------------------------------------------------------------------------------
+    Module:       templates-bootstrap/opac/parts/recaptcha.tt2
+    Author:       Ian Skelskey <ianskelskey@gmail.com>
+    Organization: Bibliomation, Inc.
+    Year:         2024
+    Description:  Template Toolkit file for reCAPTCHA form validation in the OPAC.
+-------------------------------------------------------------------------------->
+[% 
+   org_unit = ctx.search_ou;
+   recaptcha_site_key = ctx.get_org_setting(org_unit, 'recaptcha.site_key');
+   action_name = action_name || 'register';
+   submit_action = submit_action || 'submit';
+   target_element_id = target_element_id || 'recaptcha-form';
+   recaptcha_enabled = ctx.get_org_setting(ctx.search_ou, 'recaptcha.enable');
+%]
+[% IF recaptcha_enabled && recaptcha_enabled == 1 %]
+    <script src="https://www.google.com/recaptcha/api.js?render=[% recaptcha_site_key %]"></script>
+    <script src="/opac/common/js/opensrf.js"></script>
+    <script src="/opac/common/js/opensrf_xhr.js"></script>
+    <script src="/opac/common/js/JSON_v1.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('[% target_element_id %]');
+            if (!form) return;
+
+            const recaptchaContainer = createRecaptchaContainer();
+            form.appendChild(recaptchaContainer);
+
+            form.addEventListener('[% submit_action %]', event => {
+                event.preventDefault();
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                grecaptcha.ready(() => {
+                    grecaptcha.execute('[% recaptcha_site_key %]', { action: '[% action_name %]' })
+                        .then(handleRecaptchaToken);
+                });
+            });
+
+            function createRecaptchaContainer() {
+                const container = document.createElement('div');
+                container.id = 'recaptcha-container';
+                return container;
+            }
+
+            function handleRecaptchaToken(token) {
+                const session = new OpenSRF.ClientSession('biblio.recaptcha');
+                const request = session.request('biblio.recaptcha.verify', {
+                    token,
+                    org_unit: '[% org_unit %]'
+                });
+
+                request.oncomplete = response => processRecaptchaResponse(response, form);
+                request.send();
+            }
+
+            function processRecaptchaResponse(response, form) {
+                let msg;
+                while ((msg = response.recv())) {
+                    try {
+                        const responseContent = JSON.parse(msg.content());
+                        if (responseContent.success === 1) {
+                            form.submit();
+                        } else {
+                            alert('reCAPTCHA validation failed. Please try again.');
+                        }
+                    } catch (error) {
+                        alert('Error in reCAPTCHA validation. Please try again.');
+                    }
+                }
+            }
+        });
+    </script>
+[% ELSE %]
+    <script>
+        console.log('reCAPTCHA is not enabled for this organization unit.');
+    </script>
+[% END %]
+```
+
+=== register.tt2 ===
+
+Included the reCAPTCHA template:
+
+```tt2
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="register"
+    submit_action="submit"
+    target_element_id="registration-form" 
+%]
+```
+
+== Conclusion ==
+
+The integration of Google reCAPTCHA v3 into Evergreen ILS enhances security by verifying user interactions. Follow the steps outlined above to enable and configure reCAPTCHA for your Evergreen instance.
