@@ -1,0 +1,20 @@
+site:
+  title: Evergreen Documentation
+  start_page: docs:shared:about_this_documentation.adoc
+  url: http://example.com
+content:
+  sources:
+  - url: ../
+#    - url: git://git.evergreen-ils.org/Evergreen.git
+    start_path: docs
+ui:
+  bundle:
+    url: https://github.com/IanSkelskey/eg-antora/releases/latest/download/ui-bundle.zip
+
+output:
+  dir: ./output
+
+antora:
+  extensions:
+  - require: '@antora/lunr-extension'
+    index_latest_only: true
