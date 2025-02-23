@@ -119,7 +119,7 @@ export class LineitemFromBibIdsComponent implements OnInit {
                     this.bibIdMap[f.name] = (e.target.result as string). // text content
                         split('\n'). // split to lines
             	        filter(o => Boolean(o.length > 0)). // line isn't empty
-        	            map(l => l.replace('\r','').split(',')[0]). // take first field
+        	            map(l => l.replace(/\r/g,'').split(',')[0]). // take first field
             	        filter(o => Boolean(o.length > 0)). // first field has content
                         map(o => o.match(/^".+"$/) ? o.slice(1,-1) : o). // remove quotes
                         filter(o => Boolean(o.match(/^\d+$/))). // and it's a number
