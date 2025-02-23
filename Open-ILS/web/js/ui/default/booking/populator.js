@@ -329,7 +329,7 @@ function display_transit_slip(e) {
             [ma.street1(),ma.street2(),ma.city(),ma.state(),ma.post_code()].map(
                 function(o) { return o ? o : ""; }
             )
-        ).replace("\n\n", "\n").replace("\n", "<br />") : "[Unknown address]";
+        ).replace(/\n\n/g, "\n").replace(/\n/g, "<br />") : "[Unknown address]";
     /* XXX i18n and/or template */
     try {
         var win = window.open(
