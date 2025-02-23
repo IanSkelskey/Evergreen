@@ -1715,7 +1715,9 @@ function($scope , $routeParams , $q , $uibModal , $window , egCore ,
 
     // generates a random 4-digit password
     $scope.generate_password = function() {
-        $scope.patron.passwd = Math.floor(Math.random()*9000) + 1000;
+        var array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        $scope.patron.passwd = Math.floor(array[0] / (0xFFFFFFFF + 1) * 9000) + 1000;
     }
 
     $scope.set_expire_date = function() {
