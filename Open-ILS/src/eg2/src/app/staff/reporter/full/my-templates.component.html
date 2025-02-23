@@ -51,10 +51,10 @@
 ></eg-prompt-dialog>
 
 <ng-template #docURLTmpl let-row="row">
-  <div *ngIf="row.documentation?.match('^\s*https?:')">
+  <div *ngIf="row.documentation?.match('^\\s*https?:')">
     <a href="{{row.documentation}}" target="_blank" i18n>Template Documentation</a>
   </div>
-  <span *ngIf="!row.documentation?.match('^\s*https?:')">
+  <span *ngIf="!row.documentation?.match('^\\s*https?:')">
     {{row.documentation}}
   </span>
 </ng-template>
