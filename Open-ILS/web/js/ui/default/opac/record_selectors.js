@@ -293,11 +293,20 @@
 
     if (do_basket_action_el) {
         do_basket_action_el.addEventListener('click', function(evt) {
-            if (select_action_el.options[select_action_el.selectedIndex].value) { 
-                window.location.href = select_action_el.options[select_action_el.selectedIndex].value;
+            var selectedValue = select_action_el.options[select_action_el.selectedIndex].value;
+            if (selectedValue && isValidUrl(selectedValue)) {
+                window.location.href = selectedValue;
             }
             evt.preventDefault();
         });
     }
 
+    function isValidUrl(url) {
+        var allowedUrls = [
+            // Add allowed URLs here
+            'https://example.com/page1',
+            'https://example.com/page2'
+        ];
+        return allowedUrls.includes(url);
+    }
 })();
