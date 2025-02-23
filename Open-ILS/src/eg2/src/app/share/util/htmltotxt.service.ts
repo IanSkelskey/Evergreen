@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+import sanitizeHtml from 'sanitize-html';
 
 const ENTITY_REGEX = /&[^\s]+;/;
 
@@ -61,18 +62,10 @@ export class HtmlToTxtService {
             line = this.unEscapeHtml(line);
             line = this.entityToChars(line);
 
-            line = line.replace(/<head.*?>.*?<\/head>/gi, '');
-            line = line.replace(/<br.*?>/gi, '\r\n');
-            line = line.replace(/<table.*?>/gi, '');
-            line = line.replace(/<\/tr>/gi, '\r\n'); // end of row
-            line = line.replace(/<\/td>/gi, ' '); // end of cell
-            line = line.replace(/<\/th>/gi, ' '); // end of th
-            line = line.replace(/<tr.*?>/gi, '');
-            line = line.replace(/<hr.*?>/gi, '\r\n');
-            line = line.replace(/<p.*?>/gi, '');
-            line = line.replace(/<block.*?>/gi, '');
-            line = line.replace(/<li.*?>/gi, ' * ');
-            line = line.replace(/<.+?>/gi, '');
+            line = sanitizeHtml(line, {
+                allowedTags: [],
+                allowedAttributes: {}
+            });
 
             if (line) { newLines.push(line); }
         });
@@ -80,4 +73,3 @@ export class HtmlToTxtService {
         return newLines.join('\n');
     }
 }
-
