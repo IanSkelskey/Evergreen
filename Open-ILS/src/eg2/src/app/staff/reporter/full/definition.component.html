@@ -60,8 +60,8 @@
 	  <label class="form-label" i18n>Template Documentation</label>
 	</div>
 	<div class="col-lg-8">
-  	<a *ngIf="templ.doc_url.match('\s*https?:')" id="documentation-link" href="{{templ.doc_url}}">{{templ.doc_url}}</a>
-  	<span *ngIf="!templ.doc_url.match('\s*https?:')" id="documentation-text">{{templ.doc_url}}</span>
+  	<a *ngIf="templ.doc_url.match('\\s*https?:')" id="documentation-link" href="{{templ.doc_url}}">{{templ.doc_url}}</a>
+  	<span *ngIf="!templ.doc_url.match('\\s*https?:')" id="documentation-text">{{templ.doc_url}}</span>
 	</div>
 </div>
 
