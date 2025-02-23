@@ -160,7 +160,12 @@ function opensearch ( term, reset, single_source ) {
 			if (cur_src.childNodes[i].nodeValue == turi)
 				return;
 		}
-		cur_src.innerHTML += '<a name="' + single_source + '" href="' + turi + '">' + turi + '</a><br>';
+		var a = document.createElement('a');
+		a.name = single_source;
+		a.href = turi;
+		a.textContent = turi;
+		cur_src.appendChild(a);
+		cur_src.appendChild(document.createElement('br'));
 		perform_search(single_source);
 		return;
 	}
