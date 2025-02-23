@@ -286,6 +286,7 @@ angular.module('egCoreMod')
             var last_key;
             for (var i = 0; i < parts.length; i++) {
                 var part = parts[i];
+                if (part === "__proto__" || part === "constructor") continue;
                 if (i == parts.length - 1) {
                     sub_hash[part] = val;
                     break;
