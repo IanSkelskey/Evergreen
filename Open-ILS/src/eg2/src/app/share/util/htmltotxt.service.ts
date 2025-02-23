@@ -42,7 +42,11 @@ export class HtmlToTxtService {
         //       but as of 2019-12-27 Firefox does not support
         //       the ES2018 regexp dotAll flag and Angular/tsc doesn't
         //       seem set up to transpile it
-        html = html.replace(/<!--([^]*?)-->/g, '');
+        let previousHtml;
+        do {
+            previousHtml = html;
+            html = html.replace(/<!--([^]*?)-->/g, '');
+        } while (html !== previousHtml);
 
         const lines = html.split(/\n/);
         const newLines = [];
