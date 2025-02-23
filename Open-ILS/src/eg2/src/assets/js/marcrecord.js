@@ -292,7 +292,7 @@ var MARC21 = {
             function df_line_data (l) { return l.substring(6) || '' };
             function line_tag (l) { return l.substring(0,3) };
             function df_ind1 (l) { return l.substring(4,5).replace('\\',' ') };
-            function df_ind2 (l) { return l.substring(5,6).replace('\\',' ') };
+            function df_ind2 (l) { return l.substring(5,6).replace(/\\/g,' ') };
             function isControlField (l) {
                 var x = line_tag(l);
                 return (x == 'LDR' || x < '010') ? true : false;
