@@ -1062,7 +1062,11 @@ angular.module('egCoreMod')
             line = line.replace(/<p.*?>/gi,'');
             line = line.replace(/<block.*?>/gi,'');
             line = line.replace(/<li.*?>/gi,' * ');
-            line = line.replace(/<.+?>/gi,'');
+            let previousLine;
+            do {
+                previousLine = line;
+                line = line.replace(/<.+?>/gi,'');
+            } while (line !== previousLine);
             if (line) { new_lines.push(line); }
         }
 
