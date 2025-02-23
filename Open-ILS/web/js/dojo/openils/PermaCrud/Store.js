@@ -276,7 +276,7 @@ if (!dojo._hasResource["openils.PermaCrud.Store"]) {
                         hashparts[i] = key + ":%";
                     }
                 } else {
-                    term = term.replace("%", "%%");
+                    term = term.replace(/%/g, "%%");
                     term = term.replace(/\*$/, "%");
 
                     if (dojo.indexOf(term, "%") != -1) op = "like";
