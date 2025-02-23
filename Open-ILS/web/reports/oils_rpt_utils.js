@@ -185,6 +185,7 @@ function buildFloatingDiv(div, width) {
 
 function mergeObjects( src, obj ) {
 	for( var i in obj ) {
+		if (!obj.hasOwnProperty(i) || i === "__proto__" || i === "constructor") continue;
 		if( typeof obj[i] == 'string' ) {
 			src[i] = obj[i];
 		} else {
