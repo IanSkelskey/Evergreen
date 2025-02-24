@@ -67,3 +67,8 @@
     </form>
 
 </div>
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="opac_login"
+    submit_action="submit"
+    target_element_id="login_form" 
+%]

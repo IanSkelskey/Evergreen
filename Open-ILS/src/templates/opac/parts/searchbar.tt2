@@ -31,7 +31,7 @@ END;
 
 <div id="search-wrapper">
     [% UNLESS took_care_of_form -%]
-    <form action="[% ctx.opac_root %]/results" method="get">
+    <form id="opac-search-form" action="[% ctx.opac_root %]/results" method="get">
     [%- END %]
     [% IF ctx.page == 'rresult' && ctx.metarecord && search.metarecord_default %]
     <input type="hidden" name="modifier" value="metabib"/>
@@ -229,3 +229,8 @@ END;
     -->
     <div class="clear-both"></div>
 </div>
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="opac_search"
+    submit_action="submit"
+    target_element_id="opac-search-form" 
+%]

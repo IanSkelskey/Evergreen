@@ -1491,6 +1491,24 @@ vim:et:ts=4:sw=4:
                 </app_settings>
             </open-ils.curbside>
 
+            <!-- ReCAPTCHA -->
+            <biblio.recaptcha>
+                <keepalive>3</keepalive>
+                <stateless>1</stateless>
+                <language>perl</language> <!-- Language of the service -->
+                <implementation>OpenILS::Application::Recaptcha</implementation> <!-- Path to the service module (in this case, /OpenILS/Application/Recaptcha.pm) -->
+                <max_requests>100</max_requests>
+                <unix_config>
+                    <unix_log>biblio.recaptcha.log</unix_log>
+                    <unix_sock>biblio.recaptcha.sock</unix_sock>
+                    <unix_pid>biblio.recaptcha.pid</unix_pid>
+                    <min_children>2</min_children>
+                    <max_children>10</max_children>
+                    <min_spare_children>1</min_spare_children>
+                    <max_spare_children>3</max_spare_children>
+                </unix_config>
+            </biblio.recaptcha>
+
         </apps>
     </default>
 
@@ -1543,6 +1561,7 @@ vim:et:ts=4:sw=4:
                 <appname>open-ils.curbside</appname>
                 <appname>open-ils.geo</appname>
                 <appname>open-ils.sip2</appname>
+                <appname>biblio.recaptcha</appname>
             </activeapps>
         </localhost>
     </hosts>
