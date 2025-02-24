@@ -81,7 +81,7 @@ INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatyp
 
 -- Insert reCAPTCHA site key setting
 INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
-(1, 'recaptcha.site_key', '"<YOUR_SITE_KEY">');
+(1, 'recaptcha.site_key', '"<YOUR_SITE_KEY>"');
 
 -- Insert reCAPTCHA secret key setting
 INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
