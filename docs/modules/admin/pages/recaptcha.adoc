@@ -5,12 +5,39 @@
 
 This document describes the integration of Google reCAPTCHA v3 into the Evergreen ILS system. The reCAPTCHA service helps protect the system from spam and abuse by verifying that user interactions are performed by humans.
 
+== Setting Up Your Google reCAPTCHA v3 Admin Account ==
+
+To set up your free Google reCAPTCHA v3 admin account and obtain your keys, follow these steps:
+
+1. **Create a Google Account**:
+    - If you don't already have a Google account, create one by visiting the link:https://accounts.google.com/signup[Google Account Signup^].
+
+2. **Access the reCAPTCHA Admin Console**:
+    - Go to the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^].
+    - Log in with your Google account credentials.
+
+3. **Register Your Site**:
+    - Click on the "+ Add" button to register a new site.
+    - Fill in the required information, including your domain name and selecting reCAPTCHA v3.
+    - Accept the reCAPTCHA Terms of Service and click "Submit".
+
+4. **Obtain Your Keys**:
+    - After registering your site, you will be provided with a site key and a secret key.
+    - Save these keys as you will need them to configure reCAPTCHA in Evergreen.
+
+[Placeholder for screenshot of reCAPTCHA Admin Console registration page]
+
+[Placeholder for screenshot showing site key and secret key]
+
+Continue with the steps outlined in the link:#_enabling_recaptcha_v3[Enabling reCAPTCHA v3] section to configure reCAPTCHA in Evergreen.
+
 == Enabling reCAPTCHA v3 ==
 
 To enable reCAPTCHA v3, follow these steps:
 
 1. **Obtain reCAPTCHA Keys**:
    - Register your site with Google reCAPTCHA to obtain the site key and secret key.
+- Visit the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^] to register your site.
 - Visit the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^] to register your site.
 
 2. **Configure reCAPTCHA in Evergreen**:
@@ -86,6 +113,44 @@ INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
 -- Insert reCAPTCHA secret key setting
 INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
 (1, 'recaptcha.secret_key', '6LeRiIUqAAAAAPp1ipltFGlnHZCRVqgudVBAbppU');
+
+-- Insert reCAPTCHA enabled setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.enabled', 'true');
+```
+
+== Adding Library Settings ==
+
+To enable reCAPTCHA v3, you need to add the following library settings to Evergreen:
+
+* `recaptcha.site_key`: The site key obtained from Google reCAPTCHA.
+* `recaptcha.secret_key`: The secret key obtained from Google reCAPTCHA.
+* `recaptcha.enabled`: A flag to enable or disable reCAPTCHA (set to true to enable).
+
+These settings should be applied at the consortium level and will automatically apply to all children. However, supplying different keys for different organizational units will override the consortial setting by default.
+
+Here are the SQL insert statements to create these library settings:
+
+```sql
+-- Insert reCAPTCHA site key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.site_key', 'reCAPTCHA site key', 'sec', 'The site key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA secret key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.secret_key', 'reCAPTCHA secret key', 'sec', 'The secret key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA enabled setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.enabled', 'Enable reCAPTCHA', 'sec', 'A flag to enable or disable reCAPTCHA (set to true to enable).', 'bool');
+
+-- Insert reCAPTCHA site key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.site_key', '"<YOUR_SITE_KEY>"');
+
+-- Insert reCAPTCHA secret key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.secret_key', '"<YOUR_SECRET_KEY>"');
 
 -- Insert reCAPTCHA enabled setting
 INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
@@ -194,6 +259,19 @@ Included the reCAPTCHA template:
     target_element_id="registration-form" 
 %]
 ```
+
+== TODO ==
+
+The following tasks are pending completion:
+
+- Perl tests for reCAPTCHA module.
+- Database upgrade script to add reCAPTCHA settings.
+- Protect OPAC search forms with reCAPTCHA.
+- Protect staff client login form with reCAPTCHA.
+- Protect staff client password reset form with reCAPTCHA?
+- Documentation for users on how to enable reCAPTCHA in their Evergreen instance.
+- Remove excess console logs.
+- Replace alerts with a more sensible error handling mechanism. Maybe a toast notification or redirection to an error page.
 
 == Conclusion ==
 

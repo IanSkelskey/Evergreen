@@ -10,6 +10,10 @@ content:
 ui:
   bundle:
     url: https://github.com/IanSkelskey/eg-antora/releases/latest/download/ui-bundle.zip
+    snapshot: true
+
+runtime:
+  fetch: true
 
 output:
   dir: ./output
