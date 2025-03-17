@@ -1,0 +1,278 @@
+= Google reCAPTCHA v3 Integration =
+:toc:
+
+== Overview ==
+
+This document describes the integration of Google reCAPTCHA v3 into the Evergreen ILS system. The reCAPTCHA service helps protect the system from spam and abuse by verifying that user interactions are performed by humans.
+
+== Setting Up Your Google reCAPTCHA v3 Admin Account ==
+
+To set up your free Google reCAPTCHA v3 admin account and obtain your keys, follow these steps:
+
+1. **Create a Google Account**:
+    - If you don't already have a Google account, create one by visiting the link:https://accounts.google.com/signup[Google Account Signup^].
+
+2. **Access the reCAPTCHA Admin Console**:
+    - Go to the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^].
+    - Log in with your Google account credentials.
+
+3. **Register Your Site**:
+    - Click on the "+ Add" button to register a new site.
+    - Fill in the required information, including your domain name and selecting reCAPTCHA v3.
+    - Accept the reCAPTCHA Terms of Service and click "Submit".
+
+4. **Obtain Your Keys**:
+    - After registering your site, you will be provided with a site key and a secret key.
+    - Save these keys as you will need them to configure reCAPTCHA in Evergreen.
+
+[Placeholder for screenshot of reCAPTCHA Admin Console registration page]
+
+[Placeholder for screenshot showing site key and secret key]
+
+Continue with the steps outlined in the link:#_enabling_recaptcha_v3[Enabling reCAPTCHA v3] section to configure reCAPTCHA in Evergreen.
+
+== Enabling reCAPTCHA v3 ==
+
+To enable reCAPTCHA v3, follow these steps:
+
+1. **Obtain reCAPTCHA Keys**:
+   - Register your site with Google reCAPTCHA to obtain the site key and secret key.
+- Visit the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^] to register your site.
+- Visit the link:https://www.google.com/recaptcha/admin[Google reCAPTCHA Admin Console^] to register your site.
+
+2. **Configure reCAPTCHA in Evergreen**:
+   - Add the reCAPTCHA keys to your organizational settings in Evergreen.
+   - Update the `opensrf.xml` and `opensrf_core.xml` configuration files to include the reCAPTCHA service.
+
+3. **Modify Templates**:
+   - Update the relevant template files to include reCAPTCHA validation.
+
+== Configuration Changes ==
+
+The following changes were made to integrate reCAPTCHA v3:
+
+=== `opensrf.xml` ===
+
+Added the reCAPTCHA service configuration:
+```xml
+<biblio.recaptcha>
+    <keepalive>3</keepalive>
+    <stateless>1</stateless>
+    <language>perl</language>
+    <implementation>OpenILS::Application::Recaptcha</implementation>
+    <max_requests>100</max_requests>
+    <unix_config>
+        <unix_log>biblio.recaptcha.log</unix_log>
+        <unix_sock>biblio.recaptcha.sock</unix_sock>
+        <unix_pid>biblio.recaptcha.pid</unix_pid>
+        <min_children>2</min_children>
+        <max_children>10</max_children>
+        <min_spare_children>1</min_spare_children>
+        <max_spare_children>3</max_spare_children>
+    </unix_config>
+</biblio.recaptcha>
+```
+
+=== `opensrf_core.xml` ===
+
+Added the reCAPTCHA service to the list of services:
+
+```xml
+<service>biblio.recaptcha</service>
+```
+
+== Adding Library Settings ==
+
+To enable reCAPTCHA v3, you need to add the following library settings to Evergreen:
+
+* `recaptcha.site_key`: The site key obtained from Google reCAPTCHA.
+* `recaptcha.secret_key`: The secret key obtained from Google reCAPTCHA.
+* `recaptcha.enabled`: A flag to enable or disable reCAPTCHA (set to true to enable).
+
+These settings should be applied at the consortium level and will automatically apply to all children. However, supplying different keys for different organizational units will override the consortial setting by default.
+
+Here are the SQL insert statements to create these library settings:
+
+```sql
+-- Insert reCAPTCHA site key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.site_key', 'reCAPTCHA site key', 'sec', 'The site key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA secret key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.secret_key', 'reCAPTCHA secret key', 'sec', 'The secret key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA enabled setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.enabled', 'Enable reCAPTCHA', 'sec', 'A flag to enable or disable reCAPTCHA (set to true to enable).', 'bool');
+
+-- Insert reCAPTCHA site key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.site_key', '6LeRiIUqAAAAANAjL3XH7Gnb4l1Fr5m5zA8fyFOt');
+
+-- Insert reCAPTCHA secret key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.secret_key', '6LeRiIUqAAAAAPp1ipltFGlnHZCRVqgudVBAbppU');
+
+-- Insert reCAPTCHA enabled setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.enabled', 'true');
+```
+
+== Adding Library Settings ==
+
+To enable reCAPTCHA v3, you need to add the following library settings to Evergreen:
+
+* `recaptcha.site_key`: The site key obtained from Google reCAPTCHA.
+* `recaptcha.secret_key`: The secret key obtained from Google reCAPTCHA.
+* `recaptcha.enabled`: A flag to enable or disable reCAPTCHA (set to true to enable).
+
+These settings should be applied at the consortium level and will automatically apply to all children. However, supplying different keys for different organizational units will override the consortial setting by default.
+
+Here are the SQL insert statements to create these library settings:
+
+```sql
+-- Insert reCAPTCHA site key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.site_key', 'reCAPTCHA site key', 'sec', 'The site key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA secret key setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.secret_key', 'reCAPTCHA secret key', 'sec', 'The secret key obtained from Google reCAPTCHA.', 'string');
+
+-- Insert reCAPTCHA enabled setting type
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype) VALUES
+('recaptcha.enabled', 'Enable reCAPTCHA', 'sec', 'A flag to enable or disable reCAPTCHA (set to true to enable).', 'bool');
+
+-- Insert reCAPTCHA site key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.site_key', '"<YOUR_SITE_KEY>"');
+
+-- Insert reCAPTCHA secret key setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.secret_key', '"<YOUR_SECRET_KEY>"');
+
+-- Insert reCAPTCHA enabled setting
+INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES
+(1, 'recaptcha.enabled', 'true');
+```
+
+== Template Modifications ==
+
+The following template files were modified to include reCAPTCHA validation:
+
+=== recaptcha.tt2 ===
+
+A new template file was created to handle reCAPTCHA validation:
+
+```tt2
+<!--------------------------------------------------------------------------------
+    Module:       templates-bootstrap/opac/parts/recaptcha.tt2
+    Author:       Ian Skelskey <ianskelskey@gmail.com>
+    Organization: Bibliomation, Inc.
+    Year:         2024
+    Description:  Template Toolkit file for reCAPTCHA form validation in the OPAC.
+-------------------------------------------------------------------------------->
+[% 
+   org_unit = ctx.search_ou;
+   recaptcha_site_key = ctx.get_org_setting(org_unit, 'recaptcha.site_key');
+   action_name = action_name || 'register';
+   submit_action = submit_action || 'submit';
+   target_element_id = target_element_id || 'recaptcha-form';
+   recaptcha_enabled = ctx.get_org_setting(ctx.search_ou, 'recaptcha.enable');
+%]
+[% IF recaptcha_enabled && recaptcha_enabled == 1 %]
+    <script src="https://www.google.com/recaptcha/api.js?render=[% recaptcha_site_key %]"></script>
+    <script src="/opac/common/js/opensrf.js"></script>
+    <script src="/opac/common/js/opensrf_xhr.js"></script>
+    <script src="/opac/common/js/JSON_v1.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('[% target_element_id %]');
+            if (!form) return;
+
+            const recaptchaContainer = createRecaptchaContainer();
+            form.appendChild(recaptchaContainer);
+
+            form.addEventListener('[% submit_action %]', event => {
+                event.preventDefault();
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                grecaptcha.ready(() => {
+                    grecaptcha.execute('[% recaptcha_site_key %]', { action: '[% action_name %]' })
+                        .then(handleRecaptchaToken);
+                });
+            });
+
+            function createRecaptchaContainer() {
+                const container = document.createElement('div');
+                container.id = 'recaptcha-container';
+                return container;
+            }
+
+            function handleRecaptchaToken(token) {
+                const session = new OpenSRF.ClientSession('biblio.recaptcha');
+                const request = session.request('biblio.recaptcha.verify', {
+                    token,
+                    org_unit: '[% org_unit %]'
+                });
+
+                request.oncomplete = response => processRecaptchaResponse(response, form);
+                request.send();
+            }
+
+            function processRecaptchaResponse(response, form) {
+                let msg;
+                while ((msg = response.recv())) {
+                    try {
+                        const responseContent = JSON.parse(msg.content());
+                        if (responseContent.success === 1) {
+                            form.submit();
+                        } else {
+                            alert('reCAPTCHA validation failed. Please try again.');
+                        }
+                    } catch (error) {
+                        alert('Error in reCAPTCHA validation. Please try again.');
+                    }
+                }
+            }
+        });
+    </script>
+[% ELSE %]
+    <script>
+        console.log('reCAPTCHA is not enabled for this organization unit.');
+    </script>
+[% END %]
+```
+
+=== register.tt2 ===
+
+Included the reCAPTCHA template:
+
+```tt2
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="register"
+    submit_action="submit"
+    target_element_id="registration-form" 
+%]
+```
+
+== TODO ==
+
+The following tasks are pending completion:
+
+- Perl tests for reCAPTCHA module.
+- Database upgrade script to add reCAPTCHA settings.
+- Protect OPAC search forms with reCAPTCHA.
+- Protect staff client login form with reCAPTCHA.
+- Protect staff client password reset form with reCAPTCHA?
+- Documentation for users on how to enable reCAPTCHA in their Evergreen instance.
+- Remove excess console logs.
+- Replace alerts with a more sensible error handling mechanism. Maybe a toast notification or redirection to an error page.
+
+== Conclusion ==
+
+The integration of Google reCAPTCHA v3 into Evergreen ILS enhances security by verifying user interactions. Follow the steps outlined above to enable and configure reCAPTCHA for your Evergreen instance.

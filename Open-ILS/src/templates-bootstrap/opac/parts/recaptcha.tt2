@@ -1,0 +1,28 @@
+[% 
+   org_unit = ctx.search_ou;
+   recaptcha_site_key = ctx.get_org_setting(org_unit, 'recaptcha.site_key');
+   action_name = action_name || 'register';        # Default action name if none is provided
+   submit_action = submit_action || 'submit';      # Default submit action if none is provided
+   target_element_id = target_element_id || 'recaptcha-form'; # Default target element ID
+   recaptcha_enabled = ctx.get_org_setting(ctx.search_ou, 'recaptcha.enabled');
+%]
+[% IF recaptcha_enabled && recaptcha_enabled == 1 %]
+    <!-- Dependencies -->
+    <script src="https://www.google.com/recaptcha/api.js?render=[% recaptcha_site_key %]"></script>
+    <script src="/opac/common/js/opensrf.js"></script>
+    <script src="/opac/common/js/opensrf_xhr.js"></script>
+    <script src="/opac/common/js/JSON_v1.js"></script>
+    <script src="/opac/common/js/recaptcha.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeRecaptcha('[% target_element_id %]', '[% recaptcha_site_key %]', '[% action_name %]', '[% submit_action %]');
+        });
+    </script>
+[% ELSE %]
+    <script>
+        console.log('org_unit:', '[% org_unit %]');
+        console.log('recaptcha_enabled:', '[% recaptcha_enabled %]');
+        console.log('reCAPTCHA is not enabled for this organization unit.');
+    </script>
+[% END %]

@@ -42,6 +42,7 @@ Example OpenSRF bootstrap configuration file for Evergreen
           <service>open-ils.serial</service>
           <service>open-ils.ebook_api</service>
           <service>open-ils.sip2</service>
+          <service>biblio.recaptcha</service>
         </services>
       </router>
 
@@ -110,6 +111,7 @@ Example OpenSRF bootstrap configuration file for Evergreen
       <service>open-ils.auth_mfa</service>
       <service>open-ils.collections</service>
       <service>open-ils.reporter</service>
+      <service>biblio.recaptcha</service>
     </services>
 
     <!-- Ejabberd -->
