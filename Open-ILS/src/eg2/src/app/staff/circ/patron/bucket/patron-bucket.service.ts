@@ -1,95 +1,127 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
-import { IdlObject } from '@eg/core/idl.service';
-import { NetService } from '@eg/core/net.service';
-import { PcrudService } from '@eg/core/pcrud.service';
-import { AuthService } from '@eg/core/auth.service';
+import {Injectable} from '@angular/core';
+import {Subject, Observable, lastValueFrom} from 'rxjs';
+import {NetService} from '@eg/core/net.service';
+import {AuthService} from '@eg/core/auth.service';
+import {StoreService} from '@eg/core/store.service';
+import {PcrudService} from '@eg/core/pcrud.service';
+import {IdlService, IdlObject} from '@eg/core/idl.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class PatronBucketService {
-  private recentPatronBucketIds_: number[] = [];
-  private patronBucketsRefreshRequested = new Subject<void>();
-  patronBucketsRefreshRequested$ = this.patronBucketsRefreshRequested.asObservable();
+    maxRecentPatronBuckets = 10;
+    
+    private patronBucketsRefreshRequested = new Subject<void>();
+    patronBucketsRefreshRequested$ = this.patronBucketsRefreshRequested.asObservable();
 
-  constructor(
-    private net: NetService,
-    private pcrud: PcrudService,
-    private auth: AuthService
-  ) {
-    // Try to load recent bucket IDs from localStorage
-    const recentBuckets = localStorage.getItem('eg.circ.patron.bucket.recent');
-    if (recentBuckets) {
-      try {
-        this.recentPatronBucketIds_ = JSON.parse(recentBuckets);
-      } catch (e) {
-        console.error('Error parsing recent patron buckets from localStorage:', e);
-      }
-    }
-  }
+    constructor(
+        private store: StoreService,
+        private net: NetService,
+        private auth: AuthService,
+        private pcrud: PcrudService,
+        private idl: IdlService
+    ) {}
 
-  requestPatronBucketsRefresh(): void {
-    this.patronBucketsRefreshRequested.next();
-  }
+    requestPatronBucketsRefresh() {
+        this.patronBucketsRefreshRequested.next();
+    }
 
-  recentPatronBucketIds(): number[] {
-    return this.recentPatronBucketIds_;
-  }
+    // Record recently accessed buckets
+    logPatronBucket(bucketId: number) {
+        console.debug('logPatronBucket', bucketId);
+        const patronBucketLog: number[] =
+            this.store.getLocalItem('eg.patron_bucket_log') || [];
 
-  // Log a bucket ID to the recent buckets list and update localStorage
-  logPatronBucket(bucketId: number): void {
-    if (!bucketId || isNaN(bucketId)) return;
-    
-    // Remove the ID if it already exists and push it to the top
-    const idx = this.recentPatronBucketIds_.indexOf(bucketId);
-    if (idx > -1) {
-      this.recentPatronBucketIds_.splice(idx, 1);
-    }
-    
-    // Add to beginning of array
-    this.recentPatronBucketIds_.unshift(bucketId);
-    
-    // Keep only the 10 most recent buckets
-    if (this.recentPatronBucketIds_.length > 10) {
-      this.recentPatronBucketIds_.length = 10;
-    }
-    
-    localStorage.setItem('eg.circ.patron.bucket.recent', 
-      JSON.stringify(this.recentPatronBucketIds_));
-  }
-  
-  // Retrieve patron buckets by their IDs
-  async retrievePatronBuckets(bucketIds: number[]): Promise<any[]> {
-    if (!bucketIds || bucketIds.length === 0) {
-      return [];
-    }
-    
-    try {
-      const buckets = await this.pcrud.search('cub', 
-        { id: bucketIds },
-        {
-          flesh: 1,
-          flesh_fields: { cub: ['owner', 'owning_lib'] }
+        if (!patronBucketLog.includes(bucketId)) {
+            patronBucketLog.unshift(bucketId);
+            
+            if (patronBucketLog.length > this.maxRecentPatronBuckets) {
+                patronBucketLog.pop();
+            }
+
+            this.store.setLocalItem('eg.patron_bucket_log', patronBucketLog);
         }
-      ).toPromise();
-      
-      // Format the results for the grid display
-      return Array.isArray(buckets) ? buckets.map(bucket => ({
-        bucket: bucket,
-        id: bucket.id(),
-        name: bucket.name(),
-        description: bucket.description(),
-        owner: bucket.owner(),
-        'owner.usrname': bucket.owner().usrname(),
-        owning_lib: bucket.owning_lib(),
-        'owning_lib.shortname': bucket.owning_lib().shortname(),
-        btype: bucket.btype(),
-        create_time: bucket.create_time()
-      })) : [];
-    } catch (error) {
-      console.error('Error retrieving patron buckets:', error);
-      return [];
     }
-  }
+
+    recentPatronBucketIds(): number[] {
+        return this.store.getLocalItem('eg.patron_bucket_log') || [];
+    }
+
+    // Retrieve items (patrons) in a bucket
+    async retrievePatronBucketItems(bucketId: number): Promise<any[]> {
+        try {
+            const query: any = { bucket: bucketId };
+            const options = {
+                flesh: 2,
+                flesh_fields: {
+                    cubi: ['target_user'],
+                    au: ['card']
+                }
+            };
+            let items = await lastValueFrom(
+                this.pcrud.search('cubi', query, options)
+            );
+            // Normalize to array
+            if (!items) items = [];
+            if (!Array.isArray(items)) items = [items];
+            return items.map(item => {
+                const user = item.target_user();
+                return {
+                    id: item.id(),
+                    bucketId: item.bucket(),
+                    userId: user.id(),
+                    patron_name: user.family_name() + ', ' + user.first_given_name(),
+                    barcode: user.card()?.barcode() || '',
+                    patron: user
+                };
+            });
+        } catch (error) {
+            console.error('Error retrieving patron bucket items:', error);
+            throw new Error($localize`Error retrieving patron bucket items: ${error.message || error}`);
+        }
+    }
+
+    // Add patrons to a bucket
+    async addPatronsToPatronBucket(bucketId: number, patronIds: number[]): Promise<any> {
+        this.logPatronBucket(bucketId);
+        try {
+            const items = [];
+            patronIds.forEach(patronId => {
+                const item = this.idl.create('cubi');
+                item.bucket(bucketId);
+                item.target_user(patronId);
+                items.push(item);
+            });
+            return await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.item.create',
+                    this.auth.token(),
+                    'user',
+                    items
+                )
+            );
+        } catch (error) {
+            console.error('Error adding patrons to bucket:', error);
+            throw new Error($localize`Error adding patrons to bucket: ${error.message || error}`);
+        }
+    }
+
+    // Remove patrons from a bucket
+    async removePatronsFromPatronBucket(bucketId: number, patronIds: number[]): Promise<any> {
+        try {
+            return await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.item.delete.batch',
+                    this.auth.token(),
+                    'user',
+                    bucketId,
+                    patronIds
+                )
+            );
+        } catch (error) {
+            console.error('Error removing patrons from bucket:', error);
+            throw new Error($localize`Error removing patrons from bucket: ${error.message || error}`);
+        }
+    }
 }

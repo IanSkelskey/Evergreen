@@ -1,0 +1,46 @@
+<eg-title i18n-prefix prefix="Patron Bucket Content">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Bucket Content" i18n-bannerText>
+</eg-staff-banner>
+
+<div class="container-fluid px-0">
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <h3>
+        <span i18n>Bucket: </span>
+        <span>{{bucket?.name()}}</span>
+      </h3>
+      <div *ngIf="bucket?.description()" class="alert alert-info">
+        {{bucket.description()}}
+      </div>
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-outline-primary" 
+        (click)="returnToBuckets()" i18n>
+        ← Return to Patron Buckets
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <eg-grid #grid idlClass="cubi"
+          persistKey="circ.patron_bucket_items"
+          [dataSource]="dataSource" 
+          [cellTextGenerator]="cellTextGenerator"
+          (rowSelectionChange)="gridSelectionChange($event)">
+
+          <eg-grid-toolbar-action
+              label="Remove Selected Patrons" i18n-label
+              [disabled]="noSelectedRows"
+              (onClick)="removeSelectedPatrons($event)">
+          </eg-grid-toolbar-action>
+
+          <eg-grid-column path="id" label="ID"></eg-grid-column>
+          <eg-grid-column path="barcode" label="Barcode"></eg-grid-column>
+          <eg-grid-column path="patron_name" label="Name"></eg-grid-column>
+      </eg-grid>
+    </div>
+  </div>
+</div>

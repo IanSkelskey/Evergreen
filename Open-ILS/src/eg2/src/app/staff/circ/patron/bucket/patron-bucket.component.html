@@ -43,55 +43,23 @@
     <div class="col-md-4">
       <form class="input-group">
         <label for="bucket-id-input" class="input-group-text" i18n>Bucket ID:</label>
-        <input type="text" class="form-control"
-          id="bucket-id-input"
-          name="bucket-id-input"
-          [(ngModel)]="bucketIdToRetrieve"
-          (keydown.enter)="retrieveBucketById()">
-          <button class="btn btn-outline-secondary"
-            (click)="retrieveBucketById()" i18n>
-            Search
-          </button>
+        <input type="text" id="bucket-id-input" class="form-control"
+          [(ngModel)]="bucketIdToRetrieve" name="bucketIdToRetrieve">
+        <button class="btn btn-outline-secondary" type="submit" 
+          (click)="retrieveBucketById()" i18n>Retrieve</button>
       </form>
     </div>
   </div>
 
-  <div class="row mb-3">
-    <div class="col-12">
-      <div class="btn-toolbar">
-        <div class="btn-group me-2">
-          <button class="btn btn-outline-primary" (click)="openNewBucketDialog()" i18n>
-            <span class="material-icons align-text-bottom">add</span>
-            New Bucket
-          </button>
-        </div>
-        <div class="btn-group me-2">
-          <a class="btn btn-outline-secondary" routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
-            <span class="material-icons align-text-bottom">person_add</span>
-            Add Patrons
-          </a>
-        </div>
-        <div class="btn-group me-2">
-          <button class="btn btn-outline-secondary" (click)="openSharedBucketDialog()" i18n>
-            <span class="material-icons align-text-bottom">share</span>
-            Load Shared Bucket
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <eg-bucket-transfer-dialog #transferDialog></eg-bucket-transfer-dialog>
-  <eg-bucket-share-dialog #shareBucketDialog></eg-bucket-share-dialog>
-  
   <div class="row">
     <div class="col-12">
       <eg-grid #grid idlClass="cub"
           persistKey="circ.patron_buckets"
-          [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+          [dataSource]="dataSource" 
+          [cellTextGenerator]="cellTextGenerator"
           (rowSelectionChange)="gridSelectionChange($event)"
-          showDeclaredFieldsOnly="true"
-          [sortable]="true" [filterable]="true" [allowNamedFilterSets]="false">
+          [sortable]="true" 
+          [filterable]="true">
 
           <eg-grid-toolbar-button label="New Bucket" i18n-label
             (onClick)="openNewBucketDialog()">
@@ -121,44 +89,17 @@
               (onClick)="openShareBucketDialog($event)">
           </eg-grid-toolbar-action>
 
-          <eg-grid-column path="id"></eg-grid-column>
-          <eg-grid-column path="name" [cellTemplate]="nameTemplate"></eg-grid-column>
-          <eg-grid-column path="description"></eg-grid-column>
-          <eg-grid-column path="btype"></eg-grid-column>
-          <eg-grid-column path="owner.usrname" i18n-label label="Owner"></eg-grid-column>
-          <eg-grid-column path="create_time"></eg-grid-column>
-          <eg-grid-column name="row-actions" label="Actions" i18n-label [filterable]="false" 
-            [sortable]="false" [cellTemplate]="bucketActionsTemplate"></eg-grid-column>
+          <eg-grid-column name="id" label="ID"></eg-grid-column>
+          <eg-grid-column name="name" [cellTemplate]="nameTemplate" label="Name"></eg-grid-column>
+          <eg-grid-column name="description" label="Description"></eg-grid-column>
+          <eg-grid-column name="btype" label="Bucket Type"></eg-grid-column>
+          <eg-grid-column name="owner.usrname" label="Owner"></eg-grid-column>
+          <eg-grid-column name="create_time" label="Create Time" datatype="timestamp"></eg-grid-column>
       </eg-grid>
     </div>
   </div>
 </div>
 
-<ng-template #nameTemplate let-r="row">
-  <a routerLink="/staff/circ/patron/bucket/content/{{r?.bucket?.id}}" [queryParams]="{returnTo: currentView}">{{r?.bucket?.name}}</a>
-</ng-template>
-
-<ng-template #bucketActionsTemplate let-row="row">
-  <div class="hstack flex-wrap justify-content-end">
-    <div class="hstack flex-wrap">
-      <a class="btn mat-icon-in-button bucket-action" routerLink="/staff/circ/patron/bucket/add/{{row?.bucket?.id}}">
-        <span class="visually-hidden" id="actions-add-patrons-{{row?.bucket?.id}}" i18n>Add Patrons to {{row?.bucket?.name}}</span>
-        <span class="material-icons" aria-hidden="true" title="Add Patrons" i18n-title>person_add</span>
-      </a>
-      <button type="button" class="btn mat-icon-in-button bucket-action" (click)="openEditBucketDialog([row])">
-        <span class="visually-hidden" id="actions-edit-bucket-{{row?.bucket?.id}}" i18n>Edit {{row?.bucket?.name}}</span>
-        <span class="material-icons" aria-hidden="true" title="Edit {{row?.bucket?.name}}" i18n-title>edit</span>
-      </button>
-    </div>
-    <div class="hstack flex-wrap">
-      <button type="button" class="btn mat-icon-in-button bucket-action" (click)="openShareBucketDialog([row])">
-        <span class="visually-hidden" id="actions-share-bucket-{{row?.bucket?.id}}" i18n>Share {{row?.bucket?.name}}</span>
-        <span class="material-icons" aria-hidden="true" title="Share {{row?.bucket?.name}}" i18n-title>share</span>
-      </button>
-      <button type="button" class="btn mat-icon-in-button bucket-action bucket-destroy" (click)="openDeleteBucketDialog([row])">
-        <span class="visually-hidden" id="actions-delete-bucket-{{row?.bucket?.id}}" i18n>Delete {{row?.bucket?.name}}</span>
-        <span class="material-icons" aria-hidden="true" title="Delete {{row?.bucket?.name}}" i18n-title>delete</span>
-      </button>
-    </div>
-  </div>
+<ng-template #nameTemplate let-row="row">
+  <a routerLink="/staff/circ/patron/bucket/content/{{row.id}}" [queryParams]="{returnTo: currentView}">{{row.name}}</a>
 </ng-template>
