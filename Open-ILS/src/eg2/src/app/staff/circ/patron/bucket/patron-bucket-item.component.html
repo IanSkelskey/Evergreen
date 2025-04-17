@@ -1,0 +1,65 @@
+<eg-title i18n-prefix prefix="Patron Bucket Content">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Bucket Content" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-confirm-dialog #confirmDialog></eg-confirm-dialog>
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+<eg-bucket-dialog #addToBucketDialog></eg-bucket-dialog>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center">
+            <h3 class="my-0 me-3">{{bucket?.name()}}</h3>
+            <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+               routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+                <span class="material-icons">arrow_back</span>
+                Back to Buckets
+            </a>
+        </div>
+        <div *ngIf="bucket?.description()">
+            <p class="text-muted">{{bucket?.description()}}</p>
+        </div>
+    </div>
+</div>
+
+<eg-grid #grid idlClass="cubi" i18n-persistKey 
+    persistKey="circ.patron_bucket_items"
+    [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+    (rowSelectionChange)="gridSelectionChange($event)"
+    [sortable]="true" [filterable]="true">
+    
+    <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="removeFromBucket($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Move to Another Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="moveAddToBucket($event, true)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Add to Another Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="moveAddToBucket($event, false)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="editSelectedPatrons($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-column name="id" path="id" [hidden]="true"></eg-grid-column>
+    <eg-grid-column name="bucket" path="bucket" [hidden]="true"></eg-grid-column>
+    <eg-grid-column name="target_user" path="target_user"></eg-grid-column>
+    <eg-grid-column name="barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
+    <eg-grid-column name="family_name" path="target_user.family_name"></eg-grid-column>
+    <eg-grid-column name="first_given_name" path="target_user.first_given_name"></eg-grid-column>
+</eg-grid>
+
+<ng-template #barcodeTemplate let-row="row">
+    <a href="/eg2/staff/circ/patron/{{row.target_user}}?search=barcode&query={{row.target_user?.card()?.barcode()}}" target="_blank">
+        {{row.target_user?.card()?.barcode()}}
+    </a>
+</ng-template>

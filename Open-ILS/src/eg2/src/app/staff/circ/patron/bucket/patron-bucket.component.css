@@ -1,0 +1,22 @@
+.eg-grid-filter-links {
+    margin-bottom: 0;
+}
+
+.eg-grid-filter-links button {
+    padding-left: 0;
+    padding-right: 1rem;
+}
+
+.eg-grid-filter-links button.active {
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.bucket-action {
+    padding: 0;
+    margin-left: 0.25rem;
+}
+
+.bucket-destroy {
+    color: #dc3545;
+}
