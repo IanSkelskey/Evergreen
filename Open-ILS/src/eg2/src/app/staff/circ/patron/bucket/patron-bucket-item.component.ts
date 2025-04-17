@@ -80,9 +80,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             this.bucketService.logPatronBucket(this.bucketId);
             this.initDataSource(this.bucketId);
             this.gridSelectionChange([]);
-
-            this.pcrud.retrieve('cub', this.bucketId).subscribe(bucket => {
-                this.bucket = bucket;
+            this.pcrud.retrieve('cub', this.bucketId).subscribe({
+                next: bucket => { this.bucket = bucket; },
+                error: err => {
+                    console.error('Error loading bucket:', err);
+                    this.toast.danger($localize`Error loading bucket: ${err.message || err}`);
+                }
             });
         });
 
@@ -124,9 +127,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
     async removeFromBucket(rows: any[]): Promise<boolean> {
         if (!rows.length) return false;
-        
         const patronIds = rows.map(row => row['target_user']);
-        
         try {
             const response = await firstValueFrom(this.net.request(
                 'open-ils.actor',
@@ -134,19 +135,17 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 this.auth.token(), 'user',
                 this.bucketId, patronIds
             ));
-            
             const evt = this.evt.parse(response);
             if (evt) {
-                console.error(evt.toString());
                 this.alertDialog.dialogTitle = $localize`Error removing patron from bucket`;
                 this.alertDialog.dialogBody = evt.toString();
                 await this.alertDialog.open();
                 return false;
             }
-            
+            this.toast.success($localize`${rows.length} patron(s) removed from bucket`);
             return true;
         } catch (err) {
-            console.debug('removeFromBucket, error', err);
+            this.toast.danger($localize`Error removing patrons: ${err.message || err}`);
             return false;
         } finally {
             this.grid.reload();

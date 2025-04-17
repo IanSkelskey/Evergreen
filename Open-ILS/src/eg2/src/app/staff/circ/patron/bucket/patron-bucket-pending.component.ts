@@ -66,9 +66,12 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
 
     private fetchBucket() {
         if (!this.bucketId) return;
-        
-        this.pcrud.retrieve('cub', this.bucketId).subscribe(bucket => {
-            this.bucket = bucket;
+        this.pcrud.retrieve('cub', this.bucketId).subscribe({
+            next: bucket => { this.bucket = bucket; },
+            error: err => {
+                console.error('Error loading bucket:', err);
+                this.toast.danger($localize`Error loading bucket: ${err.message || err}`);
+            }
         });
     }
 
@@ -160,10 +163,8 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
 
     addToBucket() {
         if (!this.bucket || !this.pendingList.length) return;
-        
         this.progressDialog.open();
         const userIds = [...this.pendingList];
-        
         this.net.request(
             'open-ils.actor',
             'open-ils.actor.container.item.create.batch',
@@ -172,7 +173,6 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
             next: (response) => {
                 const evt = this.evt.parse(response);
                 if (evt) {
-                    console.error(evt);
                     this.alertDialog.dialogTitle = $localize`Error Adding Patrons`;
                     this.alertDialog.dialogBody = evt.toString();
                     this.progressDialog.close();
@@ -180,7 +180,6 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
                 }
             },
             error: (err) => {
-                console.error('Error adding patrons to bucket', err);
                 this.progressDialog.close();
                 this.toast.danger($localize`Error adding patrons to bucket: ${err.message || err}`);
             },
@@ -189,7 +188,6 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
                 this.toast.success($localize`${userIds.length} patrons added to bucket`);
                 this.pendingList = [];
                 this.grid.reload();
-                // Refresh the bucket service
                 this.bucketService.requestPatronBucketsRefresh();
             }
         });
