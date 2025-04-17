@@ -2,3 +2,12 @@ a.btn .material-icons {
     vertical-align: middle;
     margin-right: 0.25rem;
 }
+
+eg-grid {
+    min-height: calc(100vh - 200px);
+    display: block;
+}
+
+.align-text-bottom {
+    vertical-align: text-bottom;
+}

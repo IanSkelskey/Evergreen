@@ -6,14 +6,17 @@ import { TreeModule } from '@eg/share/tree/tree.module';
 import { PatronBucketRoutingModule } from './patron-bucket-routing.module';
 import { PatronBucketComponent } from './patron-bucket.component';
 import { PatronBucketItemComponent } from './patron-bucket-item.component';
+import { PatronBucketPendingComponent } from './patron-bucket-pending.component';
 import { PatronBucketService } from './patron-bucket.service';
+import { PatronBucketUpdateService } from './patron-bucket-update.service';
 import { FmRecordEditorModule } from '@eg/share/fm-editor/fm-editor.module';
 import { RecordBucketModule } from '@eg/staff/share/buckets/record-bucket.module';
 
 @NgModule({
     declarations: [
         PatronBucketComponent,
-        PatronBucketItemComponent
+        PatronBucketItemComponent,
+        PatronBucketPendingComponent
     ],
     imports: [
         StaffCommonModule,
@@ -25,7 +28,8 @@ import { RecordBucketModule } from '@eg/staff/share/buckets/record-bucket.module
         RecordBucketModule
     ],
     providers: [
-        PatronBucketService
+        PatronBucketService,
+        PatronBucketUpdateService
     ],
     schemas: [
         CUSTOM_ELEMENTS_SCHEMA

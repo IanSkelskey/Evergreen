@@ -20,3 +20,17 @@
 .bucket-destroy {
     color: #dc3545;
 }
+
+/* New styles for improved layout */
+eg-grid {
+    min-height: calc(100vh - 220px);
+    display: block;
+}
+
+.nav-pills .nav-link {
+    margin-right: 0.5rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}

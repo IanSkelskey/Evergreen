@@ -1,0 +1,99 @@
+<eg-title i18n-prefix prefix="Add Patrons to Bucket">
+</eg-title>
+
+<eg-staff-banner bannerText="Add Patrons to Bucket" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+
+<div class="container-fluid px-0">
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center">
+        <h3 class="me-3 my-0">{{bucket?.name() || 'Select a Bucket'}}</h3>
+        <button *ngIf="bucketId" class="btn btn-outline-secondary me-2" 
+          (click)="viewBucketContent()" i18n>
+          <span class="material-icons align-text-bottom">visibility</span>
+          View Bucket Content
+        </button>
+        <button class="btn btn-outline-secondary" 
+          (click)="backToBuckets()" i18n>
+          <span class="material-icons align-text-bottom">arrow_back</span>
+          Back to Buckets
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header" i18n>Search for Patrons</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="input-group">
+              <input type="text" class="form-control" 
+                placeholder="Enter barcode" i18n-placeholder
+                [(ngModel)]="barcodeString"
+                (keyup.enter)="search()">
+              <button class="btn btn-outline-secondary" type="button" 
+                (click)="search()" i18n>Search</button>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="barcodesFile" class="form-label" i18n>Or add barcodes from file (one per line)</label>
+            <textarea class="form-control" id="barcodesFile" rows="3"
+              [(ngModel)]="barcodesFromFile"></textarea>
+            <div class="d-flex justify-content-end mt-2">
+              <button class="btn btn-outline-secondary" 
+                (click)="processBarcodeFile()" i18n>Process Barcodes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <h4 i18n>Pending Patrons</h4>
+      <div class="mb-2">
+        <button class="btn btn-danger me-2" 
+          [disabled]="!pendingList.length" 
+          (click)="resetPendingList()" i18n>Clear List</button>
+        <button class="btn btn-success" 
+          [disabled]="!pendingList.length || !bucketId" 
+          (click)="addToBucket()" i18n>Add to Bucket</button>
+      </div>
+      
+      <eg-grid #grid idlClass="au"
+          persistKey="circ.patron_bucket_pending"
+          [dataSource]="dataSource"
+          [showDeclaredFieldsOnly]="true">
+
+        <eg-grid-column name="id" [index]="true" [hidden]="true"></eg-grid-column>
+        <eg-grid-column name="barcode" path="card.barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
+        <eg-grid-column name="family_name"></eg-grid-column>
+        <eg-grid-column name="first_given_name"></eg-grid-column>
+        <eg-grid-column name="second_given_name"></eg-grid-column>
+        <eg-grid-column name="home_ou.name" i18n-label label="Home Library"></eg-grid-column>
+        <eg-grid-column name="actions" i18n-label label="Actions" [cellTemplate]="actionsTemplate" [sortable]="false"></eg-grid-column>
+      </eg-grid>
+    </div>
+  </div>
+</div>
+
+<ng-template #barcodeTemplate let-row="row">
+  <a [routerLink]="['/staff/circ/patron', row.id]" target="_blank">
+    {{row.card()?.barcode()}}
+  </a>
+</ng-template>
+
+<ng-template #actionsTemplate let-row="row">
+  <button class="btn btn-sm btn-danger" 
+    (click)="removeFromPendingList(row.id())" i18n>
+    <span class="material-icons">remove</span>
+  </button>
+</ng-template>

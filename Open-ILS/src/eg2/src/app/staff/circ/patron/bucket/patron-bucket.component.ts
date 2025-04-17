@@ -16,6 +16,7 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
@@ -50,9 +51,9 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     dataSource: GridDataSource = new GridDataSource();
     cellTextGenerator: GridCellTextGenerator;
     bucketIdToRetrieve: number;
+    bucketId: number;
     userId: number;
     countInProgress = false;
-    favoriteIds: number[] = [];
     noSelectedRows = true;
     oneSelectedRow = false;
 
@@ -77,7 +78,8 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private evt: EventService,
         private toast: ToastService,
         private org: OrgService,
-        private bucketService: PatronBucketService
+        private bucketService: PatronBucketService,
+        private modal: NgbModal
     ) {}
 
     ngOnInit() {
@@ -88,7 +90,6 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.initViews();
 
         this.userId = this.auth.user().id();
-        this.loadFavorites();
 
         this.route.paramMap.pipe(
             takeUntil(this.destroy$)
@@ -127,11 +128,6 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    private async loadFavorites() {
-        await this.bucketService.loadFavoritePatronBucketFlags(this.userId);
-        this.favoriteIds = this.bucketService.getFavoritePatronBucketIds();
     }
 
     private initCellTextGenerator() {
@@ -206,42 +202,9 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                     return result;
                 }
             },
-            favorites: {
-                label: $localize`Favorites`,
-                sort_key: 2,
-                count: -1,
-                bucketIdQuery: async (pager, sort, justCount) => {
-                    this.favoriteIds = this.bucketService.getFavoritePatronBucketIds();
-                    let result: BucketQueryResult;
-                    if (this.favoriteIds.length) {
-                        const response = await lastValueFrom(
-                            this.search_or_count(justCount, 'cub',
-                                { id: this.favoriteIds },
-                                {
-                                    ...(pager?.limit && { limit: pager.limit }),
-                                    ...(pager?.offset && { offset: pager.offset }),
-                                    ...(sort && { order_by: sort }),
-                                },
-                                { idlist: true, atomic: true }
-                            )
-                        );
-                        if (justCount) {
-                            result = { bucketIds: [], count: response as number };
-                            this.views['favorites']['count'] = result['count'];
-                        } else {
-                            const ids = response as number[];
-                            result = { bucketIds: ids, count: ids.length };
-                        }
-                    } else {
-                        result = { bucketIds: [], count: 0 };
-                        this.views['favorites']['count'] = 0;
-                    }
-                    return result;
-                }
-            },
             recent: {
                 label: $localize`Recent`,
-                sort_key: 3,
+                sort_key: 2,
                 count: -1,
                 bucketIdQuery: async (pager, sort, justCount) => {
                     const recentBucketIds = this.bucketService.recentPatronBucketIds();
@@ -353,6 +316,33 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.bucketService.logPatronBucket(bucketId);
         this.router.navigate(['/staff/circ/patron/bucket/content', bucketId]);
     }
+
+    // Added method to handle loading shared buckets
+    openSharedBucketDialog = async () => {
+        const modalRef = this.modal.open({
+            component: PromptDialogComponent,
+            size: 'sm'
+        });
+        
+        if (modalRef.componentInstance) {
+            modalRef.componentInstance.dialogTitle = $localize`Load Shared Bucket`;
+            modalRef.componentInstance.dialogBody = $localize`Enter the ID of the shared bucket:`;
+            modalRef.componentInstance.focusMe = true;
+        }
+        
+        try {
+            const result = await lastValueFrom(modalRef.closed);
+            if (result && !isNaN(parseInt(result, 10))) {
+                const id = parseInt(result, 10);
+                
+                this.testReferencedBucket(id, (bucket: IdlObject) => {
+                    this.jumpToBucketContent(id);
+                });
+            }
+        } catch (error) {
+            console.error('Error in shared bucket dialog:', error);
+        }
+    };
 
     openNewBucketDialog = async () => {
         try {
@@ -492,37 +482,5 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.error('Error in share dialog:', error);
         }
-    };
-
-    favoriteBucket = async (rows: any[]) => {
-        if (!rows.length) return;
-        
-        for (const row of rows) {
-            try {
-                await this.bucketService.addFavoritePatronBucketFlag(row.bucket.id, this.auth.user().id());
-            } catch (error) {
-                console.error('Error adding favorite flag:', error);
-            }
-        }
-        
-        this.favoriteIds = this.bucketService.getFavoritePatronBucketIds();
-        this.grid.reload();
-        this.updateCounts();
-    };
-
-    unFavoriteBucket = async (rows: any[]) => {
-        if (!rows.length) return;
-        
-        for (const row of rows) {
-            try {
-                await this.bucketService.removeFavoritePatronBucketFlag(row.bucket.id);
-            } catch (error) {
-                console.error('Error removing favorite flag:', error);
-            }
-        }
-        
-        this.favoriteIds = this.bucketService.getFavoritePatronBucketIds();
-        this.grid.reload();
-        this.updateCounts();
     };
 }

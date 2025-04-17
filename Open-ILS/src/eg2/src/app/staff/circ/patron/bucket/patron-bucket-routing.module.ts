@@ -1,26 +1,42 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { PatronBucketComponent } from './patron-bucket.component';
-import { PatronBucketItemComponent } from './patron-bucket-item.component';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
+import {PatronBucketComponent} from './patron-bucket.component';
+import {PatronBucketItemComponent} from './patron-bucket-item.component';
+import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
 
 const routes: Routes = [
-    {
-        path: '',
-        component: PatronBucketComponent 
-    },
-    { path: 'all', component: PatronBucketComponent },
-    { path: 'user', component: PatronBucketComponent },
-    { path: 'favorites', component: PatronBucketComponent },
-    { path: 'recent', component: PatronBucketComponent },
-    { path: 'shared-with-others', component: PatronBucketComponent },
-    { path: 'shared-with-user', component: PatronBucketComponent },
-    { path: 'bucket/:id', component: PatronBucketItemComponent },
-    { path: 'content/:id', component: PatronBucketItemComponent },
-    { path: ':id', component: PatronBucketComponent }
+  {
+    path: '',
+    component: PatronBucketComponent
+  },
+  {
+    path: 'user',
+    component: PatronBucketComponent
+  },
+  {
+    path: 'favorites',
+    component: PatronBucketComponent
+  },
+  {
+    path: 'recent',
+    component: PatronBucketComponent
+  },
+  {
+    path: 'add',
+    component: PatronBucketPendingComponent
+  },
+  {
+    path: 'add/:id',
+    component: PatronBucketPendingComponent
+  },
+  {
+    path: 'content/:id',
+    component: PatronBucketItemComponent
+  }
 ];
 
 @NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
 })
-export class PatronBucketRoutingModule {}
+export class PatronBucketRoutingModule { }
