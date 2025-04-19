@@ -2,6 +2,8 @@ import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {PatronBucketComponent} from './patron-bucket.component';
 import {PatronBucketContentComponent} from './patron-bucket-content.component';
+import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
+import {PatronBucketItemComponent} from './patron-bucket-item.component';
 
 const routes: Routes = [
   {
@@ -18,7 +20,11 @@ const routes: Routes = [
   },
   {
     path: 'content/:id',
-    component: PatronBucketContentComponent
+    component: PatronBucketItemComponent
+  },
+  {
+    path: 'add/:id',
+    component: PatronBucketPendingComponent
   }
 ];
 

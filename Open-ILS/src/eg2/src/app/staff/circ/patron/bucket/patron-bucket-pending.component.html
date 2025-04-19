@@ -87,13 +87,13 @@
 
 <ng-template #barcodeTemplate let-row="row">
   <a [routerLink]="['/staff/circ/patron', row.id]" target="_blank">
-    {{row.card()?.barcode()}}
+    {{row.barcode}}
   </a>
 </ng-template>
 
 <ng-template #actionsTemplate let-row="row">
   <button class="btn btn-sm btn-danger" 
-    (click)="removeFromPendingList(row.id())" i18n>
+    (click)="removeFromPendingList(row.id)" i18n>
     <span class="material-icons">remove</span>
   </button>
 </ng-template>
