@@ -1,0 +1,32 @@
+.required::after {
+  content: " *";
+  color: red;
+}
+
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.form-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn-close-white {
+  filter: brightness(0) invert(1);
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+}
+
+.alert .material-icons {
+  font-size: 1.2rem;
+}
