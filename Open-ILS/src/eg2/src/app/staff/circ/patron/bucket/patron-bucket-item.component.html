@@ -127,8 +127,7 @@
 
         <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
         <eg-grid-column name="bucket" path="bucket" [hidden]="true"></eg-grid-column>
-        <eg-grid-column name="target_user" path="target_user"></eg-grid-column>
-        <eg-grid-column name="barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
+        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
         <eg-grid-column name="family_name" path="target_user.family_name"></eg-grid-column>
         <eg-grid-column name="first_given_name" path="target_user.first_given_name"></eg-grid-column>
         <eg-grid-column name="second_given_name" path="target_user.second_given_name"></eg-grid-column>
@@ -139,9 +138,12 @@
 </div>
 
 <ng-template #barcodeTemplate let-row="row">
-  <a href="/eg2/staff/circ/patron/{{row.target_user}}?search=barcode&query={{row.barcode}}" target="_blank">
-    {{row.barcode}}
+  <a *ngIf="row.target_user?.card()?.barcode()" href="/eg2/staff/circ/patron/{{row.target_user.id()}}/edit" target="_blank">
+    {{row.target_user.card().barcode()}}
   </a>
+  <span *ngIf="!row.target_user?.card()?.barcode()">
+    <em>No barcode</em>
+  </span>
 </ng-template>
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>

@@ -17,11 +17,6 @@ a.btn .material-icons {
     align-items: stretch;
 }
 
-eg-grid {
-    min-height: calc(100vh - 220px);
-    display: block;
-}
-
 .align-text-bottom {
     vertical-align: text-bottom;
 }
