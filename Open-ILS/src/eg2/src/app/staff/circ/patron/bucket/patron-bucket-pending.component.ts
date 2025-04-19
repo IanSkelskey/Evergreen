@@ -109,7 +109,7 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
     
     // Add this new method to open the patron search dialog
     openPatronSearch() {
-        this.patronSearchDialog.open({size: 'lg'}).subscribe(patrons => {
+        this.patronSearchDialog.open({size: 'xl'}).subscribe(patrons => {
             if (patrons && patrons.length > 0) {
                 patrons.forEach(patron => {
                     this.addToPendingList(patron.id());
