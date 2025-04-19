@@ -278,16 +278,31 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         try {
             // Use our enhanced dialog if available
             if (this.createBucketDialog) {
-                const results = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
-                this.handleBucketCreationResult(results);
+                try {
+                    const results = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
+                    // Only handle results if there's actual data
+                    if (results) {
+                        this.handleBucketCreationResult(results);
+                    }
+                } catch (err) {
+                    // User dismissed the dialog - silently handle this case
+                    console.debug('Bucket creation canceled');
+                }
             } 
             // Fallback to the old dialog if necessary
             else if (this.newBucketDialog) {
                 this.newBucketDialog.bucketClass = 'user';
                 this.newBucketDialog.bucketType = 'staff_client';
                 this.newBucketDialog.itemIds = [];
-                const results = await lastValueFrom(this.newBucketDialog.open());
-                this.handleBucketCreationResult(results);
+                try {
+                    const results = await lastValueFrom(this.newBucketDialog.open());
+                    if (results) {
+                        this.handleBucketCreationResult(results);
+                    }
+                } catch (err) {
+                    // User dismissed the dialog - silently handle this case
+                    console.debug('Bucket creation canceled');
+                }
             } 
             // Create the new dialog programmatically as fallback
             else {
@@ -298,14 +313,19 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                 
                 try {
                     const results = await modalRef.result;
-                    this.handleBucketCreationResult(results);
+                    if (results) {
+                        this.handleBucketCreationResult(results);
+                    }
                 } catch (err) {
                     // User dismissed the dialog
                     console.debug('Bucket creation canceled');
                 }
             }
         } catch (error) {
-            this.toast.danger($localize`Error creating bucket: ${error.message || error}`);
+            // Only show error toast for actual errors, not for dialog dismissals
+            if (error && error.message !== 'no elements in sequence') {
+                this.toast.danger($localize`Error creating bucket: ${error.message || error}`);
+            }
         }
     }
 

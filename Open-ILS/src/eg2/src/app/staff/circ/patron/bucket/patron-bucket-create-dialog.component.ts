@@ -105,4 +105,11 @@ export class PatronBucketCreateDialogComponent extends DialogComponent {
     if (!control) return false;
     return control.touched && (errorType ? control.hasError(errorType) : control.invalid);
   }
+
+  // Override close to prevent error when closing without a result
+  override close(result?: any) {
+      // If there's no result when closing, pass null instead
+      // to prevent "no elements in sequence" error
+      return super.close(result || null);
+  }
 }
