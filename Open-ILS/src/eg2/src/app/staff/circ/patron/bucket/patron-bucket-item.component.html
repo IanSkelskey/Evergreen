@@ -93,7 +93,7 @@
 </div>
 
 <ng-template #barcodeTemplate let-row="row">
-  <a href="/eg2/staff/circ/patron/{{row.target_user}}?search=barcode&query={{row.target_user?.card()?.barcode()}}" target="_blank">
-    {{row.target_user?.card()?.barcode()}}
+  <a href="/eg2/staff/circ/patron/{{row.target_user}}?search=barcode&query={{row.barcode}}" target="_blank">
+    {{row.barcode}}
   </a>
 </ng-template>
