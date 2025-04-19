@@ -3,6 +3,7 @@ import {Observable, Subject, lastValueFrom} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
+import {EventService} from '@eg/core/event.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {StoreService} from '@eg/core/store.service';
 
@@ -18,7 +19,8 @@ export class PatronBucketService {
         private net: NetService,
         private auth: AuthService,
         private pcrud: PcrudService,
-        private idl: IdlService
+        private idl: IdlService,
+        private evt: EventService
     ) {}
     
     requestPatronBucketsRefresh() {
@@ -40,6 +42,114 @@ export class PatronBucketService {
     
     recentPatronBucketIds() {
         return this.store.getLocalItem('eg.patron_bucket_log') || [];
+    }
+    
+    // Create a new bucket
+    async createBucket(name: string, description: string = '', bucketType: string = 'staff_client'): Promise<any> {
+        try {
+            const bucket = this.idl.create('cub');
+            bucket.owner(this.auth.user().id());
+            bucket.name(name);
+            bucket.description(description || '');
+            bucket.btype(bucketType);
+            
+            const result = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.create',
+                    this.auth.token(), 'user', bucket
+                )
+            );
+            
+            const evt = this.evt.parse(result);
+            if (evt) {
+                throw new Error(evt.toString());
+            }
+            
+            // Log the newly created bucket
+            this.logPatronBucket(result);
+            this.requestPatronBucketsRefresh();
+            
+            return {
+                id: result,
+                name: name
+            };
+        } catch (error) {
+            console.error('Error creating bucket:', error);
+            throw new Error(`Error creating bucket: ${error.message || error}`);
+        }
+    }
+    
+    // Delete a bucket
+    async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
+        try {
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.full_delete',
+                    this.auth.token(), 'user', bucketId
+                )
+            );
+            
+            const evt = this.evt.parse(response);
+            if (evt) {
+                console.error('Delete bucket error:', evt);
+                return {success: false, message: evt.toString()};
+            }
+            
+            this.requestPatronBucketsRefresh();
+            return {success: true};
+        } catch (error) {
+            console.error('Error deleting bucket:', error);
+            return {success: false, message: 'Unknown error'};
+        }
+    }
+    
+    // Retrieve bucket by ID
+    async retrieveBucketById(bucketId: number): Promise<IdlObject> {
+        try {
+            const bucket = await lastValueFrom(this.pcrud.retrieve('cub', bucketId));
+            const evt = this.evt.parse(bucket);
+            if (evt) {
+                throw new Error(evt.toString());
+            }
+            return bucket;
+        } catch (error) {
+            console.error('Error retrieving bucket:', error);
+            throw new Error(`Error retrieving bucket: ${error.message || error}`);
+        }
+    }
+    
+    // Transform bucket objects for grid display
+    transformBucketsForGrid(buckets: IdlObject[] | IdlObject): any[] {
+        if (!buckets) return [];
+        
+        // Ensure we have an array
+        const bucketArray = Array.isArray(buckets) ? buckets : [buckets];
+        
+        return bucketArray.map((bucket, index) => {
+            if (!bucket) {
+                return {
+                    id: `unknown_${index}`,
+                    name: 'Unknown Bucket',
+                    description: '',
+                    btype: '',
+                    'owner.usrname': '',
+                    create_time: null,
+                    bucket: null
+                };
+            }
+            
+            return {
+                id: bucket.id(),
+                name: bucket.name(),
+                description: bucket.description(),
+                btype: bucket.btype(),
+                'owner.usrname': bucket.owner() ? bucket.owner().usrname() : '',
+                create_time: bucket.create_time() ? new Date(bucket.create_time()) : null,
+                bucket: bucket
+            };
+        });
     }
     
     // Retrieve items (patrons) in a bucket
