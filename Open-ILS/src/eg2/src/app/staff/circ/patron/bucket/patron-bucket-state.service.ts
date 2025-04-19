@@ -208,11 +208,15 @@ export class PatronBucketStateService {
                         } else {
                             // Get all buckets for this user - try with no filters first to see what's available
                             try {
-                                // Get full records to ensure we have all data
+                                // Get full records with flesh to ensure we have owner information
                                 const allBuckets = await lastValueFrom(
                                     this.pcrud.search('cub', 
                                         {owner: currentUserId}, 
-                                        options, 
+                                        {
+                                            ...options,
+                                            flesh: 1,
+                                            flesh_fields: {cub: ['owner']}
+                                        }, 
                                         {atomic: true}
                                     )
                                 );

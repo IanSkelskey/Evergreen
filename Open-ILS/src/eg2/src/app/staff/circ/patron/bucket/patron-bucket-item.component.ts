@@ -82,8 +82,15 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             this.bucketService.logPatronBucket(this.bucketId);
             this.initDataSource(this.bucketId);
             this.gridSelectionChange([]);
-            this.pcrud.retrieve('cub', this.bucketId).subscribe({
-                next: bucket => { this.bucket = bucket; },
+            
+            // Fetch bucket with owner information
+            this.pcrud.retrieve('cub', this.bucketId, 
+                {flesh: 1, flesh_fields: {cub: ['owner']}}
+            ).subscribe({
+                next: bucket => { 
+                    console.debug('Retrieved bucket with owner:', bucket);
+                    this.bucket = bucket; 
+                },
                 error: err => {
                     console.error('Error loading bucket:', err);
                     this.toast.danger($localize`Error loading bucket: ${err.message || err}`);

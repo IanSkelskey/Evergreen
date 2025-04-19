@@ -5,7 +5,6 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {PatronBucketComponent} from './patron-bucket.component';
 import {PatronBucketItemComponent} from './patron-bucket-item.component';
 import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
-import {PatronBucketContentComponent} from './patron-bucket-content.component';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './patron-bucket-state.service';
@@ -23,7 +22,6 @@ import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
         PatronBucketComponent,
         PatronBucketItemComponent,
         PatronBucketPendingComponent,
-        PatronBucketContentComponent,
         PatronBucketAddDialogComponent
     ],
     imports: [

@@ -133,11 +133,11 @@ export class PatronBucketService {
             if (!bucket) {
                 console.warn(`Bucket at index ${index} is null or undefined`);
                 return {
-                    id: `unknown_${index}`, // Ensure there's always an ID
+                    id: `unknown_${index}`,
                     name: 'Unknown Bucket',
                     description: '',
                     btype: '',
-                    'owner.usrname': '',
+                    owner_usrname: '',
                     create_time: null,
                     bucket: null
                 };
@@ -155,19 +155,25 @@ export class PatronBucketService {
             
             let ownerUsername = '';
             try {
-                ownerUsername = bucket.owner() && typeof bucket.owner().usrname === 'function' ? 
-                    bucket.owner().usrname() : '';
+                // Check if owner is available and has usrname function
+                if (bucket.owner && typeof bucket.owner === 'function') {
+                    const owner = bucket.owner();
+                    if (owner && typeof owner.usrname === 'function') {
+                        ownerUsername = owner.usrname();
+                    }
+                }
             } catch (e) {
                 console.warn('Error accessing owner username:', e);
             }
             
             const item = {
-                id: bucketId, // Always provide a valid ID
-                name: bucket.name(),
-                description: bucket.description(),
-                btype: bucket.btype(),
-                'owner.usrname': ownerUsername,
-                create_time: bucket.create_time() ? new Date(bucket.create_time()) : null,
+                id: bucketId,
+                name: typeof bucket.name === 'function' ? bucket.name() : '',
+                description: typeof bucket.description === 'function' ? bucket.description() : '',
+                btype: typeof bucket.btype === 'function' ? bucket.btype() : '',
+                owner_usrname: ownerUsername,
+                create_time: typeof bucket.create_time === 'function' && bucket.create_time() ? 
+                           new Date(bucket.create_time()) : null,
                 bucket: bucket
             };
             

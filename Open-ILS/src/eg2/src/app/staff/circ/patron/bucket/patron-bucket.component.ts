@@ -220,7 +220,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             name: (row: any) => row.name != null ? String(row.name) : '',
             description: (row: any) => row.description != null ? String(row.description) : '',
             btype: (row: any) => row.btype != null ? String(row.btype) : '',
-            'owner.usrname': (row: any) => row['owner.usrname'] != null ? String(row['owner.usrname']) : '',
+            owner_usrname: (row: any) => row.owner_usrname != null ? String(row.owner_usrname) : '',
             create_time: (row: any) =>
                 row.create_time ? this.datePipe.transform(row.create_time, 'medium') || '' : ''
         };
@@ -393,5 +393,12 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.error('Error in share dialog:', error);
         }
+    }
+
+    // Add this method to help with debugging
+    debugRowData(rows: any[]) {
+        if (!rows.length) return;
+        console.log('Sample row data:', rows[0]);
+        this.toast.info(`Row data logged to console`);
     }
 }

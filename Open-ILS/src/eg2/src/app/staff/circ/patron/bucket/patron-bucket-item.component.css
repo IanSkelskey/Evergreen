@@ -3,8 +3,22 @@ a.btn .material-icons {
     margin-right: 0.25rem;
 }
 
+.btn-group .btn {
+    display: flex;
+    align-items: center;
+}
+
+.material-icons {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+}
+
+.btn-toolbar {
+    align-items: stretch;
+}
+
 eg-grid {
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 220px);
     display: block;
 }
 

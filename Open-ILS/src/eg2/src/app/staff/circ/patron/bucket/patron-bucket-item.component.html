@@ -11,44 +11,67 @@
 
 <div class="container-fluid px-0">
   <div class="row mb-3">
-    <div class="col-md-8">
+    <div class="col-md-9">
+      <!-- Bucket header section -->
       <div class="d-flex align-items-center">
         <h3 class="my-0 me-3">{{bucket?.name()}}</h3>
-        <a *ngIf="returnTo" class="btn btn-outline-secondary me-2" 
-          routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
-          <span class="material-icons align-text-bottom">arrow_back</span>
-          Back to Buckets
-        </a>
-        <button class="btn btn-outline-secondary me-2" 
-          (click)="openAddPatronDialog()" i18n>
-          <span class="material-icons align-text-bottom">person_add</span>
-          Add Patron
-        </button>
-        <a class="btn btn-outline-secondary" 
-          routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
-          <span class="material-icons align-text-bottom">group_add</span>
-          Add Multiple Patrons
-        </a>
+        <!-- Owner information with link -->
+        <span class="me-3 text-muted" *ngIf="bucket?.owner()">
+          <span i18n>Owner:</span>
+          <a href="/eg2/staff/circ/patron/{{bucket?.owner()?.id()}}/edit" 
+            target="_blank" class="ms-1">
+            {{bucket?.owner()?.usrname()}}
+          </a>
+        </span>
       </div>
       <div *ngIf="bucket?.description()" class="mt-2">
         <p class="text-muted mb-0">{{bucket?.description()}}</p>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="dropdown">
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
-          id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <span class="material-icons align-text-bottom">build</span>
-          <span i18n>Bulk Actions</span>
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
-          <li><button class="dropdown-item" (click)="updateAllPatrons()" i18n>Update All Patrons</button></li>
-          <li><button class="dropdown-item" (click)="modifyStatcats()" i18n>Modify Statistical Categories</button></li>
-          <li><button class="dropdown-item" (click)="viewChangesets()" i18n>View Changesets</button></li>
-          <li><button class="dropdown-item" (click)="applyRollback()" i18n>Apply Rollback</button></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><button class="dropdown-item text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button></li>
-        </ul>
+  </div>
+
+  <!-- Action buttons row -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="btn-toolbar">
+        <div class="btn-group me-2">
+          <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+            routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+            <span class="material-icons align-text-bottom">arrow_back</span>
+            Back to Buckets
+          </a>
+        </div>
+        
+        <div class="btn-group me-2">
+          <button class="btn btn-outline-primary" 
+            (click)="openAddPatronDialog()" i18n>
+            <span class="material-icons align-text-bottom">person_add</span>
+            Add Patron
+          </button>
+          <a class="btn btn-outline-primary" 
+            routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
+            <span class="material-icons align-text-bottom">group_add</span>
+            Add Multiple Patrons
+          </a>
+        </div>
+        
+        <div class="btn-group">
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+              id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="material-icons align-text-bottom">build</span>
+              <span i18n>Bulk Actions</span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+              <li><button class="dropdown-item" (click)="updateAllPatrons()" i18n>Update All Patrons</button></li>
+              <li><button class="dropdown-item" (click)="modifyStatcats()" i18n>Modify Statistical Categories</button></li>
+              <li><button class="dropdown-item" (click)="viewChangesets()" i18n>View Changesets</button></li>
+              <li><button class="dropdown-item" (click)="applyRollback()" i18n>Apply Rollback</button></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -97,3 +120,5 @@
     {{row.barcode}}
   </a>
 </ng-template>
+
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
