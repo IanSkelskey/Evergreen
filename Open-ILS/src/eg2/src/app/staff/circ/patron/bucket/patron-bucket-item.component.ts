@@ -18,7 +18,6 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
-import {PatronBucketUpdateService} from './patron-bucket-update.service';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -61,7 +60,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         private toast: ToastService,
         private flatData: GridFlatDataService,
         private bucketService: PatronBucketService,
-        private updateService: PatronBucketUpdateService,
         private modal: NgbModal,
         private perm: PermService
     ) {}
@@ -194,168 +192,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.error('Error in add to bucket dialog:', error);
         }
-    }
-
-    // New bulk operation methods
-    updateAllPatrons() {
-        if (!this.hasUpdatePerm) {
-            this.toast.danger($localize`You do not have permission to update users`);
-            return;
-        }
-
-        const modalRef = this.modal.open({
-            component: DialogComponent,
-            size: 'lg'
-        });
-        modalRef.componentInstance.content = $localize`<div class="modal-header">
-            <h4 class="modal-title" i18n>Update All Patrons</h4>
-            <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
-        </div>
-        <div class="modal-body">
-            <form>
-                <div class="mb-3">
-                    <label for="changeset-name" class="form-label" i18n>Changeset Name</label>
-                    <input type="text" class="form-control" id="changeset-name" [(ngModel)]="name" name="name" required>
-                </div>
-                <!-- Add fields for profile, expire date, etc. -->
-                <div class="alert alert-info" i18n>This will update all patrons in the current bucket.</div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="close()" i18n>Cancel</button>
-            <button type="button" class="btn btn-primary" (click)="ok()" [disabled]="!name" i18n>Update</button>
-        </div>`;
-
-        modalRef.componentInstance.name = '';
-
-        modalRef.result.then(result => {
-            if (result && result.name) {
-                this.progressDialog.open();
-                
-                this.updateService.batchUpdateUsers(this.bucketId, result.name, result.fields || {})
-                    .subscribe({
-                        next: progress => {
-                            if (progress.error) {
-                                this.toast.danger(progress.error);
-                            }
-                            this.progressDialog.update({
-                                value: progress.count,
-                                max: progress.max
-                            });
-                            // Handle the label separately if needed
-                            // this.progressDialog.setLabel(progress.label || $localize`Processing patrons...`);
-                        },
-                        error: err => {
-                            console.error('Error updating patrons', err);
-                            this.progressDialog.close();
-                            this.toast.danger($localize`Error updating patrons: ${err.message || err}`);
-                        },
-                        complete: () => {
-                            this.progressDialog.close();
-                            this.toast.success($localize`Patrons updated successfully`);
-                            this.grid.reload();
-                        }
-                    });
-            }
-        });
-    }
-
-    deleteAllPatrons() {
-        if (!this.hasDeletePerm) {
-            this.toast.danger($localize`You do not have permission to delete users`);
-            return;
-        }
-
-        this.confirmDialog.dialogTitle = $localize`Delete All Patrons`;
-        this.confirmDialog.dialogBody = $localize`Are you sure you want to delete all patrons in this bucket? This cannot be undone.`;
-        
-        this.confirmDialog.open().toPromise().then(confirmed => {
-            if (confirmed) {
-                const modalRef = this.modal.open({
-                    component: DialogComponent,
-                    size: 'sm'
-                });
-                modalRef.componentInstance.content = $localize`<div class="modal-header">
-                    <h4 class="modal-title" i18n>Confirm Deletion</h4>
-                    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="mb-3">
-                            <label for="changeset-name" class="form-label" i18n>Changeset Name</label>
-                            <input type="text" class="form-control" id="changeset-name" [(ngModel)]="name" name="name" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" (click)="close()" i18n>Cancel</button>
-                    <button type="button" class="btn btn-danger" (click)="ok()" [disabled]="!name" i18n>Delete All</button>
-                </div>`;
-
-                modalRef.componentInstance.name = '';
-
-                modalRef.result.then(result => {
-                    if (result && result.name) {
-                        this.progressDialog.open();
-                        
-                        this.updateService.batchDeleteUsers(this.bucketId, result.name)
-                            .subscribe({
-                                next: progress => {
-                                    if (progress.error) {
-                                        this.toast.danger(progress.error);
-                                    }
-                                    this.progressDialog.update({
-                                        value: progress.count,
-                                        max: progress.max,
-                                    });
-                                },
-                                error: err => {
-                                    console.error('Error deleting patrons', err);
-                                    this.progressDialog.close();
-                                    this.toast.danger($localize`Error deleting patrons: ${err.message || err}`);
-                                },
-                                complete: () => {
-                                    this.progressDialog.close();
-                                    this.toast.success($localize`Patrons deleted successfully`);
-                                    this.grid.reload();
-                                }
-                            });
-                    }
-                });
-            }
-        });
-    }
-
-    modifyStatcats() {
-        if (!this.hasUpdatePerm) {
-            this.toast.danger($localize`You do not have permission to update users`);
-            return;
-        }
-
-        const modalRef = this.modal.open({
-            component: DialogComponent,
-            size: 'lg'
-        });
-
-        // Fetch stat cats to populate the dialog
-        this.pcrud.search('asc', {owner: this.auth.user().ws_ou()}, {flesh: 1, flesh_fields: {asc: ['entries']}})
-            .subscribe({
-                next: statCat => {
-                    // Add UI handling for stat cats
-                },
-                error: err => {
-                    console.error('Error fetching stat cats', err);
-                    this.toast.danger($localize`Error fetching statistical categories: ${err.message || err}`);
-                }
-            });
-    }
-
-    viewChangesets() {
-        // Implement view changesets dialog
-    }
-
-    applyRollback() {
-        // Implement rollback dialog
     }
 
     // Add a new method to open the add patron dialog

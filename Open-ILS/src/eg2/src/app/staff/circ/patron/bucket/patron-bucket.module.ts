@@ -9,13 +9,13 @@ import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.compone
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './patron-bucket-state.service';
 import {PatronBucketRoutingModule} from './patron-bucket-routing.module';
-import {PatronBucketUpdateService} from './patron-bucket-update.service';
 
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {GridModule} from '@eg/share/grid/grid.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
 import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
+import {PatronModule} from '@eg/staff/share/patron/patron.module'; // Add this import
 
 @NgModule({
     declarations: [
@@ -33,12 +33,12 @@ import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
         StaffCommonModule,
         GridModule,
         FmRecordEditorModule,
-        CommonWidgetsModule
+        CommonWidgetsModule,
+        PatronModule // Add this module to imports
     ],
     providers: [
         PatronBucketService,
         PatronBucketStateService,
-        PatronBucketUpdateService
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

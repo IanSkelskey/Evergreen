@@ -6,6 +6,8 @@
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
 <eg-alert-dialog #alertDialog></eg-alert-dialog>
+<eg-patron-search-dialog #patronSearchDialog i18n-dialogTitle dialogTitle="Patron Search">
+</eg-patron-search-dialog>
 
 <div class="container-fluid px-0">
   <div class="row mb-3">
@@ -31,6 +33,14 @@
       <div class="card">
         <div class="card-header" i18n>Search for Patrons</div>
         <div class="card-body">
+          <!-- Add advanced search button -->
+          <div class="mb-3">
+            <button class="btn btn-primary w-100" (click)="openPatronSearch()" i18n>
+              <span class="material-icons align-text-bottom">search</span>
+              Advanced Patron Search
+            </button>
+          </div>
+          
           <div class="mb-3">
             <div class="input-group">
               <input type="text" class="form-control" 
@@ -38,7 +48,7 @@
                 [(ngModel)]="barcodeString"
                 (keyup.enter)="search()">
               <button class="btn btn-outline-secondary" type="button" 
-                (click)="search()" i18n>Search</button>
+                (click)="search()" i18n>Search by Barcode</button>
             </div>
           </div>
           
