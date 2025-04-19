@@ -9,6 +9,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {EventService} from '@eg/core/event.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
+import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
@@ -64,7 +65,8 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private bucketService: PatronBucketService,
         private bucketState: PatronBucketStateService,
         private modal: NgbModal,
-        private datePipe: DatePipe
+        private datePipe: DatePipe,
+        private flatData: GridFlatDataService
     ) {}
 
     ngOnInit() {
@@ -141,7 +143,6 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.dataSource.getRows = (pager, sort): Observable<any> => {
             // Get the current view from the state service
             const currentView = this.bucketState.currentView;
-            console.debug('DataSource getRows called - current view:', currentView);
             
             if (!currentView) {
                 console.warn('No current view defined');
@@ -154,54 +155,21 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                 return of({count: 0, items: []});
             }
             
-            console.debug(`DataSource getRows for view: ${currentView}`, pager, sort);
-            
             return from(viewDef.bucketIdQuery(pager, sort, false)).pipe(
                 switchMap(result => {
-                    console.debug('Bucket IDs from query:', result.bucketIds, 'count:', result.count);
-                    
                     // Ensure we have valid IDs to search for
                     let ids = result.bucketIds;
                     if (!Array.isArray(ids) || ids.length === 0) {
-                        console.debug('No bucket IDs to fetch, returning empty result');
                         return of({count: result.count || 0, items: []});
                     }
                     
-                    console.debug('Fetching buckets with IDs:', ids);
-                    
-                    // Try to directly fetch the buckets with a simpler approach first
-                    return this.pcrud.search('cub', 
-                        {id: ids}, 
-                        { flesh: 1, flesh_fields: {cub: ['owner']} }
+                    // Use flatData service instead of direct pcrud + transformation
+                    return this.flatData.getRows(
+                        this.grid.context,
+                        {id: ids},
+                        pager,
+                        sort
                     ).pipe(
-                        map(buckets => {
-                            console.debug('Raw buckets from pcrud:', buckets);
-                            
-                            // Convert to array if not already
-                            let bucketsArray = buckets;
-                            if (!Array.isArray(buckets)) {
-                                bucketsArray = buckets ? [buckets] : [];
-                            }
-                            
-                            // Check what we actually received
-                            console.debug('Buckets array after normalization:', bucketsArray);
-                            
-                            // Transform buckets for grid display using the service
-                            const items = this.bucketService.transformBucketsForGrid(bucketsArray);
-                            console.debug('Transformed grid items:', items);
-                            
-                            // Ensure all items have a unique index
-                            items.forEach((item, idx) => {
-                                if (item.id === undefined || item.id === null) {
-                                    item.id = `temp_${idx}`; // Provide a fallback ID if needed
-                                }
-                            });
-                            
-                            return {
-                                count: result.count,
-                                items: items
-                            };
-                        }),
                         catchError(err => {
                             console.error('Error retrieving patron buckets:', err);
                             return of({count: 0, items: []});
@@ -419,7 +387,12 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Add this method to help with debugging
+    // Add this method to handle the View Content button click
+    viewSelectedBuckets(rows: any[]) {
+        if (!rows.length) return;
+        rows.forEach(row => this.jumpToBucketContent(row.id));
+    }
+
     debugRowData(rows: any[]) {
         if (!rows.length) return;
         console.log('Sample row data:', rows[0]);
