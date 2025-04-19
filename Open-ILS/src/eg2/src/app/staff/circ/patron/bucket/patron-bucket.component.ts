@@ -22,6 +22,7 @@ import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './patron-bucket-state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
+import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component';
 
 @Component({
     selector: 'eg-patron-bucket',
@@ -40,6 +41,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     @ViewChild('grid', { static: false }) grid: GridComponent;
     @ViewChild('newBucketDialog') private newBucketDialog: BucketDialogComponent;
+    @ViewChild('createBucketDialog') private createBucketDialog: PatronBucketCreateDialogComponent;
     @ViewChild('editDialog') private editDialog: FmRecordEditorComponent;
     @ViewChild('deleteDialog') private deleteDialog: ConfirmDialogComponent;
     @ViewChild('deleteFail') private deleteFail: AlertDialogComponent;
@@ -274,23 +276,25 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     openNewBucketDialog = async () => {
         try {
-            // Method 1: Use the ViewChild reference if it exists
-            if (this.newBucketDialog) {
+            // Use our enhanced dialog if available
+            if (this.createBucketDialog) {
+                const results = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
+                this.handleBucketCreationResult(results);
+            } 
+            // Fallback to the old dialog if necessary
+            else if (this.newBucketDialog) {
                 this.newBucketDialog.bucketClass = 'user';
                 this.newBucketDialog.bucketType = 'staff_client';
                 this.newBucketDialog.itemIds = [];
                 const results = await lastValueFrom(this.newBucketDialog.open());
                 this.handleBucketCreationResult(results);
             } 
-            // Method 2: Create the dialog programmatically as fallback
+            // Create the new dialog programmatically as fallback
             else {
-                // Import the component dynamically to avoid circular dependencies
-                const modalRef = this.modal.open(BucketDialogComponent);
-                const bucketDialog = modalRef.componentInstance as BucketDialogComponent;
-                
-                bucketDialog.bucketClass = 'user';
-                bucketDialog.bucketType = 'staff_client';
-                bucketDialog.itemIds = [];
+                const modalRef = this.modal.open(PatronBucketCreateDialogComponent, {
+                    size: 'lg'
+                });
+                const bucketDialog = modalRef.componentInstance as PatronBucketCreateDialogComponent;
                 
                 try {
                     const results = await modalRef.result;

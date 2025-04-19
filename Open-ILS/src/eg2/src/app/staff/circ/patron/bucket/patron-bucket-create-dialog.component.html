@@ -1,0 +1,75 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+<eg-string #successString i18n-text text="Patron bucket created successfully"></eg-string>
+
+<ng-template #dialogContent>
+  <div class="modal-header text-white">
+    <h4 class="modal-title" i18n>Create New Patron Bucket</h4>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="close()"></button>
+  </div>
+
+  <div class="modal-body">
+    <div *ngIf="error" class="alert alert-danger">
+      <span class="material-icons align-middle me-1">error</span>
+      {{error}}
+    </div>
+
+    <div class="alert alert-info">
+      <span class="material-icons align-middle me-1">info</span>
+      <span i18n>Patron buckets allow you to group patrons together for batch operations and reporting.</span>
+    </div>
+
+    <form [formGroup]="bucketForm" class="form-validated">
+      <div class="mb-3">
+        <label for="bucketName" class="form-label" i18n>
+          <span class="text-danger">*</span> Bucket Name
+        </label>
+        <input type="text" class="form-control" 
+               id="bucketName" 
+               formControlName="name"
+               [class.is-invalid]="hasError('name')"
+               [attr.aria-invalid]="hasError('name')"
+               placeholder="Enter a name for this bucket" i18n-placeholder 
+               autocomplete="off">
+        <div class="invalid-feedback" *ngIf="hasError('name', 'required')" i18n>
+          Name is required
+        </div>
+        <div class="invalid-feedback" *ngIf="hasError('name', 'maxlength')" i18n>
+          Name cannot exceed 70 characters
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="bucketDescription" class="form-label" i18n>Description</label>
+        <textarea class="form-control" 
+                  id="bucketDescription" 
+                  formControlName="description"
+                  [class.is-invalid]="hasError('description')"
+                  rows="3"
+                  placeholder="Optional description" i18n-placeholder></textarea>
+        <div class="invalid-feedback" *ngIf="hasError('description', 'maxlength')" i18n>
+          Description cannot exceed 140 characters
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="bucketType" class="form-label" i18n>Bucket Type</label>
+        <select class="form-select" formControlName="bucketType" id="bucketType">
+          <option *ngFor="let type of bucketTypes" [value]="type.value">
+            {{type.label}}
+          </option>
+        </select>
+        <div class="form-text" i18n>For most cases, use "Staff Client" type</div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
+    <button type="button" class="btn btn-primary" 
+            (click)="createBucket()"
+            [disabled]="bucketForm.invalid || pending">
+      <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      <span i18n>Create Bucket</span>
+    </button>
+  </div>
+</ng-template>
