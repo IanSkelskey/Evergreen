@@ -77,20 +77,20 @@
         </form>
         
         <div class="btn-group">
-          <div class="dropdown">
+          <div ngbDropdown>
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
-              id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              id="bulkActionsDropdown" ngbDropdownToggle>
               <span class="material-icons align-text-bottom">build</span>
               <span i18n>Bulk Actions</span>
             </button>
-            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
-              <li><button class="dropdown-item" (click)="updateAllPatrons()" i18n>Update All Patrons</button></li>
-              <li><button class="dropdown-item" (click)="modifyStatcats()" i18n>Modify Statistical Categories</button></li>
-              <li><button class="dropdown-item" (click)="viewChangesets()" i18n>View Changesets</button></li>
-              <li><button class="dropdown-item" (click)="applyRollback()" i18n>Apply Rollback</button></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button></li>
-            </ul>
+            <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
+              <button ngbDropdownItem (click)="updateAllPatrons()" i18n>Update All Patrons</button>
+              <button ngbDropdownItem (click)="modifyStatcats()" i18n>Modify Statistical Categories</button>
+              <button ngbDropdownItem (click)="viewChangesets()" i18n>View Changesets</button>
+              <button ngbDropdownItem (click)="applyRollback()" i18n>Apply Rollback</button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button>
+            </div>
           </div>
         </div>
       </div>
