@@ -7,6 +7,7 @@
 <eg-confirm-dialog #confirmDialog></eg-confirm-dialog>
 <eg-alert-dialog #alertDialog></eg-alert-dialog>
 <eg-bucket-dialog #addToBucketDialog></eg-bucket-dialog>
+<eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
 
 <div class="container-fluid px-0">
   <div class="row mb-3">
@@ -18,10 +19,15 @@
           <span class="material-icons align-text-bottom">arrow_back</span>
           Back to Buckets
         </a>
+        <button class="btn btn-outline-secondary me-2" 
+          (click)="openAddPatronDialog()" i18n>
+          <span class="material-icons align-text-bottom">person_add</span>
+          Add Patron
+        </button>
         <a class="btn btn-outline-secondary" 
           routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
-          <span class="material-icons align-text-bottom">person_add</span>
-          Add Patrons
+          <span class="material-icons align-text-bottom">group_add</span>
+          Add Multiple Patrons
         </a>
       </div>
       <div *ngIf="bucket?.description()" class="mt-2">

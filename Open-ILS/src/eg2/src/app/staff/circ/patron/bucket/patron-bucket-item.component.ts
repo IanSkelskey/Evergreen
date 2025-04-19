@@ -19,6 +19,7 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketUpdateService} from './patron-bucket-update.service';
+import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
@@ -45,6 +46,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     @ViewChild('alertDialog') alertDialog: AlertDialogComponent;
     @ViewChild('addToBucketDialog') addToBucketDialog: BucketDialogComponent;
     @ViewChild('progressDialog') progressDialog: ProgressDialogComponent;
+    @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
     
     private destroy$ = new Subject<void>();
     
@@ -347,5 +349,33 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
     applyRollback() {
         // Implement rollback dialog
+    }
+
+    // Add a new method to open the add patron dialog
+    openAddPatronDialog() {
+        if (!this.addPatronDialog) {
+            // Create dialog programmatically if ViewChild not available
+            const modalRef = this.modal.open(PatronBucketAddDialogComponent, {
+                size: 'lg'
+            });
+            const dialog = modalRef.componentInstance as PatronBucketAddDialogComponent;
+            dialog.bucketId = this.bucketId;
+            
+            modalRef.result.then(result => {
+                if (result) {
+                    this.grid.reload();
+                }
+            }, () => {
+                // Dialog dismissed
+            });
+        } else {
+            // Use ViewChild reference
+            this.addPatronDialog.bucketId = this.bucketId;
+            this.addPatronDialog.open({size: 'lg'}).subscribe(result => {
+                if (result) {
+                    this.grid.reload();
+                }
+            });
+        }
     }
 }

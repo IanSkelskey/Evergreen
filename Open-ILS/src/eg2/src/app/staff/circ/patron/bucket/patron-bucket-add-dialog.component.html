@@ -1,0 +1,21 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Add Patron to Bucket</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+  </div>
+  
+  <div class="modal-body">
+    <p class="mb-3" i18n>Search for patrons to add to the bucket.</p>
+    
+    <eg-patron-search-dialog #patronSearch
+      dialogTitle="Search for Patrons"
+      (patronsSelected)="patronsSelected($event)">
+    </eg-patron-search-dialog>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Close</button>
+  </div>
+</ng-template>
