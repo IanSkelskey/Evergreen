@@ -127,10 +127,13 @@ export class PatronBucketService {
         // Ensure we have an array
         const bucketArray = Array.isArray(buckets) ? buckets : [buckets];
         
-        return bucketArray.map((bucket, index) => {
+        console.debug('transformBucketsForGrid input:', bucketArray);
+        
+        const result = bucketArray.map((bucket, index) => {
             if (!bucket) {
+                console.warn(`Bucket at index ${index} is null or undefined`);
                 return {
-                    id: `unknown_${index}`,
+                    id: `unknown_${index}`, // Ensure there's always an ID
                     name: 'Unknown Bucket',
                     description: '',
                     btype: '',
@@ -140,16 +143,40 @@ export class PatronBucketService {
                 };
             }
             
-            return {
-                id: bucket.id(),
+            // Get ID safely
+            let bucketId;
+            try {
+                bucketId = typeof bucket.id === 'function' ? bucket.id() : 
+                           (bucket.id || `bucket_${index}`);
+            } catch (e) {
+                console.warn('Error accessing bucket ID:', e);
+                bucketId = `error_${index}`;
+            }
+            
+            let ownerUsername = '';
+            try {
+                ownerUsername = bucket.owner() && typeof bucket.owner().usrname === 'function' ? 
+                    bucket.owner().usrname() : '';
+            } catch (e) {
+                console.warn('Error accessing owner username:', e);
+            }
+            
+            const item = {
+                id: bucketId, // Always provide a valid ID
                 name: bucket.name(),
                 description: bucket.description(),
                 btype: bucket.btype(),
-                'owner.usrname': bucket.owner() ? bucket.owner().usrname() : '',
+                'owner.usrname': ownerUsername,
                 create_time: bucket.create_time() ? new Date(bucket.create_time()) : null,
                 bucket: bucket
             };
+            
+            console.debug('Transformed bucket item:', item);
+            return item;
         });
+        
+        console.debug('transformBucketsForGrid output:', result);
+        return result;
     }
     
     // Retrieve items (patrons) in a bucket

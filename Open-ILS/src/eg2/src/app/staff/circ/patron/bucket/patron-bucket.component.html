@@ -52,37 +52,12 @@
       persistKey="circ.patron.bucket.buckets"
       (rowSelectionChange)="gridSelectionChange($event)"
   >
-    <eg-grid-toolbar-actions>
-      <eg-grid-toolbar-action label="Edit Bucket" i18n-label
-          [disabled]="!oneSelectedRow" (onClick)="openEditBucketDialog($event)">
-      </eg-grid-toolbar-action>
-      
-      <eg-grid-toolbar-action label="Delete Bucket" i18n-label
-          [disabled]="noSelectedRows" (onClick)="openDeleteBucketDialog($event)">
-      </eg-grid-toolbar-action>
-      
-      <eg-grid-toolbar-action label="Transfer Ownership" i18n-label
-          [disabled]="noSelectedRows" (onClick)="openTransferDialog($event)">
-      </eg-grid-toolbar-action>
-      
-      <eg-grid-toolbar-action label="Bucket Sharing" i18n-label
-          [disabled]="noSelectedRows" (onClick)="openShareBucketDialog($event)">
-      </eg-grid-toolbar-action>
-    </eg-grid-toolbar-actions>
-    
-    <eg-grid-column path="id" [hidden]="true" [index]="true"
-        i18n-label label="ID"></eg-grid-column>
-    <eg-grid-column path="name" i18n-label label="Name"
-        [sortable]="true" [sortpath]="'name'"></eg-grid-column>
-    <eg-grid-column path="owner.usrname" i18n-label label="Owner" 
-        [sortable]="true" [sortpath]="'owner'"></eg-grid-column>
-    <eg-grid-column path="description" i18n-label label="Description"
-        [sortable]="true" [sortpath]="'description'"></eg-grid-column>
-    <eg-grid-column path="btype" i18n-label label="Bucket Type"
-        [sortable]="true" [sortpath]="'btype'" [hidden]="true"></eg-grid-column>
-    <eg-grid-column path="create_time" datatype="timestamp" i18n-label label="Create Date"
-        [sortable]="true" [sortpath]="'create_time'"></eg-grid-column>
-    <eg-grid-column i18n-label label="Actions" [cellTemplate]="actionsTemplate"></eg-grid-column>
+    <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
+    <eg-grid-column path="name" i18n-label label="Name" visible="true"></eg-grid-column>
+    <eg-grid-column path="description" i18n-label label="Description" visible="true"></eg-grid-column>
+    <eg-grid-column path="btype" i18n-label label="Type" visible="true"></eg-grid-column>
+    <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
+    <eg-grid-column path="create_time" i18n-label label="Create Date" visible="true" datatype="timestamp"></eg-grid-column>
   </eg-grid>
 </div>
 

@@ -149,54 +149,95 @@ export class PatronBucketStateService {
                             };
                         }
                         
-                        // Make sure we have the correct search parameters
-                        const search = { 
-                            owner: this.userId || this.auth.user().id(), 
-                            btype: 'staff_client' 
+                        // Include ALL bucket types and check for deleted flag
+                        const currentUserId = this.userId || this.auth.user().id();
+                        console.debug('Current user ID for bucket query:', currentUserId);
+                        
+                        const search: any = { 
+                            owner: currentUserId
                         };
+                        
+                        // Explicitly search for different bucket types
+                        // search.btype = {in: ['staff_client', 'vandelay_queue', 'hold_subscription', null]};
+                        
+                        // Also check if there's a deleted flag that needs to be filtered
+                        // search.deleted = 'f';
                         
                         console.debug('Bucket search criteria:', search, 'options:', options);
                         
+                        // First, let's try to get all available bucket types in the system
+                        try {
+                            const allBucketTypes = await lastValueFrom(
+                                this.pcrud.search('cub', 
+                                    {owner: currentUserId}, 
+                                    {distinct: 'btype'}, 
+                                    {atomic: true}
+                                )
+                            );
+                            console.debug('All available bucket types in the system:', allBucketTypes);
+                        } catch (err) {
+                            console.warn('Error fetching distinct bucket types:', err);
+                        }
+                        
                         if (justCount) {
-                            // Count query - direct approach rather than using count:true which may be unreliable
-                            const idList = await lastValueFrom(this.pcrud.search('cub', search, {}, {idlist: true}));
-                            console.debug('Count via ID list:', idList);
-                            
-                            // Convert result to array for counting
-                            let ids = [];
-                            if (idList !== null) {
-                                if (typeof idList === 'number') {
-                                    ids = [idList]; // Single ID
-                                } else if (Array.isArray(idList)) {
-                                    ids = idList; // Already an array
-                                }
+                            // Count query - direct approach rather than using count:true
+                            try {
+                                // Try a direct SQL query for debugging
+                                // Fetch all buckets and count them
+                                const allBuckets = await lastValueFrom(
+                                    this.pcrud.search('cub', 
+                                        {owner: currentUserId}, 
+                                        {}, 
+                                        {atomic: true}
+                                    )
+                                );
+                                console.debug('All buckets (full data):', allBuckets);
+                                
+                                // Calculate proper count
+                                const finalCount = Array.isArray(allBuckets) ? allBuckets.length : 
+                                    (allBuckets !== null && allBuckets !== undefined) ? 1 : 0;
+                                
+                                console.debug('Final count calculation:', finalCount);
+                                this.views.user.count = finalCount;
+                                
+                                return { bucketIds: [], count: finalCount };
+                            } catch (error) {
+                                console.error('Error in count query:', error);
+                                return { bucketIds: [], count: 0 };
                             }
-                            
-                            const finalCount = ids.length;
-                            console.debug('Final count:', finalCount);
-                            this.views.user.count = finalCount;
-                            return { bucketIds: [], count: finalCount };
                         } else {
-                            // ID list query - get the actual bucket IDs
-                            const idResults = await lastValueFrom(this.pcrud.search('cub', search, options, {idlist: true}));
-                            console.debug('Raw bucket IDs:', idResults);
-                            
-                            // Handle different return types - ensure we have an array
-                            let ids = [];
-                            if (idResults !== null) {
-                                if (typeof idResults === 'number') {
-                                    ids = [idResults]; // Single ID
-                                } else if (Array.isArray(idResults)) {
-                                    ids = idResults; // Already an array
+                            // Get all buckets for this user - try with no filters first to see what's available
+                            try {
+                                // Get full records to ensure we have all data
+                                const allBuckets = await lastValueFrom(
+                                    this.pcrud.search('cub', 
+                                        {owner: currentUserId}, 
+                                        options, 
+                                        {atomic: true}
+                                    )
+                                );
+                                console.debug('All buckets (full data):', allBuckets);
+                                
+                                // Extract IDs from the records
+                                let ids = [];
+                                if (Array.isArray(allBuckets)) {
+                                    ids = allBuckets.map(bucket => bucket.id());
+                                } else if (allBuckets !== null && allBuckets !== undefined) {
+                                    if (typeof allBuckets === 'object' && typeof allBuckets.id === 'function') {
+                                        ids = [allBuckets.id()];
+                                    } else if (typeof allBuckets === 'number') {
+                                        ids = [allBuckets];
+                                    }
                                 }
+                                
+                                console.debug('Extracted bucket IDs:', ids, 'count:', ids.length);
+                                this.views.user.count = ids.length;
+                                
+                                return { bucketIds: ids, count: ids.length };
+                            } catch (error) {
+                                console.error('Error fetching buckets:', error);
+                                return { bucketIds: [], count: 0 };
                             }
-                            
-                            console.debug('Normalized bucket IDs:', ids, 'count:', ids.length);
-                            
-                            // Update the view count with the actual number of IDs
-                            this.views.user.count = ids.length;
-                            
-                            return { bucketIds: ids, count: ids.length };
                         }
                     } catch (error) {
                         console.error('Error in user bucketIdQuery:', error);
