@@ -69,7 +69,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         this.cellTextGenerator = {
             'family_name': row => row['family_name'],
             'first_given_name': row => row['first_given_name'],
-            'barcode': row => row['barcode']
+            'barcode': row => row['target_user']?.card()?.barcode() // Correctly access barcode
         };
 
         // Check permissions
