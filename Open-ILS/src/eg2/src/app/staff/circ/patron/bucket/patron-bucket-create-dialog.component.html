@@ -2,15 +2,15 @@
 <eg-string #successString i18n-text text="Patron bucket created successfully"></eg-string>
 
 <ng-template #dialogContent>
-  <div class="modal-header text-white">
+  <div class="modal-header">
     <h4 class="modal-title" i18n>Create New Patron Bucket</h4>
     <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="close()"></button>
   </div>
 
   <div class="modal-body">
-    <div *ngIf="error" class="alert alert-danger">
+    <div *ngIf="errorMessage" class="alert alert-danger">
       <span class="material-icons align-middle me-1">error</span>
-      {{error}}
+      {{errorMessage}}
     </div>
 
     <div class="alert alert-info">
@@ -20,9 +20,7 @@
 
     <form [formGroup]="bucketForm" class="form-validated">
       <div class="mb-3">
-        <label for="bucketName" class="form-label" i18n>
-          <span class="text-danger">*</span> Bucket Name
-        </label>
+        <label for="bucketName" class="form-label required" i18n>Bucket Name</label>
         <input type="text" class="form-control" 
                id="bucketName" 
                formControlName="name"
@@ -65,7 +63,7 @@
 
   <div class="modal-footer">
     <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
-    <button type="button" class="btn btn-primary" 
+    <button type="button" class="btn btn-success" 
             (click)="createBucket()"
             [disabled]="bucketForm.invalid || pending">
       <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
