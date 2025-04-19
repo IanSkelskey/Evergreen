@@ -139,14 +139,20 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.dataSource.getRows = (pager, sort): Observable<any> => {
             // Get the current view from the state service
             const currentView = this.bucketState.currentView;
+            console.debug('DataSource getRows called - current view:', currentView);
+            
             if (!currentView) {
+                console.warn('No current view defined');
                 return of({count: 0, items: []});
             }
             
             const viewDef = this.bucketState.getView(currentView);
             if (!viewDef) {
+                console.warn(`View definition not found for: ${currentView}`);
                 return of({count: 0, items: []});
             }
+            
+            console.debug(`DataSource getRows for view: ${currentView}`, pager, sort);
             
             return from(viewDef.bucketIdQuery(pager, sort, false)).pipe(
                 switchMap(result => {
@@ -155,20 +161,39 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                     // Ensure we have valid IDs to search for
                     let ids = result.bucketIds;
                     if (!Array.isArray(ids) || ids.length === 0) {
-                        console.debug('No bucket IDs to fetch');
+                        console.debug('No bucket IDs to fetch, returning empty result');
                         return of({count: result.count || 0, items: []});
                     }
                     
                     console.debug('Fetching buckets with IDs:', ids);
                     
-                    // Fetch the full bucket objects
+                    // Try to directly fetch the buckets with a simpler approach first
                     return this.pcrud.search('cub', 
                         {id: ids}, 
                         { flesh: 1, flesh_fields: {cub: ['owner']} }
                     ).pipe(
                         map(buckets => {
+                            console.debug('Raw buckets from pcrud:', buckets);
+                            
+                            // Convert to array if not already
+                            let bucketsArray = buckets;
+                            if (!Array.isArray(buckets)) {
+                                bucketsArray = buckets ? [buckets] : [];
+                            }
+                            
+                            // Check what we actually received
+                            console.debug('Buckets array after normalization:', bucketsArray);
+                            
                             // Transform buckets for grid display using the service
-                            const items = this.bucketService.transformBucketsForGrid(buckets);
+                            const items = this.bucketService.transformBucketsForGrid(bucketsArray);
+                            console.debug('Transformed grid items:', items);
+                            
+                            // Ensure all items have a unique index
+                            items.forEach((item, idx) => {
+                                if (item.id === undefined || item.id === null) {
+                                    item.id = `temp_${idx}`; // Provide a fallback ID if needed
+                                }
+                            });
                             
                             return {
                                 count: result.count,
