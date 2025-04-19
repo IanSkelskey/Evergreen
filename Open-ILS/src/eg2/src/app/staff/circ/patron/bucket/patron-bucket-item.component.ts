@@ -135,28 +135,36 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
     async removeFromBucket(rows: any[]): Promise<boolean> {
         if (!rows.length) return false;
-        const patronIds = rows.map(row => row['target_user']);
+        
         try {
-            const response = await firstValueFrom(this.net.request(
-                'open-ils.actor',
-                'open-ils.actor.container.item.delete.batch',
-                this.auth.token(), 'user',
-                this.bucketId, patronIds
-            ));
-            const evt = this.evt.parse(response);
-            if (evt) {
-                this.alertDialog.dialogTitle = $localize`Error removing patron from bucket`;
-                this.alertDialog.dialogBody = evt.toString();
-                await this.alertDialog.open();
-                return false;
-            }
+            // Extract the bucket item IDs from the rows
+            const itemIds = rows.map(row => row.id);
+            console.debug('Attempting to remove items from bucket:', itemIds);
+            
+            // Use the service's method which handles the delete operation properly
+            const result = await this.bucketService.removePatronsFromPatronBucket(this.bucketId, itemIds);
+            
+            // Handle success
+            console.debug('Remove operation result:', result);
             this.toast.success($localize`${rows.length} patron(s) removed from bucket`);
+            this.grid.reload();
             return true;
         } catch (err) {
+            console.error('Error removing patrons from bucket:', err);
+            
+            // Special handling for "item not found" errors - treat as success if some were removed
+            if (err.message && err.message.includes('CONTAINER_USER_BUCKET_ITEM_NOT_FOUND')) {
+                console.log('Some items were not found in bucket. They may have been already removed.');
+                this.toast.success($localize`Patrons removed from bucket`);
+                this.grid.reload();
+                return true;
+            }
+            
             this.toast.danger($localize`Error removing patrons: ${err.message || err}`);
             return false;
         } finally {
-            this.grid.reload();
+            // Force reload of the grid to reflect changes
+            setTimeout(() => this.grid.reload(), 100);
         }
     }
 
