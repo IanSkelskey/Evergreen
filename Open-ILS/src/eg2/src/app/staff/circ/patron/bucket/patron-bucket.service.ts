@@ -277,18 +277,65 @@ export class PatronBucketService {
     }
     
     // Remove patrons from a bucket
-    async removePatronsFromPatronBucket(bucketId: number, patronIds: number[]): Promise<any> {
+    async removePatronsFromPatronBucket(bucketId: number, itemIds: number[]): Promise<any> {
         try {
-            return await lastValueFrom(
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.container.item.delete.batch',
-                    this.auth.token(), 'user', bucketId, patronIds
-                )
-            );
+            console.debug('In service: removing items', itemIds, 'from bucket', bucketId);
+            
+            if (!itemIds || itemIds.length === 0) {
+                throw new Error('No item IDs provided for removal');
+            }
+            
+            // Process each item ID individually
+            const results = [];
+            const errors = [];
+            
+            for (const itemId of itemIds) {
+                try {
+                    console.debug(`Removing item ${itemId} from bucket ${bucketId}`);
+                    
+                    // Use the standard item.delete method - as defined in container.pm
+                    const response = await lastValueFrom(
+                        this.net.request(
+                            'open-ils.actor',
+                            'open-ils.actor.container.item.delete',  // This is the correct method
+                            this.auth.token(), 'user', itemId
+                        ),
+                        { defaultValue: { success: true, id: itemId } }
+                    );
+                    
+                    // Check for errors
+                    const evt = this.evt.parse(response);
+                    if (evt) {
+                        console.warn(`Error removing item ${itemId}:`, evt);
+                        errors.push({ id: itemId, error: evt });
+                    } else {
+                        results.push({ id: itemId, success: true });
+                    }
+                } catch (itemError) {
+                    console.warn(`Exception removing item ${itemId}:`, itemError);
+                    errors.push({ id: itemId, error: itemError });
+                }
+            }
+            
+            console.debug('Removal results:', { results, errors });
+            
+            // If all operations failed, throw an error
+            if (errors.length === itemIds.length) {
+                throw new Error(`Failed to remove any items: ${JSON.stringify(errors)}`);
+            }
+            
+            // Return the results with partial success information
+            return {
+                success: results.length > 0,
+                total: itemIds.length,
+                removed: results.length,
+                failed: errors.length,
+                results: results,
+                errors: errors
+            };
         } catch (error) {
-            console.error('Error removing patrons from bucket:', error);
-            throw new Error(`Error removing patrons from bucket: ${error.message || error}`);
+            console.error('Error in removePatronsFromPatronBucket:', error);
+            throw error;
         }
     }
 }
