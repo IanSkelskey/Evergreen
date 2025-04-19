@@ -25,3 +25,19 @@ eg-grid {
 .align-text-bottom {
     vertical-align: text-bottom;
 }
+
+/* Quick add form styling */
+.quick-add-form {
+    min-width: 250px;
+}
+
+.quick-add-form .input-group {
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 992px) {
+    .quick-add-form {
+        margin-top: 10px;
+        width: 100%;
+    }
+}

@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
+import {Component, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
 import {Router, ActivatedRoute} from '@angular/router';
 import {firstValueFrom, lastValueFrom, EMPTY, Subject} from 'rxjs';
 import {catchError, takeUntil} from 'rxjs/operators';
@@ -6,8 +6,8 @@ import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {EventService} from '@eg/core/event.service';
 import {OrgService} from '@eg/core/org.service';
+import {EventService} from '@eg/core/event.service';
 import {PermService} from '@eg/core/perm.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
@@ -16,7 +16,6 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
-import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
@@ -39,6 +38,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     oneSelectedRow = false;
     hasUpdatePerm = false;
     hasDeletePerm = false;
+    quickAddBarcode: string = '';
+    @ViewChild('barcodeInput') barcodeInput: ElementRef;
 
     @ViewChild('grid', { static: true }) grid: GridComponent;
     @ViewChild('confirmDialog') confirmDialog: ConfirmDialogComponent;
@@ -220,6 +221,132 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                     this.grid.reload();
                 }
             });
+        }
+    }
+
+    /**
+     * Quickly add a patron to the bucket by barcode
+     */
+    async quickAddPatron(): Promise<void> {
+        if (!this.quickAddBarcode || this.quickAddBarcode.trim() === '') {
+            return;
+        }
+
+        try {
+            this.progressDialog.open();
+            
+            // First get the patron by barcode
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.user.fleshed.retrieve_by_barcode',
+                    this.auth.token(),
+                    this.quickAddBarcode.trim()
+                ).pipe(
+                    catchError(err => {
+                        console.error('Error fetching patron:', err);
+                        return [null];
+                    })
+                )
+            );
+
+            if (!response) {
+                this.alertDialog.dialogTitle = $localize`Patron Not Found`;
+                this.alertDialog.dialogBody = $localize`No patron found with barcode "${this.quickAddBarcode}"`;
+                await this.alertDialog.open();
+                return;
+            }
+
+            const evt = this.evt.parse(response);
+            if (evt) {
+                console.error('Error retrieving patron:', evt);
+                this.alertDialog.dialogTitle = $localize`Error Finding Patron`;
+                this.alertDialog.dialogBody = evt.toString();
+                await this.alertDialog.open();
+                return;
+            }
+
+            const patron = response;
+            
+            try {
+                // Check if patron is already in bucket
+                const existingItems = await lastValueFrom(
+                    this.net.request(
+                        'open-ils.actor',
+                        'open-ils.actor.container.item.retrieve',
+                        this.auth.token(), 'user',
+                        this.bucketId, patron.id()
+                    ).pipe(
+                        catchError(err => {
+                            console.error('Error checking if patron is in bucket:', err);
+                            return [null];
+                        })
+                    )
+                );
+
+                if (existingItems && existingItems.length > 0) {
+                    this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
+                    this.quickAddBarcode = '';
+                    setTimeout(() => {
+                        if (this.barcodeInput) {
+                            this.barcodeInput.nativeElement.focus();
+                        }
+                    }, 100);
+                    return;
+                }
+                
+                // Use the bucket service to add the patron
+                try {
+                    const addResult = await this.bucketService.addPatronsToPatronBucket(
+                        this.bucketId, 
+                        [patron.id()]
+                    );
+                    
+                    // Check for error response
+                    const addEvt = this.evt.parse(addResult);
+                    if (addEvt) {
+                        console.error('Error adding patron to bucket:', addEvt);
+                        this.alertDialog.dialogTitle = $localize`Error Adding Patron`;
+                        this.alertDialog.dialogBody = addEvt.toString();
+                        await this.alertDialog.open();
+                        return;
+                    }
+                    
+                    this.toast.success($localize`Added patron "${patron.family_name()}, ${patron.first_given_name()}" to bucket`);
+                    this.quickAddBarcode = ''; // Clear the input
+                    this.grid.reload();
+                } catch (error) {
+                    console.error('Error adding patron to bucket:', error);
+                    this.alertDialog.dialogTitle = $localize`Error Adding Patron`;
+                    this.alertDialog.dialogBody = error.message || String(error);
+                    await this.alertDialog.open();
+                    return;
+                }
+                
+            } catch (innerError) {
+                console.error('Error in bucket operations:', innerError);
+                this.toast.danger($localize`Error processing request: ${innerError.message || innerError}`);
+            }
+            
+            // Focus back on the input field for the next scan
+            setTimeout(() => {
+                if (this.barcodeInput) {
+                    this.barcodeInput.nativeElement.focus();
+                }
+            }, 100);
+            
+        } catch (error) {
+            console.error('Error in quick add patron:', error);
+            this.toast.danger($localize`Error adding patron: ${error.message || error}`);
+            
+            // Still focus back on input for next attempt
+            setTimeout(() => {
+                if (this.barcodeInput) {
+                    this.barcodeInput.nativeElement.focus();
+                }
+            }, 100);
+        } finally {
+            this.progressDialog.close();
         }
     }
 }
