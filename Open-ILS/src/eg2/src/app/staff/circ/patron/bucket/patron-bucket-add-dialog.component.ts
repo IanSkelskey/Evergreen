@@ -13,7 +13,8 @@ import {firstValueFrom} from 'rxjs';
 
 @Component({
     selector: 'eg-patron-bucket-add-dialog',
-    templateUrl: './patron-bucket-add-dialog.component.html'
+    templateUrl: './patron-bucket-add-dialog.component.html',
+    styleUrls: ['./patron-bucket-add-dialog.component.css'] // Add the CSS file
 })
 export class PatronBucketAddDialogComponent extends DialogComponent {
     @Input() bucketId: number;
@@ -95,10 +96,15 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
         }
     }
 
-    // Override the dialog open method to reset selections
+    // Override the dialog open method to reset selections and set dialog size/class
     override open(options?: any) {
         this.selectedPatrons = [];
         this.selectedPatronIds = [];
-        return super.open(options);
+        const dialogOptions = {
+            ...options,
+            size: 'xl', // Use extra large size instead of large
+            windowClass: 'patron-bucket-dialog-wide'
+        };
+        return super.open(dialogOptions);
     }
 }

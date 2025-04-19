@@ -199,7 +199,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         if (!this.addPatronDialog) {
             // Create dialog programmatically if ViewChild not available
             const modalRef = this.modal.open(PatronBucketAddDialogComponent, {
-                size: 'lg'
+                size: 'xl', // Changed from 'lg' to 'xl'
+                windowClass: 'patron-bucket-dialog-wide'
             });
             const dialog = modalRef.componentInstance as PatronBucketAddDialogComponent;
             dialog.bucketId = this.bucketId;
@@ -214,7 +215,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         } else {
             // Use ViewChild reference
             this.addPatronDialog.bucketId = this.bucketId;
-            this.addPatronDialog.open({size: 'lg'}).subscribe(result => {
+            this.addPatronDialog.open({size: 'xl'}).subscribe(result => {
                 if (result) {
                     this.grid.reload();
                 }
