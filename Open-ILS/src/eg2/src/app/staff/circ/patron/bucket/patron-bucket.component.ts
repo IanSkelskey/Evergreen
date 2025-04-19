@@ -388,14 +388,49 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     openNewBucketDialog = async () => {
         try {
-            this.newBucketDialog.bucketClass = 'user';
-            this.newBucketDialog.bucketType = 'staff_client';
-            this.newBucketDialog.itemIds = [];
-            const results = await lastValueFrom(this.newBucketDialog.open());
-            this.bucketService.requestPatronBucketsRefresh();
-            this.toast.success($localize`Bucket created successfully`);
+            // Method 1: Use the ViewChild reference if it exists
+            if (this.newBucketDialog) {
+                this.newBucketDialog.bucketClass = 'user';
+                this.newBucketDialog.bucketType = 'staff_client';
+                this.newBucketDialog.itemIds = [];
+                const results = await lastValueFrom(this.newBucketDialog.open());
+                this.handleBucketCreationResult(results);
+            } 
+            // Method 2: Create the dialog programmatically as fallback
+            else {
+                // Import the component dynamically to avoid circular dependencies
+                const modalRef = this.modal.open(BucketDialogComponent);
+                const bucketDialog = modalRef.componentInstance as BucketDialogComponent;
+                
+                bucketDialog.bucketClass = 'user';
+                bucketDialog.bucketType = 'staff_client';
+                bucketDialog.itemIds = [];
+                
+                try {
+                    const results = await modalRef.result;
+                    this.handleBucketCreationResult(results);
+                } catch (err) {
+                    // User dismissed the dialog
+                    console.debug('Bucket creation canceled');
+                }
+            }
         } catch (error) {
             this.toast.danger($localize`Error creating bucket: ${error.message || error}`);
+        }
+    }
+
+    // Helper method to handle bucket creation results
+    private handleBucketCreationResult(results: any) {
+        if (results && results.id) {
+            // Log the bucket to recent buckets
+            this.bucketService.logPatronBucket(results.id);
+            // Navigate to the bucket content view
+            this.router.navigate(['/staff/circ/patron/bucket/content', results.id]);
+            this.toast.success($localize`Bucket "${results.name}" created successfully`);
+        } else {
+            // Just refresh the list if we don't have a specific ID to navigate to
+            this.bucketService.requestPatronBucketsRefresh();
+            this.toast.success($localize`Bucket created successfully`);
         }
     }
 

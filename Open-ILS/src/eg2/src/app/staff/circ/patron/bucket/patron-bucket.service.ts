@@ -63,14 +63,44 @@ export class PatronBucketService {
             // Normalize to array
             if (!items) items = [];
             if (!Array.isArray(items)) items = [items];
+            
+            // Debug the raw items
+            console.debug('Raw bucket items before mapping:', items);
+            
             return items.map(item => {
                 const user = item.target_user();
+                
+                // Debug card access
+                console.debug('User:', user ? user.id() : 'null');
+                console.debug('Card:', user && user.card ? user.card() : 'null');
+                
+                // Fix barcode access with more robust error handling
+                let barcode = '';
+                try {
+                    // Try direct access first
+                    if (user && user.card && user.card() && typeof user.card().barcode === 'function') {
+                        barcode = user.card().barcode();
+                    }
+                } catch (e) {
+                    console.warn('Error accessing barcode:', e);
+                }
+                
+                // Fix patron name with error handling
+                let firstName = '';
+                let lastName = '';
+                try {
+                    firstName = user && typeof user.first_given_name === 'function' ? user.first_given_name() : '';
+                    lastName = user && typeof user.family_name === 'function' ? user.family_name() : '';
+                } catch (e) {
+                    console.warn('Error accessing patron name:', e);
+                }
+                
                 return {
                     id: item.id(),
                     bucketId: item.bucket(),
-                    userId: user.id(),
-                    patron_name: user.family_name() + ', ' + user.first_given_name(),
-                    barcode: user.card()?.barcode() || '',
+                    userId: user ? user.id() : 0,
+                    patron_name: lastName ? (lastName + ', ' + firstName) : 'Unknown Patron',
+                    barcode: barcode || 'No Barcode',
                     patron: user
                 };
             });

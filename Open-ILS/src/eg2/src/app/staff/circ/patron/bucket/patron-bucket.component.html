@@ -103,3 +103,5 @@
 <ng-template #nameTemplate let-row="row">
   <a routerLink="/staff/circ/patron/bucket/content/{{row.id}}" [queryParams]="{returnTo: currentView}">{{row.name}}</a>
 </ng-template>
+
+<eg-bucket-dialog #newBucketDialog></eg-bucket-dialog>
