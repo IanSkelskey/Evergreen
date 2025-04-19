@@ -349,4 +349,35 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             this.progressDialog.close();
         }
     }
+
+    // Bulk action methods
+    updateAllPatrons() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`Update All Patrons functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    modifyStatcats() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`Modify Statistical Categories functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    viewChangesets() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`View Changesets functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    applyRollback() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`Apply Rollback functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    deleteAllPatrons() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`Delete All Patrons functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
 }
