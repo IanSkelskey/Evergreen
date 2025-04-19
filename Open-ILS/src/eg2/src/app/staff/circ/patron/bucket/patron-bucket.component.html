@@ -1,0 +1,91 @@
+<eg-title i18n-prefix prefix="Patron Buckets">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Buckets" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-confirm-dialog #deleteDialog
+    dialogTitle="Delete patron bucket?" i18n-dialogTitle
+    i18n-dialogBody
+    dialogBody="Delete the selected patron bucket(s)?">
+</eg-confirm-dialog>
+
+<eg-alert-dialog #retrieveByIdFail
+    dialogTitle="Error retrieving bucket" i18n-dialogTitle>
+</eg-alert-dialog>
+
+<eg-alert-dialog #deleteFail
+    dialogTitle="Error deleting bucket" i18n-dialogTitle
+    i18n-dialogBody
+    dialogBody="Error deleting one or more buckets">
+</eg-alert-dialog>
+
+<div class="container-fluid px-0">
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <ng-container *ngFor="let viewKey of getViewKeys()">
+        <button class="btn me-2 mb-2"
+            [ngClass]="isCurrentView(viewKey) ? 'btn-success' : 'btn-outline-success'"
+            (click)="switchTo(viewKey)">
+            {{getViews()[viewKey]?.label}} 
+            <span *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
+            <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+        </button>
+      </ng-container>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <button class="btn btn-outline-primary me-2 mb-2" (click)="openNewBucketDialog()">
+        <span class="material-icons align-text-bottom">add</span>
+        <span i18n>New Bucket</span>
+      </button>
+      <div class="input-group d-inline-flex" style="width: auto;">
+        <input type="number" class="form-control" 
+          [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder>
+        <button class="btn btn-outline-primary" (click)="retrieveBucketById()" i18n>Retrieve</button>
+      </div>
+    </div>
+  </div>
+
+  <eg-grid #grid 
+      [dataSource]="dataSource"
+      [cellTextGenerator]="cellTextGenerator"
+      i18n-persistKey 
+      persistKey="circ.patron_buckets"
+      (rowSelectionChange)="gridSelectionChange($event)"
+      idlClass="cub"
+      [sortable]="true"
+      [filterable]="true"
+  >
+    <eg-grid-toolbar-action label="View Content" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="viewSelectedBuckets($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Edit Bucket" i18n-label
+        [disabled]="!oneSelectedRow"
+        (onClick)="openEditBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Debug Selected Row" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="debugRowData($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
+    <eg-grid-column path="name" i18n-label label="Name" visible="true" [cellTemplate]="nameTemplate"></eg-grid-column>
+    <eg-grid-column path="description" i18n-label label="Description" visible="true"></eg-grid-column>
+    <eg-grid-column path="btype" i18n-label label="Type" visible="true"></eg-grid-column>
+    <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
+    <eg-grid-column path="create_time" i18n-label label="Create Date" visible="true" datatype="timestamp"></eg-grid-column>
+  </eg-grid>
+
+<ng-template #nameTemplate let-bucket="row">
+  <a [routerLink]="['/staff/circ/patron/bucket/content', bucket?.id]" 
+     class="bucket-name-link"
+     title="View Bucket Content">
+    {{bucket?.name}}
+  </a>
+</ng-template>
+
+<eg-bucket-dialog #newBucketDialog></eg-bucket-dialog>
+<eg-patron-bucket-create-dialog #createBucketDialog></eg-patron-bucket-create-dialog>

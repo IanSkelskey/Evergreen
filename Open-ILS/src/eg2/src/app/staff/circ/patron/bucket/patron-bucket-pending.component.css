@@ -1,0 +1,17 @@
+eg-grid {
+  min-height: calc(100vh - 450px);
+  display: block;
+}
+
+.align-text-bottom {
+  vertical-align: text-bottom;
+}
+
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+button .material-icons {
+  margin-right: 0.25rem;
+}

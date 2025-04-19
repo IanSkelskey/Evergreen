@@ -1,0 +1,48 @@
+.eg-grid-filter-links {
+    margin-bottom: 0;
+}
+
+.eg-grid-filter-links button {
+    padding-left: 0;
+    padding-right: 1rem;
+}
+
+.eg-grid-filter-links button.active {
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.bucket-action {
+    padding: 0;
+    margin-left: 0.25rem;
+}
+
+.bucket-destroy {
+    color: #dc3545;
+}
+
+/* New styles for improved layout */
+eg-grid {
+    min-height: calc(100vh - 220px);
+    display: block;
+}
+
+.nav-pills .nav-link {
+    margin-right: 0.5rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}
+
+/* New styles for the bucket name links */
+.bucket-name-link {
+    color: var(--bs-primary);
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.bucket-name-link:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,152 @@
+<eg-title i18n-prefix prefix="Patron Bucket Content">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Bucket Content" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-confirm-dialog #confirmDialog></eg-confirm-dialog>
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+<eg-bucket-dialog #addToBucketDialog></eg-bucket-dialog>
+<eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
+
+<div class="container-fluid px-0">
+  <div class="row mb-3">
+    <div class="col-md-9">
+      <!-- Bucket header section -->
+      <div class="d-flex align-items-center">
+        <h3 class="my-0 me-3">{{bucket?.name()}}</h3>
+        <!-- Owner information with link -->
+        <span class="me-3 text-muted" *ngIf="bucket?.owner()">
+          <span i18n>Owner:</span>
+          <a href="/eg2/staff/circ/patron/{{bucket?.owner()?.id()}}/edit" 
+            target="_blank" class="ms-1">
+            {{bucket?.owner()?.usrname()}}
+          </a>
+        </span>
+      </div>
+      <div *ngIf="bucket?.description()" class="mt-2">
+        <p class="text-muted mb-0">{{bucket?.description()}}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons row -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="btn-toolbar">
+        <div class="btn-group me-2">
+          <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+            routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+            <span class="material-icons align-text-bottom">arrow_back</span>
+            Back to Buckets
+          </a>
+          <a class="btn btn-success" 
+            routerLink="/staff/circ/patron/bucket" i18n>
+            <span class="material-icons align-text-bottom">folder</span>
+            My Buckets
+          </a>
+        </div>
+        
+        <div class="btn-group me-2">
+          <button class="btn btn-primary" 
+            (click)="openAddPatronDialog()" i18n>
+            <span class="material-icons align-text-bottom">person_add</span>
+            Add Patron
+          </button>
+          <a class="btn btn-outline-primary" 
+            routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
+            <span class="material-icons align-text-bottom">group_add</span>
+            Add Multiple Patrons
+          </a>
+        </div>
+
+        <!-- Quick Add Form -->
+        <form class="d-flex me-2 quick-add-form" (ngSubmit)="quickAddPatron()">
+          <div class="input-group">
+            <input type="text" class="form-control" 
+                  [(ngModel)]="quickAddBarcode" 
+                  name="quickAddBarcode" 
+                  placeholder="Scan Patron Barcode" i18n-placeholder
+                  aria-label="Patron Barcode" i18n-aria-label
+                  #barcodeInput>
+            <button class="btn btn-outline-primary" type="submit" i18n>
+              <span class="material-icons align-text-bottom">qr_code_scanner</span>
+              Quick Add
+            </button>
+          </div>
+        </form>
+        
+        <div class="btn-group">
+          <div ngbDropdown>
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+              id="bulkActionsDropdown" ngbDropdownToggle>
+              <span class="material-icons align-text-bottom">build</span>
+              <span i18n>Bulk Actions</span>
+            </button>
+            <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
+              <button ngbDropdownItem (click)="updateAllPatrons()" i18n>Update All Patrons</button>
+              <button ngbDropdownItem (click)="modifyStatcats()" i18n>Modify Statistical Categories</button>
+              <button ngbDropdownItem (click)="viewChangesets()" i18n>View Changesets</button>
+              <button ngbDropdownItem (click)="applyRollback()" i18n>Apply Rollback</button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <eg-grid #grid idlClass="cubi" i18n-persistKey 
+        persistKey="circ.patron_bucket_items"
+        [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+        (rowSelectionChange)="gridSelectionChange($event)"
+        [sortable]="true" [filterable]="true">
+        
+        <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="removeFromBucket($event)">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Move to Another Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="moveAddToBucket($event, true)">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Add to Another Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="moveAddToBucket($event, false)">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="editSelectedPatrons($event)">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
+        <eg-grid-column name="bucket" path="bucket" [hidden]="true"></eg-grid-column>
+        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
+        <eg-grid-column name="family_name" path="target_user.family_name"></eg-grid-column>
+        <eg-grid-column name="first_given_name" path="target_user.first_given_name"></eg-grid-column>
+        <eg-grid-column name="second_given_name" path="target_user.second_given_name"></eg-grid-column>
+        <eg-grid-column name="home_ou.name" path="target_user.home_ou.name" i18n-label label="Home Library"></eg-grid-column>
+      </eg-grid>
+    </div>
+  </div>
+</div>
+
+<ng-template #barcodeTemplate let-row="row">
+  <a *ngIf="row.target_user?.card()?.barcode()" 
+     href="/eg2/staff/circ/patron/{{row.target_user.id()}}/edit" 
+     target="_blank"
+     title="Edit Patron ({{row.target_user.card().barcode()}})">
+    {{row.target_user.card().barcode()}}
+  </a>
+  <span *ngIf="!row.target_user?.card()?.barcode()">
+    <em>No barcode</em>
+  </span>
+</ng-template>
+
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
