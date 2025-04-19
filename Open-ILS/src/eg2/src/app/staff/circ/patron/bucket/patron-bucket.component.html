@@ -61,27 +61,30 @@
         (onClick)="viewSelectedBuckets($event)">
     </eg-grid-toolbar-action>
 
+    <eg-grid-toolbar-action label="Edit Bucket" i18n-label
+        [disabled]="!oneSelectedRow"
+        (onClick)="openEditBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
     <eg-grid-toolbar-action label="Debug Selected Row" i18n-label
         [disabled]="noSelectedRows"
         (onClick)="debugRowData($event)">
     </eg-grid-toolbar-action>
 
     <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
-    <eg-grid-column path="name" i18n-label label="Name" visible="true"></eg-grid-column>
+    <eg-grid-column path="name" i18n-label label="Name" visible="true" [cellTemplate]="nameTemplate"></eg-grid-column>
     <eg-grid-column path="description" i18n-label label="Description" visible="true"></eg-grid-column>
     <eg-grid-column path="btype" i18n-label label="Type" visible="true"></eg-grid-column>
     <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
     <eg-grid-column path="create_time" i18n-label label="Create Date" visible="true" datatype="timestamp"></eg-grid-column>
-    <eg-grid-column i18n-label label="Actions" [cellTemplate]="actionsTemplate"></eg-grid-column>
   </eg-grid>
 
-<ng-template #actionsTemplate let-bucket="row">
-  <button class="btn btn-sm btn-outline-primary" 
-    [disabled]="!bucket?.id" 
-    (click)="jumpToBucketContent(bucket?.id)" i18n>
-    <span class="material-icons">visibility</span>
-    View Content
-  </button>
+<ng-template #nameTemplate let-bucket="row">
+  <a [routerLink]="['/staff/circ/patron/bucket/content', bucket?.id]" 
+     class="bucket-name-link"
+     title="View Bucket Content">
+    {{bucket?.name}}
+  </a>
 </ng-template>
 
 <eg-bucket-dialog #newBucketDialog></eg-bucket-dialog>

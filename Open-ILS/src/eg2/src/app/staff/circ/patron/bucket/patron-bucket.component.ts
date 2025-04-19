@@ -315,18 +315,95 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     openEditBucketDialog = async (rows: any[]) => {
         if (!rows.length) return;
         try {
-            const bucket = rows[0].bucket;
-            const bucketId = bucket.id();
-            this.editDialog.mode = 'update';
-            this.editDialog.recordId = bucketId;
-            this.editDialog.idlClass = 'cub';
-            const editRef = this.editDialog.open();
-            const result = await lastValueFrom(editRef);
-            if (result) {
-                this.bucketService.requestPatronBucketsRefresh();
-                this.toast.success($localize`Bucket successfully updated`);
+            const row = rows[0];
+            
+            // Better checking for bucket object and ID
+            if (!row) {
+                this.toast.danger($localize`Error: No row data available`);
+                return;
+            }
+            
+            // Get the bucket ID safely - different row formats are possible
+            let bucketId;
+            let bucket;
+            
+            // Try different ways to get the bucket ID
+            if (row.id) {
+                // Direct ID from flat data
+                bucketId = row.id;
+            } else if (row.bucket && typeof row.bucket.id === 'function') {
+                // IDL object with id() method
+                bucket = row.bucket;
+                bucketId = bucket.id();
+            } else if (row.bucket && row.bucket.id) {
+                // Object with direct id property
+                bucket = row.bucket;
+                bucketId = row.bucket.id;
+            } else {
+                this.toast.danger($localize`Error: Could not determine bucket ID`);
+                return;
+            }
+            
+            console.log('Editing bucket with ID:', bucketId);
+            
+            // Prepare bucket data for editing with safe access
+            const bucketData = {
+                id: bucketId,
+                name: row.name || '',
+                description: row.description || '',
+                btype: row.btype || 'staff_client',
+                owner: this.auth.user().id() // Default to current user
+            };
+            
+            // If we have a bucket object, try to get data from it directly
+            if (bucket) {
+                try {
+                    if (typeof bucket.name === 'function') bucketData.name = bucket.name();
+                } catch (e) { console.warn('Error accessing bucket name:', e); }
+                
+                try {
+                    if (typeof bucket.description === 'function') bucketData.description = bucket.description();
+                } catch (e) { console.warn('Error accessing bucket description:', e); }
+                
+                try {
+                    if (typeof bucket.btype === 'function') bucketData.btype = bucket.btype();
+                } catch (e) { console.warn('Error accessing bucket type:', e); }
+                
+                try {
+                    if (typeof bucket.owner === 'function') bucketData.owner = bucket.owner();
+                } catch (e) { console.warn('Error accessing bucket owner:', e); }
+            }
+            
+            // Use the create dialog component for editing
+            if (this.createBucketDialog) {
+                this.createBucketDialog.editMode = true;
+                this.createBucketDialog.bucketId = bucketId;
+                this.createBucketDialog.bucketData = bucketData;
+                
+                try {
+                    const result = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
+                    if (result && result.success) {
+                        this.bucketService.requestPatronBucketsRefresh();
+                        this.toast.success($localize`Bucket successfully updated`);
+                    }
+                } catch (err) {
+                    // User dismissed the dialog - silently handle this case
+                    console.debug('Bucket editing canceled');
+                }
+            } else {
+                // Fall back to the fm-editor
+                this.editDialog.mode = 'update';
+                this.editDialog.recordId = bucketId;
+                this.editDialog.idlClass = 'cub';
+                const editRef = this.editDialog.open();
+                const result = await lastValueFrom(editRef);
+                if (result) {
+                    this.bucketService.requestPatronBucketsRefresh();
+                    this.toast.success($localize`Bucket successfully updated`);
+                }
             }
         } catch (error) {
+            console.error('Error in openEditBucketDialog:', error);
             this.toast.danger($localize`Error updating bucket: ${error.message || error}`);
         }
     }

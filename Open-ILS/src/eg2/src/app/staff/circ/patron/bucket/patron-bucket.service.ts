@@ -80,6 +80,33 @@ export class PatronBucketService {
         }
     }
     
+    // Update an existing bucket
+    async updateBucket(bucket: IdlObject): Promise<any> {
+        try {
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.update',
+                    this.auth.token(), 'user', bucket
+                )
+            );
+            
+            const evt = this.evt.parse(response);
+            if (evt) {
+                throw new Error(evt.toString());
+            }
+            
+            this.requestPatronBucketsRefresh();
+            return {
+                success: true,
+                id: bucket.id()
+            };
+        } catch (error) {
+            console.error('Error updating bucket:', error);
+            throw new Error(`Error updating bucket: ${error.message || error}`);
+        }
+    }
+    
     // Delete a bucket
     async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
         try {

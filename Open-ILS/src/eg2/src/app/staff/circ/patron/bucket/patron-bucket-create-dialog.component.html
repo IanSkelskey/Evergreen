@@ -3,7 +3,8 @@
 
 <ng-template #dialogContent>
   <div class="modal-header">
-    <h4 class="modal-title" i18n>Create New Patron Bucket</h4>
+    <h4 class="modal-title" i18n *ngIf="!editMode">Create New Patron Bucket</h4>
+    <h4 class="modal-title" i18n *ngIf="editMode">Edit Patron Bucket</h4>
     <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="close()"></button>
   </div>
 
@@ -13,7 +14,7 @@
       {{errorMessage}}
     </div>
 
-    <div class="alert alert-info">
+    <div class="alert alert-info" *ngIf="!editMode">
       <span class="material-icons align-middle me-1">info</span>
       <span i18n>Patron buckets allow you to group patrons together for batch operations and reporting.</span>
     </div>
@@ -56,7 +57,8 @@
             {{type.label}}
           </option>
         </select>
-        <div class="form-text" i18n>For most cases, use "Staff Client" type</div>
+        <div class="form-text" i18n *ngIf="!editMode">For most cases, use "Staff Client" type</div>
+        <div class="form-text" i18n *ngIf="editMode">Bucket type cannot be changed after creation</div>
       </div>
     </form>
   </div>
@@ -64,10 +66,11 @@
   <div class="modal-footer">
     <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
     <button type="button" class="btn btn-success" 
-            (click)="createBucket()"
+            (click)="createOrUpdateBucket()"
             [disabled]="bucketForm.invalid || pending">
       <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
-      <span i18n>Create Bucket</span>
+      <span *ngIf="!editMode" i18n>Create Bucket</span>
+      <span *ngIf="editMode" i18n>Save Changes</span>
     </button>
   </div>
 </ng-template>

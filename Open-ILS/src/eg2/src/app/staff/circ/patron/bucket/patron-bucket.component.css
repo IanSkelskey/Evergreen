@@ -34,3 +34,15 @@ eg-grid {
 .nav-pills .nav-link.active {
     background-color: var(--bs-primary);
 }
+
+/* New styles for the bucket name links */
+.bucket-name-link {
+    color: var(--bs-primary);
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.bucket-name-link:hover {
+    text-decoration: underline;
+}
