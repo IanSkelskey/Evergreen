@@ -8,7 +8,9 @@ import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
 import {PatronBucketContentComponent} from './patron-bucket-content.component';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
+import {PatronBucketStateService} from './patron-bucket-state.service';
 import {PatronBucketRoutingModule} from './patron-bucket-routing.module';
+import {PatronBucketUpdateService} from './patron-bucket-update.service';
 
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
@@ -36,7 +38,9 @@ import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
         CommonWidgetsModule
     ],
     providers: [
-        PatronBucketService
+        PatronBucketService,
+        PatronBucketStateService,
+        PatronBucketUpdateService
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

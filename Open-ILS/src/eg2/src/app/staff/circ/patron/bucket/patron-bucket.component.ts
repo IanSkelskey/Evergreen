@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
 import {Router, ActivatedRoute} from '@angular/router';
 import {Observable, Subject, from, lastValueFrom, EMPTY, of} from 'rxjs';
-import {takeUntil, filter, catchError, switchMap, map} from 'rxjs/operators';
+import {takeUntil, catchError, switchMap, map} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -9,37 +9,19 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {EventService} from '@eg/core/event.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
-import {Pager} from '@eg/share/util/pager';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
-import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {PatronBucketService} from './patron-bucket.service';
+import {PatronBucketStateService} from './patron-bucket-state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
-
-interface GridColumnSort {
-    name: string;
-    dir: string;
-}
-
-interface BucketQueryResult {
-    bucketIds: number[];
-    count: number;
-}
-
-interface BucketView {
-    label: string | null;
-    sort_key: number | null;
-    count: number | null;
-    bucketIdQuery: (pager: Pager, sort: GridColumnSort[], justCount: boolean) => Promise<BucketQueryResult>;
-}
 
 @Component({
     selector: 'eg-patron-bucket',
@@ -48,13 +30,10 @@ interface BucketView {
 })
 
 export class PatronBucketComponent implements OnInit, OnDestroy {
-    currentView: string;
-    views: {[name: string]: BucketView} = {};
     dataSource: GridDataSource = new GridDataSource();
     cellTextGenerator: GridCellTextGenerator;
     bucketIdToRetrieve: number;
     bucketId: number;
-    userId: number;
     countInProgress = false;
     noSelectedRows = true;
     oneSelectedRow = false;
@@ -81,23 +60,16 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private toast: ToastService,
         private org: OrgService,
         private bucketService: PatronBucketService,
+        private bucketState: PatronBucketStateService,
         private modal: NgbModal,
         private datePipe: DatePipe
     ) {}
 
     ngOnInit() {
-        // Initialize views first so they're available when needed
-        this.initViews();
-        
         // Initialize grid-related objects
         this.initCellTextGenerator();
         this.initDataSource();
 
-        this.userId = this.auth.user().id();
-        
-        // Initialize with user buckets as default view
-        this.currentView = 'user';
-        
         // Handle route parameters for bucket ID
         this.route.paramMap.pipe(
             takeUntil(this.destroy$)
@@ -105,7 +77,8 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             const id = params.get('id');
             if (id) {
                 this.bucketIdToRetrieve = Number(id);
-                this.currentView = 'retrieved_by_id';
+                this.bucketState.setBucketIdToRetrieve(this.bucketIdToRetrieve);
+                this.bucketState.setCurrentView('retrieved_by_id');
                 this.grid?.reload();
             }
         });
@@ -115,10 +88,26 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             takeUntil(this.destroy$)
         ).subscribe(segments => {
             const path = segments[0]?.path;
-            if (path && this.views[path]) {
-                this.currentView = path;
+            const views = this.bucketState.getViews();
+            if (path && views[path]) {
+                this.bucketState.setCurrentView(path);
                 this.grid?.reload();
             }
+        });
+
+        // Subscribe to state changes
+        this.bucketState.currentView$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(() => {
+            if (this.grid) {
+                this.grid.reload();
+            }
+        });
+
+        this.bucketState.countInProgress$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(inProgress => {
+            this.countInProgress = inProgress;
         });
 
         // Listen for bucket refresh requests
@@ -126,11 +115,11 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             takeUntil(this.destroy$)
         ).subscribe(() => {
             this.grid?.reload();
-            this.updateCounts();
+            this.bucketState.updateCounts();
         });
 
         // Get initial counts for all views
-        this.updateCounts();
+        this.bucketState.updateCounts();
         
         // Initial grid load with a small delay to ensure everything is ready
         setTimeout(() => {
@@ -147,44 +136,48 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     initDataSource() {
         this.dataSource = new GridDataSource();
-        this.dataSource.getRows = (pager: Pager, sort: GridColumnSort[]): Observable<any> => {
-            if (!this.currentView) {
+        this.dataSource.getRows = (pager, sort): Observable<any> => {
+            // Get the current view from the state service
+            const currentView = this.bucketState.currentView;
+            if (!currentView) {
                 return of({count: 0, items: []});
             }
             
-            const viewDef = this.views[this.currentView];
+            const viewDef = this.bucketState.getView(currentView);
             if (!viewDef) {
                 return of({count: 0, items: []});
             }
             
             return from(viewDef.bucketIdQuery(pager, sort, false)).pipe(
                 switchMap(result => {
+                    console.debug('Bucket IDs from query:', result.bucketIds, 'count:', result.count);
+                    
+                    // Ensure we have valid IDs to search for
                     let ids = result.bucketIds;
-                    if (typeof ids === 'number') ids = [ids];
-                    if (!Array.isArray(ids)) ids = [];
-                    if (!ids.length) {
+                    if (!Array.isArray(ids) || ids.length === 0) {
+                        console.debug('No bucket IDs to fetch');
                         return of({count: result.count || 0, items: []});
                     }
+                    
+                    console.debug('Fetching buckets with IDs:', ids);
+                    
+                    // Fetch the full bucket objects
                     return this.pcrud.search('cub', 
                         {id: ids}, 
                         { flesh: 1, flesh_fields: {cub: ['owner']} }
                     ).pipe(
                         map(buckets => {
-                            // Defensive: ensure buckets is always an array
-                            const bucketArray = Array.isArray(buckets) ? buckets : [buckets];
-                            const items = bucketArray.map(bucket => ({
-                                id: bucket.id(),
-                                name: bucket.name(),
-                                description: bucket.description(),
-                                btype: bucket.btype(),
-                                'owner.usrname': bucket.owner() ? bucket.owner().usrname() : '',
-                                create_time: bucket.create_time() ? new Date(bucket.create_time()) : null,
-                                bucket: bucket  // Store the original bucket object for later use
-                            }));
+                            // Transform buckets for grid display using the service
+                            const items = this.bucketService.transformBucketsForGrid(buckets);
+                            
                             return {
-                                count: typeof result.count === 'number' && !isNaN(result.count) ? result.count : items.length,
-                                items
+                                count: result.count,
+                                items: items
                             };
+                        }),
+                        catchError(err => {
+                            console.error('Error retrieving patron buckets:', err);
+                            return of({count: 0, items: []});
                         })
                     );
                 }),
@@ -209,142 +202,19 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     }
 
     isCurrentView(view: string): boolean {
-        return this.currentView === view;
+        return this.bucketState.isCurrentView(view);
     }
 
     getViewKeys(): string[] {
-        return Object.keys(this.views)
-            .filter(key => this.views[key].label !== null)
-            .sort((a, b) => {
-                const sortA = this.views[a].sort_key;
-                const sortB = this.views[b].sort_key;
-                if (sortA === null || sortB === null) {
-                    return 0;
-                }
-                return sortA - sortB;
-            });
+        return this.bucketState.getViewKeys();
+    }
+
+    getViews() {
+        return this.bucketState.getViews();
     }
 
     switchTo(view: string) {
-        this.currentView = view;
-        if (this.grid) {
-            this.grid.reload();
-        }
-    }
-
-    initViews() {
-        this.views = {
-            user: {
-                label: $localize`My buckets`,
-                sort_key: 1,
-                count: -1,
-                bucketIdQuery: async (pager, sort, justCount) => {
-                    try {
-                        let options: any = {};
-                        if (pager && !justCount) {
-                            options.limit = pager.limit;
-                            options.offset = pager.offset;
-                        }
-                        if (sort && sort.length && !justCount) {
-                            options.order_by = {
-                                cub: sort.map(s => ({
-                                    field: s.name,
-                                    direction: s.dir.toUpperCase()
-                                }))
-                            };
-                        }
-                        const search = { 
-                            owner: this.userId || this.auth.user().id(), 
-                            btype: 'staff_client' 
-                        };
-                        if (justCount) {
-                            const count = await this.pcrud.search('cub', search, {count: true}).toPromise();
-                            const numericCount = Number(count);
-                            this.views.user.count = isNaN(numericCount) ? 0 : numericCount;
-                            return { bucketIds: [], count: this.views.user.count };
-                        } else {
-                            let ids = await this.pcrud.search('cub', search, options, {idlist: true}).toPromise();
-                            if (typeof ids === 'number') ids = [ids];
-                            if (!Array.isArray(ids)) ids = [];
-                            // Always update count to reflect the current number of buckets
-                            this.views.user.count = ids.length;
-                            // Also, if count is 0, force update
-                            if (this.views.user.count === 0) this.views.user.count = 0;
-                            return { bucketIds: ids, count: ids.length };
-                        }
-                    } catch (error) {
-                        console.error('Error in user bucketIdQuery:', error);
-                        this.views.user.count = 0;
-                        return { bucketIds: [], count: 0 };
-                    }
-                }
-            },
-            recent: {
-                label: $localize`Recent`,
-                sort_key: 2,
-                count: -1,
-                bucketIdQuery: async (pager, sort, justCount) => {
-                    try {
-                        const recentBucketIds = this.bucketService.recentPatronBucketIds();
-                        
-                        if (!recentBucketIds || !recentBucketIds.length) {
-                            this.views.recent.count = 0;
-                            return { bucketIds: [], count: 0 };
-                        }
-                        
-                        if (justCount) {
-                            this.views.recent.count = recentBucketIds.length;
-                            return { bucketIds: [], count: recentBucketIds.length };
-                        } else {
-                            // Apply paging if needed
-                            let idsToUse = recentBucketIds;
-                            if (pager) {
-                                const start = pager.offset;
-                                const end = Math.min(start + pager.limit, recentBucketIds.length);
-                                idsToUse = recentBucketIds.slice(start, end);
-                            }
-                            
-                            return { bucketIds: idsToUse, count: recentBucketIds.length };
-                        }
-                    } catch (error) {
-                        console.error('Error in recent bucketIdQuery:', error);
-                        return { bucketIds: [], count: 0 };
-                    }
-                }
-            },
-            retrieved_by_id: {
-                label: null,
-                sort_key: null,
-                count: null,
-                bucketIdQuery: async (pager, sort, justCount) => {
-                    if (!this.bucketIdToRetrieve) {
-                        return { bucketIds: [], count: 0 };
-                    }
-                    
-                    const bucketIds = [this.bucketIdToRetrieve];
-                    return { bucketIds: bucketIds, count: bucketIds.length };
-                }
-            }
-        };
-    }
-
-    updateCounts() {
-        this.countInProgress = true;
-        
-        const promises = this.getViewKeys().map(viewKey => {
-            return this.views[viewKey].bucketIdQuery(null, null, true)
-                .then(result => {
-                    this.views[viewKey].count = result.count;
-                })
-                .catch(error => {
-                    console.error(`Error getting count for view ${viewKey}:`, error);
-                    this.views[viewKey].count = 0;
-                });
-        });
-
-        Promise.all(promises).finally(() => {
-            this.countInProgress = false;
-        });
+        this.bucketState.setCurrentView(view);
     }
 
     gridSelectionChange(selected: any[]) {
@@ -355,31 +225,22 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     retrieveBucketById() {
         if (!this.bucketIdToRetrieve) return;
         
-        this.testReferencedBucket(this.bucketIdToRetrieve, (bucket: IdlObject) => {
-            this.jumpToBucketContent(this.bucketIdToRetrieve);
-        });
-    }
-
-    testReferencedBucket(bucketId: number, callback: Function) {
-        this.pcrud.retrieve('cub', bucketId).subscribe({
-            next: (response) => {
-                const evt = this.evt.parse(response);
-                if (evt) {
-                    console.error(evt.toString());
-                    this.retrieveByIdFail.dialogBody = evt.toString();
-                    this.retrieveByIdFail.open();
-                } else {
-                    callback(response);
-                }
-            },
-            error: (response: unknown) => {
-                console.error(response);
+        this.bucketService.retrieveBucketById(this.bucketIdToRetrieve)
+            .then(bucket => {
+                this.jumpToBucketContent(this.bucketIdToRetrieve);
+            })
+            .catch(error => {
+                console.error('Error retrieving bucket:', error);
+                this.retrieveByIdFail.dialogBody = error.toString();
                 this.retrieveByIdFail.open();
-            }
-        });
+            });
     }
 
     jumpToBucketContent(bucketId: number) {
+        if (!bucketId) {
+            this.toast.danger($localize`Cannot view content: Invalid bucket ID`);
+            return;
+        }
         this.bucketService.logPatronBucket(bucketId);
         this.router.navigate(['/staff/circ/patron/bucket/content', bucketId]).catch(err => {
             this.toast.danger($localize`Navigation error: ${err.message || err}`);
@@ -419,7 +280,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Helper method to handle bucket creation results
+    // Helper method to handle bucket creation result
     private handleBucketCreationResult(results: any) {
         if (results && results.id) {
             // Log the bucket to recent buckets
@@ -458,41 +319,21 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         try {
             const confirmation = await lastValueFrom(this.deleteDialog.open());
             if (!confirmation) return;
+            
             const bucketIds = rows.map(row => row.bucket.id());
-            const results = await Promise.all(bucketIds.map(id => this.deleteBucket(id)));
+            const results = await Promise.all(bucketIds.map(id => this.bucketService.deleteBucket(id)));
+            
             const failures = results.filter(r => !r.success);
             if (failures.length > 0) {
                 this.deleteFail.open();
             } else {
                 this.toast.success($localize`Bucket(s) successfully deleted`);
             }
+            
             this.bucketService.requestPatronBucketsRefresh();
         } catch (error) {
             this.toast.danger($localize`Error deleting bucket: ${error.message || error}`);
             this.deleteFail.open();
-        }
-    }
-
-    private async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
-        try {
-            const response = await lastValueFrom(
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.container.full_delete',
-                    this.auth.token(), 'user', bucketId
-                )
-            );
-            
-            const evt = this.evt.parse(response);
-            if (evt) {
-                console.error('Delete bucket error:', evt);
-                return {success: false, message: evt.toString()};
-            }
-            
-            return {success: true};
-        } catch (error) {
-            console.error('Error deleting bucket:', error);
-            return {success: false, message: 'Unknown error'};
         }
     }
 
