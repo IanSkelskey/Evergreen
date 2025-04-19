@@ -45,13 +45,14 @@ export class PatronBucketService {
     }
     
     // Create a new bucket
-    async createBucket(name: string, description: string = '', bucketType: string = 'staff_client'): Promise<any> {
+    async createBucket(name: string, description: string = '', bucketType: string = 'staff_client', isPublic: boolean = false): Promise<any> {
         try {
             const bucket = this.idl.create('cub');
             bucket.owner(this.auth.user().id());
             bucket.name(name);
             bucket.description(description || '');
             bucket.btype(bucketType);
+            bucket.pub(isPublic ? 't' : 'f'); // Add public flag
             
             const result = await lastValueFrom(
                 this.net.request(
@@ -83,16 +84,48 @@ export class PatronBucketService {
     // Update an existing bucket
     async updateBucket(bucket: IdlObject): Promise<any> {
         try {
+            console.debug('Updating bucket with data:', bucket);
+            
+            // Make sure pub is properly formatted - API requires 't' or 'f' character values
+            if (typeof bucket.pub === 'function') {
+                const pubValue = bucket.pub();
+                if (pubValue === true || pubValue === false) {
+                    bucket.pub(pubValue ? 't' : 'f');
+                }
+            }
+            
+            // For debugging - show what we're sending to the server
+            console.log('Sending bucket update:', {
+                id: bucket.id(),
+                name: bucket.name(),
+                description: bucket.description(),
+                owner: bucket.owner(),
+                btype: bucket.btype(),
+                pub: bucket.pub()
+            });
+            
+            // Try using the containers.update method with specific parameters
             const response = await lastValueFrom(
                 this.net.request(
                     'open-ils.actor',
-                    'open-ils.actor.container.update',
-                    this.auth.token(), 'user', bucket
+                    'open-ils.actor.containers.update',  // Use the batch version that's more reliable
+                    this.auth.token(), 
+                    'user', 
+                    [bucket]  // Send as an array for batch API
                 )
             );
             
-            const evt = this.evt.parse(response);
+            // Log the response for debugging
+            console.debug('Bucket update response:', response);
+            
+            if (!response || !response[bucket.id()]) {
+                throw new Error('No response from server for bucket update');
+            }
+            
+            const result = response[bucket.id()];
+            const evt = this.evt.parse(result);
             if (evt) {
+                console.error('Bucket update event error:', evt);
                 throw new Error(evt.toString());
             }
             

@@ -352,7 +352,8 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                 name: row.name || '',
                 description: row.description || '',
                 btype: row.btype || 'staff_client',
-                owner: this.auth.user().id() // Default to current user
+                owner: this.auth.user().id(), // Default to current user
+                pub: false // Default public state
             };
             
             // If we have a bucket object, try to get data from it directly
@@ -372,6 +373,14 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                 try {
                     if (typeof bucket.owner === 'function') bucketData.owner = bucket.owner();
                 } catch (e) { console.warn('Error accessing bucket owner:', e); }
+
+                try {
+                    if (typeof bucket.pub === 'function') {
+                        // Handle different possible pub values
+                        const pubValue = bucket.pub();
+                        bucketData.pub = pubValue === 't' || pubValue === true;
+                    }
+                } catch (e) { console.warn('Error accessing bucket pub flag:', e); }
             }
             
             // Use the create dialog component for editing

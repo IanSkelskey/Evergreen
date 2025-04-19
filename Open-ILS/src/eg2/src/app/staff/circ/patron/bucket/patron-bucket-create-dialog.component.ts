@@ -53,7 +53,8 @@ export class PatronBucketCreateDialogComponent extends DialogComponent implement
     this.bucketForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(70)]],
       description: ['', Validators.maxLength(140)],
-      bucketType: ['staff_client', Validators.required]
+      bucketType: ['staff_client', Validators.required],
+      isPublic: [false]  // Add isPublic checkbox field with default false
     });
   }
 
@@ -67,7 +68,8 @@ export class PatronBucketCreateDialogComponent extends DialogComponent implement
       this.bucketForm.patchValue({
         name: this.bucketData.name || '',
         description: this.bucketData.description || '',
-        bucketType: this.bucketData.btype || 'staff_client'
+        bucketType: this.bucketData.btype || 'staff_client',
+        isPublic: this.bucketData.pub || false  // Load public value from bucket data
       });
       
       // In edit mode, we might want to disable the bucket type field 
@@ -90,62 +92,77 @@ export class PatronBucketCreateDialogComponent extends DialogComponent implement
       return;
     }
 
-    const { name, description, bucketType } = this.bucketForm.value;
+    const { name, description, bucketType, isPublic } = this.bucketForm.value;
     this.pending = true;
     this.errorMessage = null;
     
     if (this.progressDialog) {
-      this.progressDialog.open();
+        this.progressDialog.open();
     }
 
     try {
-      let result;
-      
-      if (this.editMode && this.bucketId) {
-        // Update existing bucket
-        const bucket = this.idl.create('cub');
-        bucket.id(this.bucketId);
+        let result;
         
-        // Fix: Safely handle owner - use current user as fallback
-        let owner;
-        try {
-          if (this.bucketData && (this.bucketData.owner_id || this.bucketData.owner)) {
-            owner = this.bucketData.owner_id || 
-                   (typeof this.bucketData.owner === 'function' ? 
-                    this.bucketData.owner() : this.bucketData.owner);
-          } else {
-            owner = this.auth.user().id();
-          }
-        } catch (err) {
-          console.error('Error handling bucket owner:', err);
-          owner = this.auth.user().id();
+        if (this.editMode && this.bucketId) {
+            // First retrieve the existing bucket to ensure we have all fields
+            let bucket;
+            try {
+                bucket = await this.bucketService.retrieveBucketById(this.bucketId);
+                console.log('Retrieved existing bucket:', bucket);
+            } catch (err) {
+                console.error('Error retrieving bucket:', err);
+                // Fall back to creating a new bucket object if retrieval fails
+                bucket = this.idl.create('cub');
+                bucket.id(this.bucketId);
+                
+                // Get owner from bucketData or use current user
+                let owner;
+                if (this.bucketData && (this.bucketData.owner_id || this.bucketData.owner)) {
+                    owner = this.bucketData.owner_id || 
+                           (typeof this.bucketData.owner === 'function' ? 
+                            this.bucketData.owner() : this.bucketData.owner);
+                } else {
+                    owner = this.auth.user().id();
+                }
+                bucket.owner(owner);
+            }
+                
+            // Now update only the fields that can change
+            bucket.name(name);
+            bucket.description(description || '');
+            bucket.pub(isPublic ? 't' : 'f');  // Server expects 't' or 'f' string values
+                
+            // Don't change bucket type - it's typically fixed
+            console.log('Updating bucket with data:', {
+                id: bucket.id(),
+                name: bucket.name(),
+                description: bucket.description(),
+                owner: bucket.owner(),
+                btype: bucket.btype(),
+                pub: bucket.pub()
+            });
+                
+            result = await this.bucketService.updateBucket(bucket);
+        } else {
+            // Create new bucket logic remains the same
+            result = await this.bucketService.createBucket(name, description, bucketType, isPublic);
         }
         
-        bucket.owner(owner);
-        bucket.name(name);
-        bucket.description(description || '');
-        bucket.btype(bucketType);
-        result = await this.bucketService.updateBucket(bucket);
-      } else {
-        // Create new bucket
-        result = await this.bucketService.createBucket(name, description, bucketType);
-      }
-      
-      if (this.progressDialog) {
-        this.progressDialog.close();
-      }
-      
-      this.pending = false;
-      this.close(result);
-      
-      // Success message will be handled by the calling component
+        if (this.progressDialog) {
+          this.progressDialog.close();
+        }
+        
+        this.pending = false;
+        this.close(result);
+        
+        // Success message will be handled by the calling component
     } catch (error) {
-      if (this.progressDialog) {
-        this.progressDialog.close();
-      }
-      
-      this.pending = false;
-      this.errorMessage = error.message || $localize`Error ${this.editMode ? 'updating' : 'creating'} bucket`;
+        if (this.progressDialog) {
+          this.progressDialog.close();
+        }
+        
+        this.pending = false;
+        this.errorMessage = error.message || $localize`Error ${this.editMode ? 'updating' : 'creating'} bucket`;
     }
   }
 

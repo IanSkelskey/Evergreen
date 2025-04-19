@@ -60,6 +60,16 @@
         <div class="form-text" i18n *ngIf="!editMode">For most cases, use "Staff Client" type</div>
         <div class="form-text" i18n *ngIf="editMode">Bucket type cannot be changed after creation</div>
       </div>
+
+      <!-- Add the public checkbox -->
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" 
+               id="isPublic" formControlName="isPublic">
+        <label class="form-check-label" for="isPublic" i18n>
+          Make this bucket public
+        </label>
+        <div class="form-text" i18n>Public buckets can be seen by all users</div>
+      </div>
     </form>
   </div>
 
