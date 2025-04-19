@@ -13,6 +13,7 @@ import {GridDataSource} from '@eg/share/grid/grid';
 import {PatronBucketService} from './patron-bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
+import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component'; // Add this import
 
 @Component({
     selector: 'eg-patron-bucket-pending',
@@ -31,6 +32,7 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
     @ViewChild('grid', {static: true}) private grid: GridComponent;
     @ViewChild('progressDialog') private progressDialog: ProgressDialogComponent;
     @ViewChild('alertDialog') private alertDialog: AlertDialogComponent;
+    @ViewChild('patronSearchDialog') private patronSearchDialog: PatronSearchDialogComponent; // Add this
 
     private destroy$ = new Subject<void>();
 
@@ -101,6 +103,18 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
             },
             complete: () => {
                 this.barcodeString = '';
+            }
+        });
+    }
+    
+    // Add this new method to open the patron search dialog
+    openPatronSearch() {
+        this.patronSearchDialog.open({size: 'lg'}).subscribe(patrons => {
+            if (patrons && patrons.length > 0) {
+                patrons.forEach(patron => {
+                    this.addToPendingList(patron.id());
+                });
+                this.toast.success($localize`Added ${patrons.length} patron(s) to pending list`);
             }
         });
     }

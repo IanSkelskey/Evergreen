@@ -9,13 +9,25 @@
   <div class="modal-body">
     <p class="mb-3" i18n>Search for patrons to add to the bucket.</p>
     
-    <eg-patron-search-dialog #patronSearch
-      dialogTitle="Search for Patrons"
-      (patronsSelected)="patronsSelected($event)">
-    </eg-patron-search-dialog>
+    <eg-patron-search #patronSearch
+      (patronsActivated)="patronsActivated($event)"
+      (selectionChange)="patronSelectionChange($event)">
+    </eg-patron-search>
+    
+    <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="selectedPatronIds.length">
+      <div>
+        <span class="badge bg-primary" i18n>
+          {{selectedPatronIds.length}} patron(s) selected
+        </span>
+      </div>
+      <button type="button" class="btn btn-success" 
+        (click)="addSelectedPatronsToBucket()" [disabled]="!selectedPatronIds.length" i18n>
+        Add Selected to Bucket
+      </button>
+    </div>
   </div>
   
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Close</button>
+    <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
   </div>
 </ng-template>

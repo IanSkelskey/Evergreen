@@ -5,7 +5,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {EventService} from '@eg/core/event.service';
-import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
+import {PatronSearchComponent} from '@eg/staff/share/patron/search.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
@@ -19,12 +19,13 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
     @Input() bucketId: number;
 
     @ViewChild('patronSearch', { static: false })
-    patronSearch: PatronSearchDialogComponent;
+    patronSearch: PatronSearchComponent;
 
     @ViewChild('progressDialog', { static: true })
     progressDialog: ProgressDialogComponent;
 
     selectedPatrons: IdlObject[] = [];
+    selectedPatronIds: number[] = [];
 
     constructor(
         private modal: NgbModal,
@@ -37,19 +38,34 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
         super(modal);
     }
 
-    // Called when patron search dialog selects patrons
-    patronsSelected(patrons: IdlObject[]) {
-        this.selectedPatrons = patrons;
-        this.addSelectedPatronsToBucket();
+    // Called when a patron is double-clicked or activated
+    patronsActivated(patrons: IdlObject[]) {
+        if (patrons && patrons.length) {
+            this.selectedPatrons = patrons;
+            this.addSelectedPatronsToBucket();
+        }
+    }
+
+    // Called when patron selection changes in grid
+    patronSelectionChange(patronIds: number[]) {
+        this.selectedPatronIds = patronIds || [];
     }
 
     async addSelectedPatronsToBucket() {
-        if (!this.selectedPatrons.length) {
+        // If activated with specific patrons, use those
+        let userIds: number[] = [];
+        
+        if (this.selectedPatrons.length > 0) {
+            userIds = this.selectedPatrons.map(patron => patron.id());
+        } else if (this.selectedPatronIds.length > 0) {
+            userIds = this.selectedPatronIds;
+        }
+        
+        if (!userIds.length) {
             return;
         }
 
         this.progressDialog.open();
-        const userIds = this.selectedPatrons.map(patron => patron.id());
 
         try {
             const response = await firstValueFrom(this.net.request(
@@ -77,5 +93,12 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
                 $localize`Error adding patrons to bucket: ${error.message || error}`
             );
         }
+    }
+
+    // Override the dialog open method to reset selections
+    override open(options?: any) {
+        this.selectedPatrons = [];
+        this.selectedPatronIds = [];
+        return super.open(options);
     }
 }
