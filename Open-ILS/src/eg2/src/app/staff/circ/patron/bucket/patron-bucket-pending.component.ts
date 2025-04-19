@@ -91,7 +91,11 @@ export class PatronBucketPendingComponent implements OnInit, OnDestroy {
     search() {
         if (!this.barcodeString) return;
         
-        this.pcrud.search('ac', {barcode: this.barcodeString}).subscribe({
+        // Trim the barcode before searching
+        const trimmedBarcode = this.barcodeString.trim();
+        if (!trimmedBarcode) return;
+        
+        this.pcrud.search('ac', {barcode: trimmedBarcode}).subscribe({
             next: card => {
                 if (card && card.usr()) {
                     this.addToPendingList(card.usr());
