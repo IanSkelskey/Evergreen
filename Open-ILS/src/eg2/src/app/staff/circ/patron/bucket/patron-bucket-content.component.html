@@ -25,11 +25,12 @@
 
   <div class="row">
     <div class="col-12">
-      <eg-grid #grid idlClass="cubi"
+      <eg-grid #grid 
           persistKey="circ.patron_bucket_items"
           [dataSource]="dataSource" 
           [cellTextGenerator]="cellTextGenerator"
-          (rowSelectionChange)="gridSelectionChange($event)">
+          (rowSelectionChange)="gridSelectionChange($event)"
+          indexField="id">
 
           <eg-grid-toolbar-action
               label="Remove Selected Patrons" i18n-label
@@ -37,9 +38,9 @@
               (onClick)="removeSelectedPatrons($event)">
           </eg-grid-toolbar-action>
 
-          <eg-grid-column path="id" label="ID"></eg-grid-column>
-          <eg-grid-column path="barcode" label="Barcode"></eg-grid-column>
-          <eg-grid-column path="patron_name" label="Name"></eg-grid-column>
+          <eg-grid-column name="id" label="ID" [hidden]="true"></eg-grid-column>
+          <eg-grid-column name="barcode" label="Barcode"></eg-grid-column>
+          <eg-grid-column name="patron_name" label="Name"></eg-grid-column>
       </eg-grid>
     </div>
   </div>

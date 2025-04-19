@@ -71,38 +71,78 @@ export class PatronBucketContentComponent implements OnInit, OnDestroy {
             });
     }
     
+    /**
+     * Initialize the data source for the patron bucket items grid.
+     * Sets up the getRows function to retrieve and process bucket items.
+     */
     initDataSource() {
         this.dataSource.getRows = (pager): Observable<any> => {
-            if (!this.bucketId) return of({count: 0, items: []});
+            if (!this.bucketId) {
+                return of(this.createEmptyResult());
+            }
             
             return from(this.bucketService.retrievePatronBucketItems(this.bucketId))
                 .pipe(
-                    map(items => {
-                        // Debug: log the items returned
-                        console.debug('Grid items:', items);
-                        return {
-                            count: items.length,
-                            items: items
-                        };
-                    }),
+                    map(items => this.processItems(items)),
                     catchError(error => {
-                        console.error('Error retrieving bucket items:', error);
-                        return of({count: 0, items: []});
+                        console.error('Error retrieving patron bucket items:', error);
+                        return of(this.createEmptyResult());
                     })
                 );
         };
     }
     
+    /**
+     * Process raw bucket items to ensure they are in the correct format
+     * @param items - The raw items from the bucket service
+     * @returns An object with count and normalized items
+     */
+    private processItems(items: any): { count: number, items: any[] } {
+        // Normalize items into an array
+        const normalizedItems = this.normalizeToArray(items);
+        
+        // Ensure each item has a unique ID
+        const processedItems = normalizedItems.map((item, index) => ({ 
+            ...item,
+            id: item.id || index + 1 // Ensure each row has a unique ID
+        }));
+        
+        console.debug('Processed patron bucket items:', processedItems);
+        
+        return {
+            count: processedItems.length,
+            items: processedItems
+        };
+    }
+    
+    /**
+     * Convert input to an array if it isn't already
+     * @param items - The items to normalize
+     * @returns An array of items
+     */
+    private normalizeToArray(items: any): any[] {
+        if (!items) return [];
+        return Array.isArray(items) ? items : [items];
+    }
+    
+    /**
+     * Create an empty result object for when no items are available
+     * @returns An empty result with count 0 and empty items array
+     */
+    private createEmptyResult(): { count: number, items: any[] } {
+        return { count: 0, items: [] };
+    }
+    
     initCellTextGenerator() {
         this.cellTextGenerator = {
-            patron_name: (row: any): string => {
-                return row.patron_name || '';
-            },
             barcode: (row: any): string => {
-                return row.barcode || '';
+                return String(row.barcode || '');
+            },
+            patron_name: (row: any): string => {
+                return String(row.patron_name || '');
             },
             id: (row: any): string => {
-                return row.id?.toString() || '';
+                return String(row.id || '');
             }
         };
     }
