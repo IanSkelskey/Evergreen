@@ -289,14 +289,13 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             const patron = response;
             
             try {
-                // Check if patron is already in bucket
+                // Check if patron is already in bucket using pcrud
+                // This replaces the call to the non-existent open-ils.actor.container.item.retrieve
                 const existingItems = await lastValueFrom(
-                    this.net.request(
-                        'open-ils.actor',
-                        'open-ils.actor.container.item.retrieve',
-                        this.auth.token(), 'user',
-                        this.bucketId, patron.id()
-                    ).pipe(
+                    this.pcrud.search('cubi', {
+                        bucket: this.bucketId,
+                        target_user: patron.id()
+                    }).pipe(
                         catchError(err => {
                             console.error('Error checking if patron is in bucket:', err);
                             return [null];
