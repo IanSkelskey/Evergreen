@@ -138,7 +138,10 @@
 </div>
 
 <ng-template #barcodeTemplate let-row="row">
-  <a *ngIf="row.target_user?.card()?.barcode()" href="/eg2/staff/circ/patron/{{row.target_user.id()}}/edit" target="_blank">
+  <a *ngIf="row.target_user?.card()?.barcode()" 
+     href="/eg2/staff/circ/patron/{{row.target_user.id()}}/edit" 
+     target="_blank"
+     title="Edit Patron ({{row.target_user.card().barcode()}})">
     {{row.target_user.card().barcode()}}
   </a>
   <span *ngIf="!row.target_user?.card()?.barcode()">
