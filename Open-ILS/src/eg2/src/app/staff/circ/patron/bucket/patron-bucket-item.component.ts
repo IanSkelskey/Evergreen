@@ -161,12 +161,24 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     }
 
     async editSelectedPatrons(rows: any[]): Promise<void> {
-        if (!rows.length) return;
-        
-        rows.forEach(row => {
-            const url = `/staff/circ/patron/${row['target_user']}/edit`;
+        if (!rows.length || !this.hasUpdatePerm) return;
+
+        if (rows.length === 1) {
+            // Open single patron edit in a new tab
+            const row = rows[0];
+            const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
             window.open(url, '_blank');
-        });
+        } else {
+            // Attempt to open multiple patron edit pages in new windows
+            // Note: Browser pop-up blockers might prevent multiple windows from opening.
+            rows.forEach((row, index) => {
+                const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
+                // Use unique names and features to encourage opening in new windows
+                const windowName = `edit_patron_${row.target_user.id()}_${index}`;
+                const windowFeatures = 'width=1024,height=768,resizable=yes,scrollbars=yes';
+                window.open(url, windowName, windowFeatures);
+            });
+        }
     }
 
     async moveAddToBucket(rows: any[], remove = false): Promise<void> {
