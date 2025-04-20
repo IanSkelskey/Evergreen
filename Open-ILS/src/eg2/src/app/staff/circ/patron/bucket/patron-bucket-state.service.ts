@@ -49,6 +49,8 @@ export class PatronBucketStateService {
     ) {
         this.userId = this.auth.user().id();
         this.initViews();
+        // Immediately update counts after initializing views
+        this.updateCounts();
     }
     
     // Get the current view
@@ -109,7 +111,15 @@ export class PatronBucketStateService {
     async updateCounts(): Promise<void> {
         this.setCountInProgress(true);
         
-        const promises = this.getViewKeys().map(viewKey => {
+        // Create a list of views to update, including normal views and 'shared' explicitly
+        const viewsToUpdate = [...this.getViewKeys()];
+        
+        // Make sure 'shared' is included even if it has a null label
+        if (!viewsToUpdate.includes('shared') && this.views['shared']) {
+            viewsToUpdate.push('shared');
+        }
+        
+        const promises = viewsToUpdate.map(viewKey => {
             return this.views[viewKey].bucketIdQuery(null, null, true)
                 .then(result => {
                     this.views[viewKey].count = result.count;
@@ -130,7 +140,7 @@ export class PatronBucketStateService {
             user: {
                 label: $localize`My Buckets`,
                 sort_key: 1,
-                count: -1,
+                count: null,
                 bucketIdQuery: async (pager, sort, justCount) => {
                     try {
                         console.debug('User bucket query - justCount:', justCount, 'userId:', this.userId || this.auth.user().id());
@@ -253,7 +263,7 @@ export class PatronBucketStateService {
             shared: {
                 label: null, // The label is provided directly in the HTML
                 sort_key: 2,
-                count: -1,
+                count: null,
                 bucketIdQuery: async (pager, sort, justCount) => {
                     try {
                         console.debug('Shared bucket query - justCount:', justCount);

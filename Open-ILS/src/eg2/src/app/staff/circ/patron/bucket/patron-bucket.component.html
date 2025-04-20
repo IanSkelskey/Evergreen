@@ -30,8 +30,10 @@
             <a class="nav-link" [class.active]="isCurrentView(viewKey)" (click)="switchTo(viewKey)">
               <span class="material-icons" *ngIf="viewKey === 'user'">folder</span>
               {{getViews()[viewKey]?.label}}
-              <span class="tab-count" *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
-              <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+              <span class="tab-count" *ngIf="getViews()[viewKey]?.count !== null && getViews()[viewKey]?.count !== undefined">
+                ({{getViews()[viewKey]?.count}})
+              </span>
+              <span *ngIf="getViews()[viewKey]?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
             </a>
           </li>
         </ng-container>
@@ -41,8 +43,10 @@
           <a class="nav-link" [class.active]="isCurrentView('shared')" (click)="switchTo('shared')">
             <span class="material-icons">folder_shared</span>
             <span i18n>Shared Buckets</span>
-            <span class="tab-count" *ngIf="getViews()['shared']?.count != null">({{getViews()['shared']?.count}})</span>
-            <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+            <span class="tab-count" *ngIf="getViews()['shared']?.count !== null && getViews()['shared']?.count !== undefined">
+              ({{getViews()['shared']?.count}})
+            </span>
+            <span *ngIf="getViews()['shared']?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
           </a>
         </li>
       </ul>
