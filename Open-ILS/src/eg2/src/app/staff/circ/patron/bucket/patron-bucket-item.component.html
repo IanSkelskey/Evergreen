@@ -14,7 +14,12 @@
     <div class="col-md-9">
       <!-- Bucket header section -->
       <div class="d-flex align-items-center">
-        <h3 class="my-0 me-3">{{bucket?.name()}}</h3>
+        <h3 class="my-0 me-3">
+          {{bucket?.name()}}
+          <span *ngIf="bucketId" class="ms-2 text-muted" style="font-size: 1rem;">
+            (ID: {{bucketId}})
+          </span>
+        </h3>
         <!-- Owner information with link -->
         <span class="me-3 text-muted" *ngIf="bucket?.owner()">
           <span i18n>Owner:</span>
@@ -103,7 +108,8 @@
         persistKey="circ.patron_bucket_items"
         [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
         (rowSelectionChange)="gridSelectionChange($event)"
-        [sortable]="true" [filterable]="true">
+        [sortable]="true" [filterable]="true"
+        ignoreFields="bucket">
         
         <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
             [disabled]="noSelectedRows"
@@ -125,13 +131,15 @@
             (onClick)="editSelectedPatrons($event)">
         </eg-grid-toolbar-action>
 
-        <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
-        <eg-grid-column name="bucket" path="bucket" [hidden]="true"></eg-grid-column>
-        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate"></eg-grid-column>
-        <eg-grid-column name="family_name" path="target_user.family_name"></eg-grid-column>
-        <eg-grid-column name="first_given_name" path="target_user.first_given_name"></eg-grid-column>
-        <eg-grid-column name="second_given_name" path="target_user.second_given_name"></eg-grid-column>
-        <eg-grid-column name="home_ou.name" path="target_user.home_ou.name" i18n-label label="Home Library"></eg-grid-column>
+        <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true" />
+        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
+        <eg-grid-column name="family_name" path="target_user.family_name" />
+        <eg-grid-column name="first_given_name" path="target_user.first_given_name" />
+        <eg-grid-column name="second_given_name" path="target_user.second_given_name" />
+        <eg-grid-column name="home_ou.name" path="target_user.home_ou.name" i18n-label label="Home Library" />
+        <eg-grid-column name="create_time" path="create_time" i18n-label label="Create Time" datatype="timestamp" />
+        <eg-grid-column name="target_user" path="target_user" i18n-label label="Username" />
+        <eg-grid-column name="pos" path="pos" i18n-label label="Position" [hidden]="true" />
       </eg-grid>
     </div>
   </div>
