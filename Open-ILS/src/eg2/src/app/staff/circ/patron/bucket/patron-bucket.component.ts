@@ -423,7 +423,22 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             const confirmation = await lastValueFrom(this.deleteDialog.open());
             if (!confirmation) return;
             
-            const bucketIds = rows.map(row => row.bucket.id());
+            // Safely extract bucket IDs from row data, handling different possible structures
+            const bucketIds = rows.map(row => {
+                // Handle different possible data structures
+                if (row.id) {
+                    // Direct ID access (flat data)
+                    return row.id;
+                } else if (row.bucket && typeof row.bucket.id === 'function') {
+                    // IDL object with id() method
+                    return row.bucket.id();
+                } else if (row.bucket && row.bucket.id) {
+                    // Object with direct id property
+                    return row.bucket.id;
+                }
+                throw new Error(`Unable to determine bucket ID from row data`);
+            });
+            
             const results = await Promise.all(bucketIds.map(id => this.bucketService.deleteBucket(id)));
             
             const failures = results.filter(r => !r.success);
