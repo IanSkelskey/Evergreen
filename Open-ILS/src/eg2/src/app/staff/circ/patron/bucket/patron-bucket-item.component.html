@@ -10,17 +10,16 @@
 <eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
 
 <div class="container-fluid px-0">
+  <!-- Improved bucket header section with better horizontal space usage -->
   <div class="row mb-3">
-    <div class="col-md-9">
-      <!-- Bucket header section -->
-      <div class="d-flex align-items-center">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center flex-wrap">
         <h3 class="my-0 me-3">
           {{bucket?.name()}}
           <span *ngIf="bucketId" class="ms-2 text-muted" style="font-size: 1rem;">
             (ID: {{bucketId}})
           </span>
         </h3>
-        <!-- Owner information with link -->
         <span class="me-3 text-muted" *ngIf="bucket?.owner()">
           <span i18n>Owner:</span>
           <a href="/eg2/staff/circ/patron/{{bucket?.owner()?.id()}}/edit" 
@@ -33,40 +32,42 @@
         <p class="text-muted mb-0">{{bucket?.description()}}</p>
       </div>
     </div>
+    <div class="col-md-4 text-md-end mt-md-0 mt-3">
+      <div class="btn-group">
+        <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+          routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+          <span class="material-icons">arrow_back</span>
+          Back to Buckets
+        </a>
+        <a class="btn btn-success" 
+          routerLink="/staff/circ/patron/bucket" i18n>
+          <span class="material-icons">folder</span>
+          My Buckets
+        </a>
+      </div>
+    </div>
   </div>
 
-  <!-- Action buttons row -->
+  <!-- Improved horizontal layout for controls -->
   <div class="row mb-3">
-    <div class="col-12">
-      <div class="btn-toolbar">
-        <div class="btn-group me-2">
-          <a *ngIf="returnTo" class="btn btn-outline-secondary" 
-            routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
-            <span class="material-icons align-text-bottom">arrow_back</span>
-            Back to Buckets
-          </a>
-          <a class="btn btn-success" 
-            routerLink="/staff/circ/patron/bucket" i18n>
-            <span class="material-icons align-text-bottom">folder</span>
-            My Buckets
-          </a>
-        </div>
-        
-        <div class="btn-group me-2">
+    <div class="col-lg-7 col-md-12 mb-md-0 mb-3">
+      <div class="d-flex flex-wrap">
+        <!-- Patron actions group -->
+        <div class="btn-group me-2 mb-2">
           <button class="btn btn-primary" 
             (click)="openAddPatronDialog()" i18n>
-            <span class="material-icons align-text-bottom">person_add</span>
+            <span class="material-icons">person_add</span>
             Add Patron
           </button>
           <a class="btn btn-outline-primary" 
             routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
-            <span class="material-icons align-text-bottom">group_add</span>
+            <span class="material-icons">group_add</span>
             Add Multiple Patrons
           </a>
         </div>
-
-        <!-- Quick Add Form -->
-        <form class="d-flex me-2 quick-add-form" (ngSubmit)="quickAddPatron()">
+        
+        <!-- Quick Add Form positioned for better horizontal layout -->
+        <form class="d-flex mb-2 quick-add-form me-2" (ngSubmit)="quickAddPatron()">
           <div class="input-group">
             <input type="text" class="form-control" 
                   [(ngModel)]="quickAddBarcode" 
@@ -75,33 +76,38 @@
                   aria-label="Patron Barcode" i18n-aria-label
                   #barcodeInput>
             <button class="btn btn-outline-primary" type="submit" i18n>
-              <span class="material-icons align-text-bottom">qr_code_scanner</span>
+              <span class="material-icons">qr_code_scanner</span>
               Quick Add
             </button>
           </div>
         </form>
-        
-        <div class="btn-group">
-          <div ngbDropdown>
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
-              id="bulkActionsDropdown" ngbDropdownToggle>
-              <span class="material-icons align-text-bottom">build</span>
-              <span i18n>Bulk Actions</span>
-            </button>
-            <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
-              <button ngbDropdownItem (click)="updateAllPatrons()" i18n>Update All Patrons</button>
-              <button ngbDropdownItem (click)="modifyStatcats()" i18n>Modify Statistical Categories</button>
-              <button ngbDropdownItem (click)="viewChangesets()" i18n>View Changesets</button>
-              <button ngbDropdownItem (click)="applyRollback()" i18n>Apply Rollback</button>
-              <div class="dropdown-divider"></div>
-              <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button>
-            </div>
+      </div>
+    </div>
+    
+    <!-- Bulk actions moved to right side on large screens -->
+    <div class="col-lg-5 col-md-12 text-lg-end">
+      <div class="d-flex justify-content-lg-end">
+        <!-- Bulk actions dropdown -->
+        <div ngbDropdown class="me-2 mb-2">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+            id="bulkActionsDropdown" ngbDropdownToggle>
+            <span class="material-icons">build</span>
+            <span i18n>Bulk Actions</span>
+          </button>
+          <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
+            <button ngbDropdownItem (click)="updateAllPatrons()" i18n>Update All Patrons</button>
+            <button ngbDropdownItem (click)="modifyStatcats()" i18n>Modify Statistical Categories</button>
+            <button ngbDropdownItem (click)="viewChangesets()" i18n>View Changesets</button>
+            <button ngbDropdownItem (click)="applyRollback()" i18n>Apply Rollback</button>
+            <div class="dropdown-divider"></div>
+            <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Grid remains the same -->
   <div class="row">
     <div class="col-12">
       <eg-grid #grid idlClass="cubi" i18n-persistKey 
