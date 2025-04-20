@@ -239,10 +239,18 @@ export class PatronBucketService {
             if (evt) {
                 throw new Error(evt.toString());
             }
+            // If bucket is null or undefined, treat as not found
+            if (!bucket) {
+                throw new Error($localize`No bucket found with ID ${bucketId}`);
+            }
             return bucket;
-        } catch (error) {
+        } catch (error: any) {
+            // Handle "no elements in sequence" (EmptyError) gracefully
+            if (error && (error.message === 'no elements in sequence' || error.name === 'EmptyError')) {
+                throw new Error($localize`No bucket found with ID ${bucketId}`);
+            }
             console.error('Error retrieving bucket:', error);
-            throw new Error(`Error retrieving bucket: ${error.message || error}`);
+            throw new Error($localize`Error retrieving bucket: ${error.message || error}`);
         }
     }
     
