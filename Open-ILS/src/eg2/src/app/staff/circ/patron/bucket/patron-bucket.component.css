@@ -46,3 +46,8 @@ eg-grid {
 .bucket-name-link:hover {
     text-decoration: underline;
 }
+
+.text-danger {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}

@@ -39,6 +39,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     countInProgress = false;
     noSelectedRows = true;
     oneSelectedRow = false;
+    retrievingById = false; // Add spinner state
 
     @ViewChild('grid', { static: false }) grid: GridComponent;
     @ViewChild('newBucketDialog') private newBucketDialog: BucketDialogComponent;
@@ -219,15 +220,19 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     retrieveBucketById() {
         if (!this.bucketIdToRetrieve) return;
-        
+        this.retrievingById = true;
         this.bucketService.retrieveBucketById(this.bucketIdToRetrieve)
             .then(bucket => {
+                this.retrievingById = false;
                 this.jumpToBucketContent(this.bucketIdToRetrieve);
             })
             .catch(error => {
-                console.error('Error retrieving bucket:', error);
-                this.retrieveByIdFail.dialogBody = error.toString();
-                this.retrieveByIdFail.open();
+                this.retrievingById = false;
+                // Show error as toast instead of inline error
+                this.toast.danger(error?.message || $localize`Unknown error retrieving bucket`);
+                // Optionally, open the dialog for more severe errors
+                // this.retrieveByIdFail.dialogBody = error?.message || $localize`Unknown error retrieving bucket`;
+                // this.retrieveByIdFail.open();
             });
     }
 
