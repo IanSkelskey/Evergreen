@@ -21,20 +21,31 @@
 </eg-alert-dialog>
 
 <div class="container-fluid px-0">
-  <!-- Improved layout with better horizontal spacing -->
   <div class="row mb-3">
     <div class="col-lg-7 mb-2">
-      <div class="btn-toolbar flex-wrap">
+      <!-- Replace buttons with tabs -->
+      <ul class="nav nav-tabs">
         <ng-container *ngFor="let viewKey of getViewKeys()">
-          <button class="btn me-2 mb-2"
-              [ngClass]="isCurrentView(viewKey) ? 'btn-success' : 'btn-outline-success'"
-              (click)="switchTo(viewKey)">
-              {{getViews()[viewKey]?.label}} 
-              <span *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="isCurrentView(viewKey)" (click)="switchTo(viewKey)">
+              <span class="material-icons" *ngIf="viewKey === 'user'">folder</span>
+              {{getViews()[viewKey]?.label}}
+              <span class="tab-count" *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
               <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
-          </button>
+            </a>
+          </li>
         </ng-container>
-      </div>
+        
+        <!-- Shared Buckets tab -->
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="isCurrentView('shared')" (click)="switchTo('shared')">
+            <span class="material-icons">folder_shared</span>
+            <span i18n>Shared Buckets</span>
+            <span class="tab-count" *ngIf="getViews()['shared']?.count != null">({{getViews()['shared']?.count}})</span>
+            <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+          </a>
+        </li>
+      </ul>
     </div>
     
     <div class="col-lg-5">
