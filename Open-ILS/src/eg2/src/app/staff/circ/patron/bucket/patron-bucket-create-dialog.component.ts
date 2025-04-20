@@ -125,6 +125,9 @@ export class PatronBucketCreateDialogComponent extends DialogComponent implement
                     owner = this.auth.user().id();
                 }
                 bucket.owner(owner);
+                
+                // Note: We don't need to set owning_lib here as the service will handle it
+                // based on the owner's home_ou
             }
                 
             // Now update only the fields that can change
@@ -139,12 +142,14 @@ export class PatronBucketCreateDialogComponent extends DialogComponent implement
                 description: bucket.description(),
                 owner: bucket.owner(),
                 btype: bucket.btype(),
-                pub: bucket.pub()
+                pub: bucket.pub(),
+                owning_lib: bucket.owning_lib ? bucket.owning_lib() : 'not set'  // Log the owning_lib
             });
                 
             result = await this.bucketService.updateBucket(bucket);
         } else {
             // Create new bucket logic remains the same
+            // The service will handle setting the owning_lib
             result = await this.bucketService.createBucket(name, description, bucketType, isPublic);
         }
         
