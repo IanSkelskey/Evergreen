@@ -44,15 +44,68 @@ export class PatronBucketService {
         return this.store.getLocalItem('eg.patron_bucket_log') || [];
     }
     
+    // New method to get user's home_ou
+    private async getUserHomeOu(userId?: number): Promise<number> {
+        try {
+            // Default to the currently logged-in user if no ID provided
+            const id = userId || this.auth.user().id();
+            
+            // Try to get from current user object first if it's the logged-in user
+            if (!userId && this.auth.user()) {
+                try {
+                    const homeOu = this.auth.user().home_ou();
+                    if (homeOu) return homeOu;
+                } catch (e) {
+                    console.warn('Could not get home_ou from auth user object:', e);
+                }
+            }
+            
+            // If we don't have it, retrieve the user object with pcrud
+            const user = await lastValueFrom(this.pcrud.retrieve('au', id, {
+                select: ['home_ou']
+            }));
+            
+            if (user && user.home_ou) {
+                return typeof user.home_ou === 'function' ? user.home_ou() : user.home_ou;
+            } else {
+                // Default to user's workstation org if available
+                const wsOrgId = this.auth.workstation();
+                if (wsOrgId) return Number(wsOrgId);
+                
+                // Last resort - return the root org
+                console.warn(`No home_ou found for user ${id}, using root org`);
+                return 1; // Assume 1 is the root org
+            }
+        } catch (error) {
+            console.error('Error getting user home_ou:', error);
+            // Default to root org
+            return 1;
+        }
+    }
+    
     // Create a new bucket
     async createBucket(name: string, description: string = '', bucketType: string = 'staff_client', isPublic: boolean = false): Promise<any> {
         try {
             const bucket = this.idl.create('cub');
-            bucket.owner(this.auth.user().id());
+            const ownerId = this.auth.user().id();
+            bucket.owner(ownerId);
             bucket.name(name);
             bucket.description(description || '');
             bucket.btype(bucketType);
-            bucket.pub(isPublic ? 't' : 'f'); // Add public flag
+            bucket.pub(isPublic ? 't' : 'f');
+            
+            // Set owning_lib to the owner's home_ou
+            const homeOu = await this.getUserHomeOu(ownerId);
+            bucket.owning_lib(homeOu);
+            
+            console.debug('Creating bucket with data:', {
+                owner: bucket.owner(),
+                name: bucket.name(),
+                description: bucket.description(),
+                btype: bucket.btype(),
+                pub: bucket.pub(),
+                owning_lib: bucket.owning_lib() // Log the owning_lib
+            });
             
             const result = await lastValueFrom(
                 this.net.request(
@@ -94,6 +147,18 @@ export class PatronBucketService {
                 }
             }
             
+            // Ensure the owning_lib is set if it isn't already
+            if ((!bucket.owning_lib || !bucket.owning_lib()) && typeof bucket.owner === 'function') {
+                try {
+                    const ownerId = bucket.owner();
+                    const homeOu = await this.getUserHomeOu(ownerId);
+                    bucket.owning_lib(homeOu);
+                    console.debug(`Setting owning_lib to ${homeOu} for bucket ${bucket.id()}`);
+                } catch (e) {
+                    console.warn('Error setting owning_lib:', e);
+                }
+            }
+            
             // For debugging - show what we're sending to the server
             console.log('Sending bucket update:', {
                 id: bucket.id(),
@@ -101,7 +166,8 @@ export class PatronBucketService {
                 description: bucket.description(),
                 owner: bucket.owner(),
                 btype: bucket.btype(),
-                pub: bucket.pub()
+                pub: bucket.pub(),
+                owning_lib: typeof bucket.owning_lib === 'function' ? bucket.owning_lib() : 'undefined'
             });
             
             // Try using the containers.update method with specific parameters
@@ -199,7 +265,8 @@ export class PatronBucketService {
                     btype: '',
                     owner_usrname: '',
                     create_time: null,
-                    bucket: null
+                    bucket: null,
+                    owning_lib: null  // Add owning_lib to the output
                 };
             }
             
@@ -226,6 +293,16 @@ export class PatronBucketService {
                 console.warn('Error accessing owner username:', e);
             }
             
+            // Get owning_lib safely
+            let owningLib = null;
+            try {
+                if (bucket.owning_lib && typeof bucket.owning_lib === 'function') {
+                    owningLib = bucket.owning_lib();
+                }
+            } catch (e) {
+                console.warn('Error accessing owning_lib:', e);
+            }
+            
             const item = {
                 id: bucketId,
                 name: typeof bucket.name === 'function' ? bucket.name() : '',
@@ -234,7 +311,8 @@ export class PatronBucketService {
                 owner_usrname: ownerUsername,
                 create_time: typeof bucket.create_time === 'function' && bucket.create_time() ? 
                            new Date(bucket.create_time()) : null,
-                bucket: bucket
+                bucket: bucket,
+                owning_lib: owningLib  // Add owning_lib to the transformed output
             };
             
             console.debug('Transformed bucket item:', item);
