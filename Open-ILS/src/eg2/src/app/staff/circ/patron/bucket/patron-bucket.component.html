@@ -66,6 +66,11 @@
         (onClick)="openEditBucketDialog($event)">
     </eg-grid-toolbar-action>
 
+    <eg-grid-toolbar-action label="Delete Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openDeleteBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
     <eg-grid-toolbar-action label="Debug Selected Row" i18n-label
         [disabled]="noSelectedRows"
         (onClick)="debugRowData($event)">
