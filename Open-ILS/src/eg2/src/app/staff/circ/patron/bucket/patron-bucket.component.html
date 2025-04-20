@@ -57,6 +57,7 @@
       persistKey="circ.patron_buckets"
       (rowSelectionChange)="gridSelectionChange($event)"
       idlClass="cub"
+      ignoreFields="create_time,owner,owning_lib"
       [sortable]="true"
       [filterable]="true"
   >
@@ -87,6 +88,7 @@
     <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
     <eg-grid-column path="owning_lib.shortname" i18n-label label="Owning Library" visible="false"></eg-grid-column>
     <eg-grid-column path="create_time" i18n-label label="Create Date" visible="true" datatype="timestamp"></eg-grid-column>
+    <eg-grid-column path="pub" i18n-label label="Public" visible="false"></eg-grid-column>
   </eg-grid>
 
 <ng-template #nameTemplate let-bucket="row">
