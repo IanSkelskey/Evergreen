@@ -22,11 +22,6 @@
 }
 
 /* New styles for improved layout */
-eg-grid {
-    min-height: calc(100vh - 220px);
-    display: block;
-}
-
 .nav-pills .nav-link {
     margin-right: 0.5rem;
 }
@@ -50,4 +45,42 @@ eg-grid {
 .text-danger {
     font-weight: 500;
     letter-spacing: 0.01em;
+}
+
+/* Improved layout styles */
+.btn-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Ensure consistent material icons styling across components */
+.material-icons {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+    vertical-align: middle;
+}
+
+/* Better horizontal space usage for forms */
+.retrieve-form {
+    width: auto;
+    min-width: 220px;
+    max-width: 300px;
+}
+
+@media (max-width: 992px) {
+    .retrieve-form {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Consistent button styling */
+.btn {
+    display: flex;
+    align-items: center;
+}
+
+/* Better grid spacing */
+eg-grid {
+    margin-top: 0.5rem;
 }

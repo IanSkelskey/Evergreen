@@ -14,25 +14,58 @@ a.btn .material-icons {
 }
 
 .btn-toolbar {
-    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
 }
 
-.align-text-bottom {
-    vertical-align: text-bottom;
+.btn {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
 }
 
-/* Quick add form styling */
 .quick-add-form {
+    width: auto;
     min-width: 250px;
+    max-width: 350px;
 }
 
-.quick-add-form .input-group {
-    flex-wrap: nowrap;
+@media (min-width: 1200px) {
+    .quick-add-form {
+        min-width: 300px;
+    }
 }
 
 @media (max-width: 992px) {
     .quick-add-form {
-        margin-top: 10px;
         width: 100%;
+        max-width: none;
     }
+}
+
+/* Consistent styling for material icons across components */
+.material-icons {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+    vertical-align: middle;
+}
+
+/* Better button alignment */
+.btn-group {
+    margin-bottom: 0.25rem;
+}
+
+/* Ensure vertical alignment is consistent */
+.align-items-center {
+    align-items: center !important;
+}
+
+/* Handle long descriptions better */
+.text-muted {
+    word-break: break-word;
+}
+
+.btn-success:hover {
+    color: white !important;
 }

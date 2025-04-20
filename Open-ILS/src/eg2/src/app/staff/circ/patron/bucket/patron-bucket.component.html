@@ -21,31 +21,38 @@
 </eg-alert-dialog>
 
 <div class="container-fluid px-0">
+  <!-- Improved layout with better horizontal spacing -->
   <div class="row mb-3">
-    <div class="col-md-6">
-      <ng-container *ngFor="let viewKey of getViewKeys()">
-        <button class="btn me-2 mb-2"
-            [ngClass]="isCurrentView(viewKey) ? 'btn-success' : 'btn-outline-success'"
-            (click)="switchTo(viewKey)">
-            {{getViews()[viewKey]?.label}} 
-            <span *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
-            <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
-        </button>
-      </ng-container>
+    <div class="col-lg-7 mb-2">
+      <div class="btn-toolbar flex-wrap">
+        <ng-container *ngFor="let viewKey of getViewKeys()">
+          <button class="btn me-2 mb-2"
+              [ngClass]="isCurrentView(viewKey) ? 'btn-success' : 'btn-outline-success'"
+              (click)="switchTo(viewKey)">
+              {{getViews()[viewKey]?.label}} 
+              <span *ngIf="getViews()[viewKey]?.count != null">({{getViews()[viewKey]?.count}})</span>
+              <span *ngIf="countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+          </button>
+        </ng-container>
+      </div>
     </div>
-    <div class="col-md-6 text-md-end">
-      <button class="btn btn-outline-primary me-2 mb-2" (click)="openNewBucketDialog()">
-        <span class="material-icons align-text-bottom">add</span>
-        <span i18n>New Bucket</span>
-      </button>
-      <div class="input-group d-inline-flex" style="width: auto; min-width: 220px;">
-        <input type="number" class="form-control" 
-          [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
-          [disabled]="retrievingById">
-        <button class="btn btn-outline-primary" (click)="retrieveBucketById()" [disabled]="retrievingById" i18n>
-          <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
-          Retrieve
+    
+    <div class="col-lg-5">
+      <div class="d-flex flex-wrap justify-content-lg-end">
+        <button class="btn btn-primary me-2 mb-2" (click)="openNewBucketDialog()">
+          <span class="material-icons">add</span>
+          <span i18n>New Bucket</span>
         </button>
+        
+        <div class="input-group mb-2 retrieve-form">
+          <input type="number" class="form-control" 
+            [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
+            [disabled]="retrievingById">
+          <button class="btn btn-outline-primary" (click)="retrieveBucketById()" [disabled]="retrievingById" i18n>
+            <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Retrieve
+          </button>
+        </div>
       </div>
     </div>
   </div>
