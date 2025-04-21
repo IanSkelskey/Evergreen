@@ -328,9 +328,41 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
             const evt = this.evt.parse(response);
             if (evt) {
-                console.error('Error retrieving patron:', evt);
-                this.alertDialog.dialogTitle = $localize`Error Finding Patron`;
-                this.alertDialog.dialogBody = evt.toString();
+                // Define expected/common errors that don't need to be logged to console
+                const expectedErrors = ['ACTOR_CARD_NOT_FOUND', 'ACTOR_USER_NOT_FOUND', 'ACTOR_CARD_INACTIVE'];
+                
+                // Only log to console if it's not an expected error
+                if (!expectedErrors.includes(evt.textcode)) {
+                    console.error('Error retrieving patron:', evt);
+                }
+                
+                // Provide user-friendly messages based on specific error codes
+                let errorTitle = $localize`Error Finding Patron`;
+                let errorMessage: string;
+                
+                switch(evt.textcode) {
+                    case 'ACTOR_CARD_NOT_FOUND':
+                        errorMessage = $localize`No patron found with barcode "${this.quickAddBarcode}".`;
+                        break;
+                    case 'ACTOR_USER_NOT_FOUND':
+                        errorMessage = $localize`The patron associated with barcode "${this.quickAddBarcode}" could not be found.`;
+                        break;
+                    case 'NO_SESSION':
+                        errorTitle = $localize`Session Expired`;
+                        errorMessage = $localize`Your session has expired. Please log in again.`;
+                        break;
+                    case 'ACTOR_USER_BARRED':
+                        errorMessage = $localize`This patron account is barred. Barcode: ${this.quickAddBarcode}`;
+                        break;
+                    case 'ACTOR_CARD_INACTIVE':
+                        errorMessage = $localize`This patron card is marked as inactive. Barcode: ${this.quickAddBarcode}`;
+                        break;
+                    default:
+                        errorMessage = $localize`Unable to retrieve patron with barcode "${this.quickAddBarcode}". Error: ${evt.desc || evt.textcode}`;
+                }
+                
+                this.alertDialog.dialogTitle = errorTitle;
+                this.alertDialog.dialogBody = errorMessage;
                 await this.alertDialog.open();
                 return;
             }
@@ -415,6 +447,13 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             }, 100);
         } finally {
             this.progressDialog.close();
+            
+            // Always focus back on the input field, regardless of success or failure
+            setTimeout(() => {
+                if (this.barcodeInput) {
+                    this.barcodeInput.nativeElement.focus();
+                }
+            }, 100);
         }
     }
 
