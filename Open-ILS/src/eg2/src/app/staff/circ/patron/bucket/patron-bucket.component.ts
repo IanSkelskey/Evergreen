@@ -218,8 +218,11 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     }
 
     retrieveBucketById() {
-        if (!this.bucketIdToRetrieve) {
-            // Focus the input field if no ID is provided
+        if (
+            this.bucketIdToRetrieve == null ||
+            this.bucketIdToRetrieve < 0
+        ) {
+            // Focus the input field if no ID is provided or negative
             setTimeout(() => this.bucketIdInput?.nativeElement?.focus(), 0);
             return;
         }
