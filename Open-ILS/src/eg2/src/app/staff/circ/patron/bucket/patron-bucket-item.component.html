@@ -137,11 +137,11 @@
             (onClick)="editSelectedPatrons($event)">
         </eg-grid-toolbar-action>
 
-        <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true" />
-        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
+        <eg-grid-column path="id" i18n-label label="ID" [hidden]="true" />
+        <eg-grid-column name="barcode" [index]="true" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
         <eg-grid-column name="family_name" path="target_user.family_name" />
         <eg-grid-column name="first_given_name" path="target_user.first_given_name" />
-        <eg-grid-column name="second_given_name" path="target_user.second_given_name" />
+        <eg-grid-column name="second_given_name" path="target_user.second_given_name" [hidden]="true" />
         <eg-grid-column name="home_ou.name" path="target_user.home_ou.name" i18n-label label="Home Library" />
         <eg-grid-column name="create_time" path="create_time" i18n-label label="Create Time" datatype="timestamp" />
         <eg-grid-column name="target_user" path="target_user" i18n-label label="Username" />

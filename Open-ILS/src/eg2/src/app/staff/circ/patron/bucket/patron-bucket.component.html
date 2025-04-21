@@ -59,15 +59,17 @@
           <span i18n>New Bucket</span>
         </button>
         
-        <div class="input-group mb-2 retrieve-form">
-          <input type="number" class="form-control" 
-            [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
-            [disabled]="retrievingById">
-          <button class="btn btn-outline-primary" (click)="retrieveBucketById()" [disabled]="retrievingById" i18n>
-            <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            Retrieve
-          </button>
-        </div>
+        <form (ngSubmit)="retrieveBucketById()">
+          <div class="input-group mb-2 retrieve-form">
+            <input type="number" class="form-control" 
+              [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
+              [disabled]="retrievingById" name="bucketId" #bucketIdInput>
+            <button type="submit" class="btn btn-outline-primary" [disabled]="retrievingById" i18n>
+              <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              Retrieve
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
