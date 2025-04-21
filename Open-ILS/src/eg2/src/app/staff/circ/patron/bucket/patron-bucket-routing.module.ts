@@ -1,8 +1,8 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {PatronBucketComponent} from './patron-bucket.component';
-import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
 import {PatronBucketItemComponent} from './patron-bucket-item.component';
+import {PatronBucketUnauthorizedComponent} from './patron-bucket-unauthorized.component';
 
 const routes: Routes = [
   {
@@ -14,8 +14,8 @@ const routes: Routes = [
     component: PatronBucketItemComponent
   },
   {
-    path: 'add/:id',
-    component: PatronBucketPendingComponent
+    path: 'unauthorized',
+    component: PatronBucketUnauthorizedComponent
   }
 ];
 

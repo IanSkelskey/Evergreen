@@ -53,6 +53,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
     
     private destroy$ = new Subject<void>();
+    isLoading = true; // Add loading state
     
     constructor(
         private router: Router,
@@ -82,28 +83,50 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
         this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
             this.bucketId = +params.get('id');
-            this.bucketService.logPatronBucket(this.bucketId);
-            this.initDataSource(this.bucketId);
-            this.gridSelectionChange([]);
             
-            // Fetch bucket with owner information
-            this.pcrud.retrieve('cub', this.bucketId, 
-                {flesh: 1, flesh_fields: {cub: ['owner']}}
-            ).subscribe({
-                next: bucket => { 
-                    console.debug('Retrieved bucket with owner:', bucket);
-                    this.bucket = bucket; 
-                },
-                error: err => {
-                    console.error('Error loading bucket:', err);
-                    this.toast.danger($localize`Error loading bucket: ${err.message || err}`);
-                }
-            });
+            // First check access permission before loading anything
+            this.checkBucketAccess();
         });
 
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
             this.returnTo = params.returnTo;
         });
+    }
+
+    /**
+     * Check if the current user has access to this bucket before initializing
+     */
+    async checkBucketAccess() {
+        try {
+            this.isLoading = true;
+            
+            // Try to retrieve the bucket with owner information
+            const bucket = await lastValueFrom(
+                this.pcrud.retrieve('cub', this.bucketId, 
+                    {flesh: 1, flesh_fields: {cub: ['owner']}}
+                )
+            );
+            
+            // Check authorization using the service method
+            await this.bucketService.checkBucketAccess(bucket);
+            
+            // Authorization successful, proceed with initialization
+            this.bucket = bucket;
+            this.bucketService.logPatronBucket(this.bucketId);
+            this.initDataSource(this.bucketId);
+            this.gridSelectionChange([]);
+            this.isLoading = false;
+            
+        } catch (err) {
+            console.error('Permission denied or bucket not found:', err);
+            
+            // Navigate to unauthorized component with the error message
+            this.router.navigate(['/staff/circ/patron/bucket/unauthorized'], { 
+                state: { message: err.message || 'Access denied to this patron bucket.' } 
+            });
+            
+            // Don't set isLoading to false since we're leaving this component
+        }
     }
 
     ngOnDestroy() {
