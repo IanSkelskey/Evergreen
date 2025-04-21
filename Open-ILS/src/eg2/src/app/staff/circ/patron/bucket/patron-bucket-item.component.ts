@@ -1,6 +1,6 @@
 import {Component, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
 import {Router, ActivatedRoute} from '@angular/router';
-import {firstValueFrom, lastValueFrom, EMPTY, Subject} from 'rxjs';
+import {lastValueFrom, EMPTY, Subject} from 'rxjs';
 import {catchError, takeUntil} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';

@@ -10,10 +10,28 @@
 <eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
 
 <div class="container-fluid px-0">
-  <!-- Improved bucket header section with better horizontal space usage -->
+  <!-- Top navigation buttons -->
   <div class="row mb-3">
-    <div class="col-md-8">
-      <div class="d-flex align-items-center flex-wrap">
+    <div class="col-12">
+      <div class="navigation-buttons">
+        <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+          routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+          <span class="material-icons">arrow_back</span>
+          Back to Buckets
+        </a>
+        <a *ngIf="!returnTo" class="btn btn-outline-secondary" 
+          routerLink="/staff/circ/patron/bucket" i18n>
+          <span class="material-icons">arrow_back</span>
+          Back to Buckets
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bucket header with information -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="bucket-header d-flex flex-wrap align-items-baseline">
         <h3 class="my-0 me-3">
           {{bucket?.name()}}
           <span *ngIf="bucketId" class="ms-2 text-muted" style="font-size: 1rem;">
@@ -27,47 +45,68 @@
             {{bucket?.owner()?.usrname()}}
           </a>
         </span>
-      </div>
-      <div *ngIf="bucket?.description()" class="mt-2">
-        <p class="text-muted mb-0">{{bucket?.description()}}</p>
-      </div>
-    </div>
-    <div class="col-md-4 text-md-end mt-md-0 mt-3">
-      <div class="btn-group">
-        <a *ngIf="returnTo" class="btn btn-outline-secondary" 
-          routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
-          <span class="material-icons">arrow_back</span>
-          Back to Buckets
-        </a>
-        <a class="btn btn-success" 
-          routerLink="/staff/circ/patron/bucket" i18n>
-          <span class="material-icons">folder</span>
-          My Buckets
-        </a>
+        <span *ngIf="bucket?.description()" class="bucket-description text-muted">
+          {{bucket?.description()}}
+        </span>
       </div>
     </div>
   </div>
 
-  <!-- Improved horizontal layout for controls -->
+  <!-- Controls row - optimized for horizontal layout -->
   <div class="row mb-3">
-    <div class="col-lg-7 col-md-12 mb-md-0 mb-3">
-      <div class="d-flex flex-wrap">
-        <!-- Patron actions group -->
-        <div class="btn-group me-2 mb-2">
-          <button class="btn btn-primary" 
-            (click)="openAddPatronDialog()" i18n>
-            <span class="material-icons">person_add</span>
-            Add Patron
-          </button>
-          <a class="btn btn-outline-primary" 
-            routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
-            <span class="material-icons">group_add</span>
-            Add Multiple Patrons
-          </a>
+    <div class="col-12">
+      <div class="action-controls-wrapper d-flex flex-wrap align-items-start">
+        <!-- Left side controls -->
+        <div class="me-auto d-flex flex-wrap">
+          <!-- Patron actions group -->
+          <div class="btn-group me-3 mb-2">
+            <button class="btn btn-primary" 
+              (click)="openAddPatronDialog()" i18n>
+              <span class="material-icons">person_add</span>
+              Add Patron
+            </button>
+            <a class="btn btn-outline-primary" 
+              routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
+              <span class="material-icons">group_add</span>
+              Add Multiple Patrons
+            </a>
+          </div>
+          
+          <!-- Bulk actions dropdown, positioned horizontally with other controls -->
+          <div ngbDropdown class="mb-2 me-3">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+              id="bulkActionsDropdown" ngbDropdownToggle>
+              <span class="material-icons">build</span>
+              <span i18n>Bulk Actions</span>
+            </button>
+            <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
+              <button ngbDropdownItem (click)="updateAllPatrons()" i18n>
+                <span class="material-icons">group</span>
+                Update All Patrons
+              </button>
+              <button ngbDropdownItem (click)="modifyStatcats()" i18n>
+                <span class="material-icons">category</span>
+                Modify Statistical Categories
+              </button>
+              <button ngbDropdownItem (click)="viewChangesets()" i18n>
+                <span class="material-icons">history</span>
+                View Changesets
+              </button>
+              <button ngbDropdownItem (click)="applyRollback()" i18n>
+                <span class="material-icons">restore</span>
+                Apply Rollback
+              </button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>
+                <span class="material-icons">delete_forever</span>
+                Delete All Patrons
+              </button>
+            </div>
+          </div>
         </div>
         
-        <!-- Quick Add Form positioned for better horizontal layout -->
-        <form class="d-flex mb-2 quick-add-form me-2" (ngSubmit)="quickAddPatron()">
+        <!-- Right side controls - Quick add form -->
+        <form class="quick-add-form mb-2" (ngSubmit)="quickAddPatron()">
           <div class="input-group">
             <input type="text" class="form-control" 
                   [(ngModel)]="quickAddBarcode" 
@@ -83,31 +122,9 @@
         </form>
       </div>
     </div>
-    
-    <!-- Bulk actions moved to right side on large screens -->
-    <div class="col-lg-5 col-md-12 text-lg-end">
-      <div class="d-flex justify-content-lg-end">
-        <!-- Bulk actions dropdown -->
-        <div ngbDropdown class="me-2 mb-2">
-          <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
-            id="bulkActionsDropdown" ngbDropdownToggle>
-            <span class="material-icons">build</span>
-            <span i18n>Bulk Actions</span>
-          </button>
-          <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
-            <button ngbDropdownItem (click)="updateAllPatrons()" i18n>Update All Patrons</button>
-            <button ngbDropdownItem (click)="modifyStatcats()" i18n>Modify Statistical Categories</button>
-            <button ngbDropdownItem (click)="viewChangesets()" i18n>View Changesets</button>
-            <button ngbDropdownItem (click)="applyRollback()" i18n>Apply Rollback</button>
-            <div class="dropdown-divider"></div>
-            <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>Delete All Patrons</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- Grid remains the same -->
+  <!-- Grid section - unchanged -->
   <div class="row">
     <div class="col-12">
       <eg-grid #grid idlClass="cubi" i18n-persistKey 
@@ -119,24 +136,28 @@
         
         <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
             [disabled]="noSelectedRows"
-            (onClick)="removeFromBucket($event)">
+            (onClick)="removeFromBucket($event)"
+            icon="delete">
         </eg-grid-toolbar-action>
 
         <eg-grid-toolbar-action label="Move to Another Bucket" i18n-label
             [disabled]="noSelectedRows"
             (onClick)="moveAddToBucket($event, true)"
-            tooltip="Copy patrons to another bucket and remove from this bucket" i18n-tooltip>
+            tooltip="Copy patrons to another bucket and remove from this bucket" i18n-tooltip
+            icon="drive_file_move">
         </eg-grid-toolbar-action>
 
         <eg-grid-toolbar-action label="Copy to Another Bucket" i18n-label
             [disabled]="noSelectedRows"
             (onClick)="moveAddToBucket($event, false)"
-            tooltip="Copy patrons to another bucket while keeping them in this bucket" i18n-tooltip>
+            tooltip="Copy patrons to another bucket while keeping them in this bucket" i18n-tooltip
+            icon="content_copy">
         </eg-grid-toolbar-action>
 
         <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
             [disabled]="noSelectedRows"
-            (onClick)="editSelectedPatrons($event)">
+            (onClick)="editSelectedPatrons($event)"
+            icon="edit">
         </eg-grid-toolbar-action>
 
         <eg-grid-column path="id" [index]="true" i18n-label label="ID" />

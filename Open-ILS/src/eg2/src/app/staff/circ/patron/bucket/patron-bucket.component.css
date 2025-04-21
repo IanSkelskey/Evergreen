@@ -92,7 +92,6 @@
         border-bottom: 1px solid transparent !important;
         color: var(--bs-nav-link-color, #fff);
     }
-    
 }
 
 /* Light mode: active tab blends in with background and no bottom border (Bootstrap default) */
@@ -111,4 +110,34 @@
 .tab-count {
     margin-left: 0.25rem;
     opacity: 0.8;
+}
+
+/* New styles for control positioning */
+.action-controls {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.action-controls .btn {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Create logical groups of controls */
+.control-group {
+    margin-bottom: 1rem;
+}
+
+/* Better spacing for form elements */
+.form-group {
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .form-group {
+        width: 100%;
+        margin-right: 0;
+    }
 }
