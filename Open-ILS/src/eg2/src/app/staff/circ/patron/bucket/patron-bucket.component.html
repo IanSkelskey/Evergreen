@@ -65,7 +65,7 @@
           <div class="input-group">
             <input type="number" class="form-control" 
               [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
-              [disabled]="retrievingById" name="bucketId" #bucketIdInput>
+              [disabled]="retrievingById" name="bucketId" #bucketIdInput min="0">
             <button type="submit" class="btn btn-outline-primary" [disabled]="retrievingById" i18n>
               <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
               Retrieve
