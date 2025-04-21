@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
+import {Component, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
 import {Router, ActivatedRoute} from '@angular/router';
 import {Observable, Subject, from, lastValueFrom, EMPTY, of} from 'rxjs';
 import {takeUntil, catchError, switchMap, map} from 'rxjs/operators';
@@ -51,6 +51,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     @ViewChild('results') private results: DialogComponent;
     @ViewChild('transferDialog') private transferDialog: BucketTransferDialogComponent;
     @ViewChild('shareBucketDialog') private shareBucketDialog: BucketShareDialogComponent;
+    @ViewChild('bucketIdInput', { static: false }) bucketIdInput: ElementRef;
 
     private destroy$ = new Subject<void>();
 
@@ -217,7 +218,12 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     }
 
     retrieveBucketById() {
-        if (!this.bucketIdToRetrieve) return;
+        if (!this.bucketIdToRetrieve) {
+            // Focus the input field if no ID is provided
+            setTimeout(() => this.bucketIdInput?.nativeElement?.focus(), 0);
+            return;
+        }
+        
         this.retrievingById = true;
         this.bucketService.retrieveBucketById(this.bucketIdToRetrieve)
             .then(bucket => {
@@ -226,11 +232,10 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             })
             .catch(error => {
                 this.retrievingById = false;
-                // Show error as toast instead of inline error
+                // Show error as toast
                 this.toast.danger(error?.message || $localize`Unknown error retrieving bucket`);
-                // Optionally, open the dialog for more severe errors
-                // this.retrieveByIdFail.dialogBody = error?.message || $localize`Unknown error retrieving bucket`;
-                // this.retrieveByIdFail.open();
+                // Return focus to the input field
+                setTimeout(() => this.bucketIdInput?.nativeElement?.focus(), 0);
             });
     }
 
