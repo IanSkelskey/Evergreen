@@ -49,34 +49,55 @@ a.btn .material-icons {
     flex-wrap: wrap;
 }
 
-/* Quick add form responsive behavior */
-.quick-add-form {
+/* Quick add controls layout */
+.quick-add-controls {
     width: auto;
     min-width: 250px;
     max-width: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+.quick-add-form {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Fix button spacing in quick add controls */
+.quick-add-controls .btn {
+    margin-bottom: 0;
 }
 
 @media (max-width: 767.98px) {
-    .quick-add-form {
+    .quick-add-controls {
         width: 100%;
         max-width: none;
     }
-    
-    .action-controls-wrapper > div {
-        width: 100%;
-    }
 }
 
-/* Fix for Quick Add form button and input height alignment */
+/* Unified button heights and alignment */
+.action-controls-wrapper button.btn,
+.action-controls-wrapper .btn-group .btn,
+.action-controls-wrapper ngbDropdown button,
+.quick-add-form .btn,
+.quick-add-form .input-group .form-control {
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Specific fixes for input group alignment */
 .quick-add-form .input-group {
-    align-items: stretch;
+    align-items: stretch !important;
 }
 
-.quick-add-form .input-group .form-control,
-.quick-add-form .input-group .btn {
-    height: 38px; /* Set an explicit height */
-    padding-top: 0.375rem;
-    padding-bottom: 0.375rem;
+/* Match padding for consistent look */
+.action-controls-wrapper button.btn,
+.action-controls-wrapper .btn-group .btn,
+.action-controls-wrapper ngbDropdown button,
+.quick-add-form .btn {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
     line-height: 1.5;
     box-sizing: border-box;
 }
@@ -87,10 +108,18 @@ a.btn .material-icons {
     justify-content: center;
 }
 
-/* Ensure material icons don't throw off the alignment */
+/* Fix vertical alignment of text and icons */
+.action-controls-wrapper .material-icons,
 .quick-add-form .material-icons {
-    font-size: 1rem;
+    display: inline-block;
+    vertical-align: middle;
     line-height: 1;
+}
+
+/* Ensure dropdown buttons maintain same height */
+.action-controls-wrapper button.dropdown-toggle {
+    height: 38px !important;
+    box-sizing: border-box !important;
 }
 
 /* Make back button look like a button for better visibility */

@@ -8,6 +8,8 @@
 <eg-alert-dialog #alertDialog></eg-alert-dialog>
 <eg-bucket-dialog #addToBucketDialog></eg-bucket-dialog>
 <eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
+<eg-patron-barcodes-paste-dialog #barcodesPasteDialog></eg-patron-barcodes-paste-dialog>
+<eg-patron-barcode-confirm-dialog #barcodeConfirmDialog></eg-patron-barcode-confirm-dialog>
 
 <div class="container-fluid px-0">
   <!-- Top navigation buttons -->
@@ -60,21 +62,37 @@
         <div class="me-auto d-flex flex-wrap">
           <!-- Patron actions group -->
           <div class="btn-group me-3 mb-2">
-            <button class="btn btn-primary" 
-              (click)="openAddPatronDialog()" i18n>
-              <span class="material-icons">person_add</span>
-              Add Patron
-            </button>
-            <a class="btn btn-outline-primary" 
-              routerLink="/staff/circ/patron/bucket/add/{{bucketId}}" i18n>
+            <button class="btn btn-primary d-flex align-items-center" 
+              (click)="openAddPatronDialog()" 
+              ngbTooltip="Search for patrons and add them directly to this bucket" i18n-ngbTooltip
+              i18n>
               <span class="material-icons">group_add</span>
-              Add Multiple Patrons
-            </a>
+              Search & Add Patrons
+            </button>
+            <div ngbDropdown class="btn-group">
+              <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center" 
+                ngbDropdownToggle i18n>
+                <span class="material-icons">add</span>
+                More Add Options
+              </button>
+              <div ngbDropdownMenu>
+                <button ngbDropdownItem (click)="fileUploadInput.click()" i18n>
+                  <span class="material-icons">upload_file</span>
+                  Upload Barcode File
+                  <span class="small text-muted ms-1">(Text file with barcodes)</span>
+                </button>
+                <button ngbDropdownItem (click)="openBarcodesPasteDialog()" i18n>
+                  <span class="material-icons">content_paste</span>
+                  Paste Barcodes
+                  <span class="small text-muted ms-1">(List of barcodes)</span>
+                </button>
+              </div>
+            </div>
           </div>
           
           <!-- Bulk actions dropdown, positioned horizontally with other controls -->
           <div ngbDropdown class="mb-2 me-3">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+            <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" 
               id="bulkActionsDropdown" ngbDropdownToggle>
               <span class="material-icons">build</span>
               <span i18n>Bulk Actions</span>
@@ -106,20 +124,42 @@
         </div>
         
         <!-- Right side controls - Quick add form -->
-        <form class="quick-add-form mb-2" (ngSubmit)="quickAddPatron()">
-          <div class="input-group">
-            <input type="text" class="form-control" 
-                  [(ngModel)]="quickAddBarcode" 
-                  name="quickAddBarcode" 
-                  placeholder="Scan Patron Barcode" i18n-placeholder
-                  aria-label="Patron Barcode" i18n-aria-label
-                  #barcodeInput>
-            <button class="btn btn-outline-primary" type="submit" i18n>
-              <span class="material-icons">qr_code_scanner</span>
-              Quick Add
-            </button>
+        <div class="quick-add-controls mb-2">
+          <!-- Quick add barcode form -->
+          <form class="quick-add-form mb-2" (ngSubmit)="quickAddPatron()">
+            <div class="input-group">
+              <input type="text" class="form-control" 
+                      [(ngModel)]="quickAddBarcode" 
+                      name="quickAddBarcode" 
+                      placeholder="Scan Patron Barcode" i18n-placeholder
+                      aria-label="Patron Barcode" i18n-aria-label
+                      #barcodeInput>
+              <button class="btn btn-outline-primary d-flex align-items-center" type="submit" 
+                      ngbTooltip="Add one patron by scanning their barcode" i18n-ngbTooltip i18n>
+                <span class="material-icons">qr_code_scanner</span>
+                Quick Add
+              </button>
+            </div>
+          </form>
+          
+          <!-- File upload input (hidden) -->
+          <input #fileUploadInput type="file" class="d-none" accept=".txt,.csv" (change)="handleBarcodeFileUpload($event)">
+          
+          <!-- Stats for current session -->
+          <div class="quick-add-stats small text-muted mt-1" *ngIf="quickAddCount > 0 || fileUploadCount > 0">
+            <div class="d-flex justify-content-between">
+              <span i18n>Session Stats:</span>
+              <span>
+                <span class="badge bg-success" *ngIf="quickAddCount + fileUploadCount > 0">
+                  {{quickAddCount + fileUploadCount}} added
+                </span>
+                <span class="badge bg-warning text-dark ms-1" *ngIf="duplicatesFound > 0">
+                  {{duplicatesFound}} duplicates
+                </span>
+              </span>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
