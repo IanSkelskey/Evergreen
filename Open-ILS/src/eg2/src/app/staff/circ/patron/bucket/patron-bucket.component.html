@@ -22,45 +22,47 @@
 
 <div class="container-fluid px-0">
   <div class="row mb-3">
-    <div class="col-lg-7 mb-2">
-      <!-- Replace buttons with tabs -->
-      <ul class="nav nav-tabs">
-        <ng-container *ngFor="let viewKey of getViewKeys()">
-          <li class="nav-item">
-            <a class="nav-link" [class.active]="isCurrentView(viewKey)" (click)="switchTo(viewKey)">
-              <span class="material-icons" *ngIf="viewKey === 'user'">folder</span>
-              {{getViews()[viewKey]?.label}}
-              <span class="tab-count" *ngIf="getViews()[viewKey]?.count !== null && getViews()[viewKey]?.count !== undefined">
-                ({{getViews()[viewKey]?.count}})
-              </span>
-              <span *ngIf="getViews()[viewKey]?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
-            </a>
-          </li>
-        </ng-container>
+    <div class="col-12">
+      <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <!-- Left side with New Bucket button and tabs -->
+        <div class="bucket-controls d-flex flex-wrap align-items-center">
+          <button class="btn btn-primary me-3 mb-2" (click)="openNewBucketDialog()">
+            <span class="material-icons">add</span>
+            <span i18n>New Bucket</span>
+          </button>
+          
+          <!-- Tabs navigation, styled to display inline on larger screens -->
+          <ul class="nav nav-tabs mb-2">
+            <ng-container *ngFor="let viewKey of getViewKeys()">
+              <li class="nav-item">
+                <a class="nav-link" [class.active]="isCurrentView(viewKey)" (click)="switchTo(viewKey)">
+                  <span class="material-icons" *ngIf="viewKey === 'user'">folder</span>
+                  {{getViews()[viewKey]?.label}}
+                  <span class="tab-count" *ngIf="getViews()[viewKey]?.count !== null && getViews()[viewKey]?.count !== undefined">
+                    ({{getViews()[viewKey]?.count}})
+                  </span>
+                  <span *ngIf="getViews()[viewKey]?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+                </a>
+              </li>
+            </ng-container>
+            
+            <!-- Shared Buckets tab -->
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="isCurrentView('shared')" (click)="switchTo('shared')">
+                <span class="material-icons">folder_shared</span>
+                <span i18n>Shared Buckets</span>
+                <span class="tab-count" *ngIf="getViews()['shared']?.count !== null && getViews()['shared']?.count !== undefined">
+                  ({{getViews()['shared']?.count}})
+                </span>
+                <span *ngIf="getViews()['shared']?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+              </a>
+            </li>
+          </ul>
+        </div>
         
-        <!-- Shared Buckets tab -->
-        <li class="nav-item">
-          <a class="nav-link" [class.active]="isCurrentView('shared')" (click)="switchTo('shared')">
-            <span class="material-icons">folder_shared</span>
-            <span i18n>Shared Buckets</span>
-            <span class="tab-count" *ngIf="getViews()['shared']?.count !== null && getViews()['shared']?.count !== undefined">
-              ({{getViews()['shared']?.count}})
-            </span>
-            <span *ngIf="getViews()['shared']?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
-          </a>
-        </li>
-      </ul>
-    </div>
-    
-    <div class="col-lg-5">
-      <div class="d-flex flex-wrap justify-content-lg-end">
-        <button class="btn btn-primary me-2 mb-2" (click)="openNewBucketDialog()">
-          <span class="material-icons">add</span>
-          <span i18n>New Bucket</span>
-        </button>
-        
-        <form (ngSubmit)="retrieveBucketById()">
-          <div class="input-group mb-2 retrieve-form">
+        <!-- Right side with retrieve form -->
+        <form (ngSubmit)="retrieveBucketById()" class="retrieve-form mb-2">
+          <div class="input-group">
             <input type="number" class="form-control" 
               [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
               [disabled]="retrievingById" name="bucketId" #bucketIdInput>
@@ -74,6 +76,7 @@
     </div>
   </div>
 
+  <!-- Grid section - unchanged -->
   <eg-grid #grid 
       [dataSource]="dataSource"
       [cellTextGenerator]="cellTextGenerator"

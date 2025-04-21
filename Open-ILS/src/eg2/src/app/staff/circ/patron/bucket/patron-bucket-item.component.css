@@ -25,23 +25,95 @@ a.btn .material-icons {
     margin-bottom: 0.25rem;
 }
 
+/* Enhanced layout styles */
+.bucket-header {
+    margin-bottom: 0.5rem;
+}
+
+.bucket-description {
+    flex-basis: 100%;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    display: block;
+}
+
+@media (min-width: 992px) {
+    .bucket-description {
+        flex-basis: auto;
+        margin-top: 0;
+    }
+}
+
+.action-controls-wrapper {
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+/* Quick add form responsive behavior */
 .quick-add-form {
     width: auto;
     min-width: 250px;
     max-width: 350px;
 }
 
-@media (min-width: 1200px) {
-    .quick-add-form {
-        min-width: 300px;
-    }
-}
-
-@media (max-width: 992px) {
+@media (max-width: 767.98px) {
     .quick-add-form {
         width: 100%;
         max-width: none;
     }
+    
+    .action-controls-wrapper > div {
+        width: 100%;
+    }
+}
+
+/* Fix for Quick Add form button and input height alignment */
+.quick-add-form .input-group {
+    align-items: stretch;
+}
+
+.quick-add-form .input-group .form-control,
+.quick-add-form .input-group .btn {
+    height: 38px; /* Set an explicit height */
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.quick-add-form .input-group .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure material icons don't throw off the alignment */
+.quick-add-form .material-icons {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* Make back button look like a button for better visibility */
+.navigation-buttons .btn {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Dropdown menu item icon styling */
+[ngbdropdownitem] .material-icons,
+.dropdown-item .material-icons {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    vertical-align: text-bottom;
+    display: inline-block;
+}
+
+/* Ensure dropdown items have consistent spacing and alignment */
+[ngbdropdownitem],
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 1rem;
 }
 
 /* Consistent styling for material icons across components */
@@ -68,4 +140,27 @@ a.btn .material-icons {
 
 .btn-success:hover {
     color: white !important;
+}
+
+/* Grid toolbar custom template styling */
+:host ::ng-deep eg-grid-toolbar-action button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+:host ::ng-deep eg-grid-toolbar-action .material-icons {
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+    vertical-align: text-bottom;
+}
+
+:host ::ng-deep eg-grid-toolbar .btn-light {
+    background-color: #f8f9fa;
+    border-color: #ddd;
+}
+
+:host ::ng-deep eg-grid-toolbar .btn-light:hover {
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
 }
