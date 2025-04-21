@@ -1,0 +1,23 @@
+/* Remove custom .unauthorized-card and .alert-warning border, rely on Bootstrap/Evergreen defaults */
+
+.card {
+    margin-top: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.alert .material-icons {
+    font-size: 1.3rem;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+}
+
+.fs-5 {
+    font-size: 1.08rem;
+}
+
+/* Reduce alert-warning intensity for this context */
+.alert-warning {
+    background-color: #fffbe6;
+    border-color: #ffeeba;
+    color: #856404;
+}

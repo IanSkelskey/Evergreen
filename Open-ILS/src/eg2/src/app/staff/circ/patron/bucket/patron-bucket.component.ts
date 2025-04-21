@@ -228,6 +228,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.bucketService.retrieveBucketById(this.bucketIdToRetrieve)
             .then(bucket => {
                 this.retrievingById = false;
+                // Authorization check is already done in the service method
                 this.jumpToBucketContent(this.bucketIdToRetrieve);
             })
             .catch(error => {
@@ -244,10 +245,21 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             this.toast.danger($localize`Cannot view content: Invalid bucket ID`);
             return;
         }
-        this.bucketService.logPatronBucket(bucketId);
-        this.router.navigate(['/staff/circ/patron/bucket/content', bucketId]).catch(err => {
-            this.toast.danger($localize`Navigation error: ${err.message || err}`);
-        });
+        
+        // First check if the user has access to this bucket
+        this.bucketService.checkBucketAccess(bucketId)
+            .then(() => {
+                // Access granted, proceed to bucket content
+                this.bucketService.logPatronBucket(bucketId);
+                this.router.navigate(['/staff/circ/patron/bucket/content', bucketId]).catch(err => {
+                    this.toast.danger($localize`Navigation error: ${err.message || err}`);
+                });
+            })
+            .catch(err => {
+                // Access denied
+                console.error('Permission denied:', err);
+                this.toast.danger($localize`${err.message || 'Access denied'}`);
+            });
     }
 
     openNewBucketDialog = async () => {

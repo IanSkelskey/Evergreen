@@ -83,6 +83,127 @@ export class PatronBucketService {
         }
     }
     
+    /**
+     * Check if the current user has access to a bucket
+     * @param bucket The bucket or bucket ID to check
+     * @param requiresWrite Whether write access is required (defaults to false)
+     * @param loadBucket Whether to load the bucket if only an ID is provided (defaults to true)
+     * @returns A promise that resolves with the bucket object if access is granted
+     * @throws Error if access is denied
+     */
+    async checkBucketAccess(
+        bucket: IdlObject | number, 
+        requiresWrite: boolean = false,
+        loadBucket: boolean = true
+    ): Promise<IdlObject> {
+        try {
+            let bucketObj: IdlObject;
+            let bucketId: number;
+
+            // If we received a bucket ID instead of a bucket object
+            if (typeof bucket === 'number') {
+                bucketId = bucket;
+                
+                // Load the bucket if requested
+                if (loadBucket) {
+                    try {
+                        bucketObj = await lastValueFrom(
+                            this.pcrud.retrieve('cub', bucketId, {
+                                flesh: 1,
+                                flesh_fields: {cub: ['owner']}
+                            })
+                        );
+                    } catch (err) {
+                        console.error(`Error retrieving bucket ${bucketId} for access check:`, err);
+                        throw new Error($localize`Bucket not found or permission denied`);
+                    }
+                    
+                    if (!bucketObj) {
+                        throw new Error($localize`Bucket not found`);
+                    }
+                } else {
+                    // Return null for the bucket object since we didn't load it
+                    return null;
+                }
+            } else if (bucket && typeof bucket.id === 'function') {
+                // We already have a bucket object
+                bucketObj = bucket;
+                bucketId = bucketObj.id();
+            } else {
+                throw new Error($localize`Invalid bucket parameter`);
+            }
+
+            // Get current user ID
+            const currentUserId = this.auth.user().id();
+            
+            // Check if user is bucket owner
+            let isOwner = false;
+            let ownerId: number;
+            
+            // Try to get the owner ID from the bucket
+            try {
+                if (typeof bucketObj.owner === 'function') {
+                    // Handle owner as a function that returns either an ID or object
+                    const owner = bucketObj.owner();
+                    if (owner) {
+                        if (typeof owner === 'object' && typeof owner.id === 'function') {
+                            ownerId = owner.id();
+                        } else if (!isNaN(Number(owner))) {
+                            ownerId = Number(owner);
+                        }
+                    }
+                }
+                
+                // If we couldn't get owner from function call, try direct property access
+                if (ownerId === undefined && bucketObj.owner !== undefined) {
+                    ownerId = Number(bucketObj.owner);
+                }
+                
+                // Check if current user is the owner
+                isOwner = (ownerId === currentUserId);
+            } catch (e) {
+                console.warn('Error checking bucket ownership:', e);
+                // Default to false if we encounter an error
+                isOwner = false;
+            }
+            
+            // If user is owner, they always have access
+            if (isOwner) {
+                return bucketObj;
+            }
+
+            // If write access is required and user is not owner, deny access
+            if (requiresWrite) {
+                throw new Error($localize`You do not have permission to modify this bucket`);
+            }
+            
+            // For read access, check if bucket is public
+            let isPublic = false;
+            try {
+                if (typeof bucketObj.pub === 'function') {
+                    const pubValue = bucketObj.pub();
+                    isPublic = (pubValue === 't' || pubValue === true);
+                } else if (bucketObj.pub !== undefined) {
+                    isPublic = (bucketObj.pub === 't' || bucketObj.pub === true);
+                }
+            } catch (e) {
+                console.warn('Error checking if bucket is public:', e);
+                // Default to private if we encounter an error
+                isPublic = false;
+            }
+            
+            // Allow access if bucket is public, deny if it's private
+            if (isPublic) {
+                return bucketObj;
+            } else {
+                throw new Error($localize`This bucket is private and can only be accessed by its owner`);
+            }
+        } catch (error) {
+            console.error('Error in checkBucketAccess:', error);
+            throw error;
+        }
+    }
+    
     // Create a new bucket
     async createBucket(name: string, description: string = '', bucketType: string = 'staff_client', isPublic: boolean = false): Promise<any> {
         try {
@@ -134,115 +255,27 @@ export class PatronBucketService {
         }
     }
     
-    // Update an existing bucket
-    async updateBucket(bucket: IdlObject): Promise<any> {
-        try {
-            console.debug('Updating bucket with data:', bucket);
-            
-            // Make sure pub is properly formatted - API requires 't' or 'f' character values
-            if (typeof bucket.pub === 'function') {
-                const pubValue = bucket.pub();
-                if (pubValue === true || pubValue === false) {
-                    bucket.pub(pubValue ? 't' : 'f');
-                }
-            }
-            
-            // Ensure the owning_lib is set if it isn't already
-            if ((!bucket.owning_lib || !bucket.owning_lib()) && typeof bucket.owner === 'function') {
-                try {
-                    const ownerId = bucket.owner();
-                    const homeOu = await this.getUserHomeOu(ownerId);
-                    bucket.owning_lib(homeOu);
-                    console.debug(`Setting owning_lib to ${homeOu} for bucket ${bucket.id()}`);
-                } catch (e) {
-                    console.warn('Error setting owning_lib:', e);
-                }
-            }
-            
-            // For debugging - show what we're sending to the server
-            console.log('Sending bucket update:', {
-                id: bucket.id(),
-                name: bucket.name(),
-                description: bucket.description(),
-                owner: bucket.owner(),
-                btype: bucket.btype(),
-                pub: bucket.pub(),
-                owning_lib: typeof bucket.owning_lib === 'function' ? bucket.owning_lib() : 'undefined'
-            });
-            
-            // Try using the containers.update method with specific parameters
-            const response = await lastValueFrom(
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.containers.update',  // Use the batch version that's more reliable
-                    this.auth.token(), 
-                    'user', 
-                    [bucket]  // Send as an array for batch API
-                )
-            );
-            
-            // Log the response for debugging
-            console.debug('Bucket update response:', response);
-            
-            if (!response || !response[bucket.id()]) {
-                throw new Error('No response from server for bucket update');
-            }
-            
-            const result = response[bucket.id()];
-            const evt = this.evt.parse(result);
-            if (evt) {
-                console.error('Bucket update event error:', evt);
-                throw new Error(evt.toString());
-            }
-            
-            this.requestPatronBucketsRefresh();
-            return {
-                success: true,
-                id: bucket.id()
-            };
-        } catch (error) {
-            console.error('Error updating bucket:', error);
-            throw new Error(`Error updating bucket: ${error.message || error}`);
-        }
-    }
-    
-    // Delete a bucket
-    async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
-        try {
-            const response = await lastValueFrom(
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.container.full_delete',
-                    this.auth.token(), 'user', bucketId
-                )
-            );
-            
-            const evt = this.evt.parse(response);
-            if (evt) {
-                console.error('Delete bucket error:', evt);
-                return {success: false, message: evt.toString()};
-            }
-            
-            this.requestPatronBucketsRefresh();
-            return {success: true};
-        } catch (error) {
-            console.error('Error deleting bucket:', error);
-            return {success: false, message: 'Unknown error'};
-        }
-    }
-    
     // Retrieve bucket by ID
     async retrieveBucketById(bucketId: number): Promise<IdlObject> {
         try {
-            const bucket = await lastValueFrom(this.pcrud.retrieve('cub', bucketId));
+            const bucket = await lastValueFrom(this.pcrud.retrieve('cub', bucketId, {
+                flesh: 1, 
+                flesh_fields: {cub: ['owner']}
+            }));
+            
             const evt = this.evt.parse(bucket);
             if (evt) {
                 throw new Error(evt.toString());
             }
+            
             // If bucket is null or undefined, treat as not found
             if (!bucket) {
                 throw new Error($localize`No bucket found with ID ${bucketId}`);
             }
+            
+            // Check authorization - this will throw an error if access is denied
+            await this.checkBucketAccess(bucket);
+            
             return bucket;
         } catch (error: any) {
             // Handle "no elements in sequence" (EmptyError) gracefully
@@ -334,6 +367,9 @@ export class PatronBucketService {
     // Retrieve items (patrons) in a bucket
     async retrievePatronBucketItems(bucketId: number): Promise<any[]> {
         try {
+            // Check if user has permission to access this bucket
+            await this.checkBucketAccess(bucketId);
+            
             const query = { 
                 bucket: bucketId 
             };
@@ -401,6 +437,9 @@ export class PatronBucketService {
     async addPatronsToPatronBucket(bucketId: number, patronIds: number[]): Promise<any> {
         this.logPatronBucket(bucketId);
         try {
+            // Check if user has permission to add items to this bucket
+            await this.checkBucketAccess(bucketId, true);
+            
             const items = [];
             patronIds.forEach(patronId => {
                 const item = this.idl.create('cubi');
@@ -502,6 +541,109 @@ export class PatronBucketService {
         } catch (error) {
             console.error('Error in removePatronsFromPatronBucket:', error);
             throw error;
+        }
+    }
+    
+    // Update an existing bucket
+    async updateBucket(bucket: IdlObject): Promise<any> {
+        try {
+            console.debug('Updating bucket with data:', bucket);
+            
+            // Check if user has permission to update this bucket
+            await this.checkBucketAccess(bucket, true);
+            
+            // Make sure pub is properly formatted - API requires 't' or 'f' character values
+            if (typeof bucket.pub === 'function') {
+                const pubValue = bucket.pub();
+                if (pubValue === true || pubValue === false) {
+                    bucket.pub(pubValue ? 't' : 'f');
+                }
+            }
+            
+            // Ensure the owning_lib is set if it isn't already
+            if ((!bucket.owning_lib || !bucket.owning_lib()) && typeof bucket.owner === 'function') {
+                try {
+                    const ownerId = bucket.owner();
+                    const homeOu = await this.getUserHomeOu(ownerId);
+                    bucket.owning_lib(homeOu);
+                    console.debug(`Setting owning_lib to ${homeOu} for bucket ${bucket.id()}`);
+                } catch (e) {
+                    console.warn('Error setting owning_lib:', e);
+                }
+            }
+            
+            // For debugging - show what we're sending to the server
+            console.log('Sending bucket update:', {
+                id: bucket.id(),
+                name: bucket.name(),
+                description: bucket.description(),
+                owner: bucket.owner(),
+                btype: bucket.btype(),
+                pub: bucket.pub(),
+                owning_lib: typeof bucket.owning_lib === 'function' ? bucket.owning_lib() : 'undefined'
+            });
+            
+            // Try using the containers.update method with specific parameters
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.containers.update',  // Use the batch version that's more reliable
+                    this.auth.token(), 
+                    'user', 
+                    [bucket]  // Send as an array for batch API
+                )
+            );
+            
+            // Log the response for debugging
+            console.debug('Bucket update response:', response);
+            
+            if (!response || !response[bucket.id()]) {
+                throw new Error('No response from server for bucket update');
+            }
+            
+            const result = response[bucket.id()];
+            const evt = this.evt.parse(result);
+            if (evt) {
+                console.error('Bucket update event error:', evt);
+                throw new Error(evt.toString());
+            }
+            
+            this.requestPatronBucketsRefresh();
+            return {
+                success: true,
+                id: bucket.id()
+            };
+        } catch (error) {
+            console.error('Error updating bucket:', error);
+            throw new Error(`Error updating bucket: ${error.message || error}`);
+        }
+    }
+    
+    // Delete a bucket
+    async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
+        try {
+            // Check if user has permission to delete this bucket
+            await this.checkBucketAccess(bucketId, true);
+            
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.full_delete',
+                    this.auth.token(), 'user', bucketId
+                )
+            );
+            
+            const evt = this.evt.parse(response);
+            if (evt) {
+                console.error('Delete bucket error:', evt);
+                return {success: false, message: evt.toString()};
+            }
+            
+            this.requestPatronBucketsRefresh();
+            return {success: true};
+        } catch (error) {
+            console.error('Error deleting bucket:', error);
+            return {success: false, message: error.message || 'Unknown error'};
         }
     }
 }

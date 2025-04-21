@@ -4,9 +4,9 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import {PatronBucketComponent} from './patron-bucket.component';
 import {PatronBucketItemComponent} from './patron-bucket-item.component';
-import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component';
+import {PatronBucketUnauthorizedComponent} from './patron-bucket-unauthorized.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './patron-bucket-state.service';
 import {PatronBucketRoutingModule} from './patron-bucket-routing.module';
@@ -23,9 +23,9 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
     declarations: [
         PatronBucketComponent,
         PatronBucketItemComponent,
-        PatronBucketPendingComponent,
         PatronBucketAddDialogComponent,
-        PatronBucketCreateDialogComponent
+        PatronBucketCreateDialogComponent,
+        PatronBucketUnauthorizedComponent
     ],
     imports: [
         PatronBucketRoutingModule,
