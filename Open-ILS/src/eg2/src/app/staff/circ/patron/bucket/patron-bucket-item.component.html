@@ -124,12 +124,14 @@
 
         <eg-grid-toolbar-action label="Move to Another Bucket" i18n-label
             [disabled]="noSelectedRows"
-            (onClick)="moveAddToBucket($event, true)">
+            (onClick)="moveAddToBucket($event, true)"
+            tooltip="Copy patrons to another bucket and remove from this bucket" i18n-tooltip>
         </eg-grid-toolbar-action>
 
-        <eg-grid-toolbar-action label="Add to Another Bucket" i18n-label
+        <eg-grid-toolbar-action label="Copy to Another Bucket" i18n-label
             [disabled]="noSelectedRows"
-            (onClick)="moveAddToBucket($event, false)">
+            (onClick)="moveAddToBucket($event, false)"
+            tooltip="Copy patrons to another bucket while keeping them in this bucket" i18n-tooltip>
         </eg-grid-toolbar-action>
 
         <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
@@ -137,8 +139,8 @@
             (onClick)="editSelectedPatrons($event)">
         </eg-grid-toolbar-action>
 
-        <eg-grid-column path="id" i18n-label label="ID" [hidden]="true" />
-        <eg-grid-column name="barcode" [index]="true" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
+        <eg-grid-column path="id" [index]="true" i18n-label label="ID" />
+        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
         <eg-grid-column name="family_name" path="target_user.family_name" />
         <eg-grid-column name="first_given_name" path="target_user.first_given_name" />
         <eg-grid-column name="second_given_name" path="target_user.second_given_name" [hidden]="true" />

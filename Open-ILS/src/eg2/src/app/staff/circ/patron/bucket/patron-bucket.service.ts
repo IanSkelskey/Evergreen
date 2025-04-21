@@ -427,15 +427,24 @@ export class PatronBucketService {
         try {
             console.debug('In service: removing items', itemIds, 'from bucket', bucketId);
             
+            // Validate inputs
             if (!itemIds || itemIds.length === 0) {
                 throw new Error('No item IDs provided for removal');
             }
+            
+            // Filter out any non-numeric or invalid values
+            const validItemIds = itemIds.filter(id => id !== undefined && id !== null && !isNaN(Number(id)));
+            if (validItemIds.length === 0) {
+                throw new Error('No valid item IDs provided for removal');
+            }
+            
+            console.debug(`Starting removal of ${validItemIds.length} items from bucket ${bucketId}`);
             
             // Process each item ID individually
             const results = [];
             const errors = [];
             
-            for (const itemId of itemIds) {
+            for (const itemId of validItemIds) {
                 try {
                     console.debug(`Removing item ${itemId} from bucket ${bucketId}`);
                     
@@ -443,7 +452,7 @@ export class PatronBucketService {
                     const response = await lastValueFrom(
                         this.net.request(
                             'open-ils.actor',
-                            'open-ils.actor.container.item.delete',  // This is the correct method
+                            'open-ils.actor.container.item.delete',  
                             this.auth.token(), 'user', itemId
                         ),
                         { defaultValue: { success: true, id: itemId } }
@@ -452,8 +461,15 @@ export class PatronBucketService {
                     // Check for errors
                     const evt = this.evt.parse(response);
                     if (evt) {
-                        console.warn(`Error removing item ${itemId}:`, evt);
-                        errors.push({ id: itemId, error: evt });
+                        // Handle the specific "item not found" error as a success
+                        // Since the end goal was to remove the item, and it's not there, we succeeded
+                        if (evt.textcode === 'CONTAINER_USER_BUCKET_ITEM_NOT_FOUND') {
+                            console.debug(`Item ${itemId} was already removed or doesn't exist`);
+                            results.push({ id: itemId, success: true, already_removed: true });
+                        } else {
+                            console.warn(`Error removing item ${itemId}:`, evt);
+                            errors.push({ id: itemId, error: evt });
+                        }
                     } else {
                         results.push({ id: itemId, success: true });
                     }
@@ -465,15 +481,19 @@ export class PatronBucketService {
             
             console.debug('Removal results:', { results, errors });
             
-            // If all operations failed, throw an error
-            if (errors.length === itemIds.length) {
+            // We'll consider it a success if at least one item was removed successfully
+            // or if all items were already removed
+            const successful = results.length > 0;
+            
+            // Only throw an error if all operations failed and no items were already removed
+            if (!successful && errors.length > 0) {
                 throw new Error(`Failed to remove any items: ${JSON.stringify(errors)}`);
             }
             
             // Return the results with partial success information
             return {
-                success: results.length > 0,
-                total: itemIds.length,
+                success: successful,
+                total: validItemIds.length,
                 removed: results.length,
                 failed: errors.length,
                 results: results,

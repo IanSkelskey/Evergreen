@@ -138,7 +138,20 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         
         try {
             // Extract the bucket item IDs from the rows
-            const itemIds = rows.map(row => row.id);
+            const itemIds = rows.map(row => {
+                // Ensure we have a valid ID - it should be a number
+                if (row.id === undefined || row.id === null) {
+                    console.warn('Row missing id property:', row);
+                    return null;
+                }
+                return Number(row.id);
+            }).filter(id => id !== null);
+            
+            if (itemIds.length === 0) {
+                this.toast.danger($localize`Unable to remove patrons - no valid item IDs found`);
+                return false;
+            }
+            
             console.debug('Attempting to remove items from bucket:', itemIds);
             
             // Use the service's method which handles the delete operation properly
@@ -192,11 +205,30 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     async moveAddToBucket(rows: any[], remove = false): Promise<void> {
         if (!rows.length) return;
         
+        // Extract the numeric user IDs instead of passing the whole user object
+        const userIds = rows.map(row => {
+            if (row.target_user && typeof row.target_user.id === 'function') {
+                return row.target_user.id();
+            } else {
+                console.warn('Invalid user object in row:', row);
+                return null;
+            }
+        }).filter(id => id !== null);
+        
+        if (userIds.length === 0) {
+            this.toast.danger($localize`Unable to add patrons - no valid IDs found`);
+            return;
+        }
+        
+        console.debug('Adding users to bucket with IDs:', userIds);
+        
         this.addToBucketDialog.bucketClass = 'user';
-        this.addToBucketDialog.itemIds = rows.map(row => row['target_user']);
+        this.addToBucketDialog.itemIds = userIds;
         
         try {
-            const dialogObservable = this.addToBucketDialog.open({size: 'lg'}).pipe(
+            const dialogObservable = this.addToBucketDialog.open({
+                size: 'lg'
+            }).pipe(
                 catchError((error: unknown) => {
                     console.error('Error in dialog observable:', error);
                     return EMPTY;
@@ -205,13 +237,30 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             if (results) {
+                console.debug('Dialog returned success:', results);
+                
                 if (remove) {
-                    await this.removeFromBucket(rows);
+                    console.debug('Attempting to remove patrons from source bucket...');
+                    const removeResult = await this.removeFromBucket(rows);
+                    console.debug('Remove result:', removeResult);
+                    
+                    if (removeResult) {
+                        this.toast.success(
+                            $localize`Patrons successfully moved to another bucket`
+                        );
+                    } else {
+                        this.toast.warning(
+                            $localize`Patrons were copied to the destination bucket but could not be removed from the source bucket`
+                        );
+                    }
+                } else {
+                    this.toast.success($localize`Patrons copied to selected bucket`);
                 }
                 this.grid.reload();
             }
         } catch (error) {
             console.error('Error in add to bucket dialog:', error);
+            this.toast.danger($localize`Error processing bucket operation: ${error.message || error}`);
         }
     }
 
