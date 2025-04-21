@@ -1,7 +1,7 @@
-import {Component, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
-import {Router, ActivatedRoute} from '@angular/router';
+import {Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit} from '@angular/core';
+import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import {lastValueFrom, EMPTY, Subject} from 'rxjs';
-import {catchError, takeUntil} from 'rxjs/operators';
+import {catchError, takeUntil, filter} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -21,6 +21,7 @@ import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.compone
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {NgbModal, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
+import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
     selector: 'eg-patron-bucket-item',
@@ -28,7 +29,7 @@ import {Pager} from '@eg/share/util/pager';
     styleUrls: ['patron-bucket-item.component.css']
 })
 
-export class PatronBucketItemComponent implements OnInit, OnDestroy {
+export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewInit {
     bucketId: number;
     bucket: IdlObject;
     returnTo: string;
@@ -39,7 +40,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     hasUpdatePerm = false;
     hasDeletePerm = false;
     quickAddBarcode: string = '';
-    // Add counters for the current session
     quickAddCount = 0;
     fileUploadCount = 0;
     duplicatesFound = 0;
@@ -53,8 +53,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
     
     private destroy$ = new Subject<void>();
-    isLoading = true; // Add loading state
-    
+    isLoading = true;
+    private currentUrl: string;
+    private previousBucketId: number;
+
     constructor(
         private router: Router,
         private route: ActivatedRoute,
@@ -74,18 +76,39 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         this.cellTextGenerator = {
             'family_name': row => row['family_name'],
             'first_given_name': row => row['first_given_name'],
-            'barcode': row => row['target_user']?.card()?.barcode() // Correctly access barcode
+            'barcode': row => row['target_user']?.card()?.barcode()
         };
 
-        // Check permissions
         this.perm.hasWorkPermAt(['UPDATE_USER']).then(result => this.hasUpdatePerm = !!result);
         this.perm.hasWorkPermAt(['DELETE_USER']).then(result => this.hasDeletePerm = !!result);
 
-        this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
-            this.bucketId = +params.get('id');
+        this.router.events.pipe(
+            filter(event => event instanceof NavigationEnd),
+            takeUntil(this.destroy$)
+        ).subscribe((event: NavigationEnd) => {
+            const previousUrl = this.currentUrl;
+            this.currentUrl = event.url;
             
-            // First check access permission before loading anything
-            this.checkBucketAccess();
+            if (previousUrl && previousUrl === this.currentUrl) {
+                console.debug('Detected revisit to same bucket page - forcing refresh');
+                setTimeout(() => this.refreshGridData(), 100);
+            }
+        });
+
+        this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+            const bucketId = +params.get('id');
+            
+            const bucketChanged = this.bucketId !== bucketId;
+            this.previousBucketId = this.bucketId;
+            this.bucketId = bucketId;
+            
+            if (bucketChanged) {
+                console.debug(`Loading bucket ${bucketId}, previous: ${this.previousBucketId}`);
+                this.checkBucketAccess();
+            } else {
+                console.debug(`Bucket ID unchanged (${bucketId}) - refreshing data`);
+                this.refreshGridData();
+            }
         });
 
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
@@ -93,39 +116,38 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Check if the current user has access to this bucket before initializing
-     */
+    ngAfterViewInit() {
+        setTimeout(() => this.refreshGridData(), 100);
+    }
+
     async checkBucketAccess() {
         try {
             this.isLoading = true;
             
-            // Try to retrieve the bucket with owner information
+            console.debug('Checking bucket access for bucket ID:', this.bucketId);
+            
             const bucket = await lastValueFrom(
                 this.pcrud.retrieve('cub', this.bucketId, 
                     {flesh: 1, flesh_fields: {cub: ['owner']}}
                 )
             );
             
-            // Check authorization using the service method
             await this.bucketService.checkBucketAccess(bucket);
             
-            // Authorization successful, proceed with initialization
             this.bucket = bucket;
             this.bucketService.logPatronBucket(this.bucketId);
             this.initDataSource(this.bucketId);
             this.gridSelectionChange([]);
             this.isLoading = false;
             
+            setTimeout(() => this.refreshGridData(), 100);
+            
         } catch (err) {
             console.error('Permission denied or bucket not found:', err);
             
-            // Navigate to unauthorized component with the error message
             this.router.navigate(['/staff/circ/patron/bucket/unauthorized'], { 
                 state: { message: err.message || 'Access denied to this patron bucket.' } 
             });
-            
-            // Don't set isLoading to false since we're leaving this component
         }
     }
 
@@ -140,7 +162,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     }
 
     initDataSource(bucketId: number) {
+        console.debug('Initializing datasource for bucket ID:', bucketId);
+        
         this.dataSource.getRows = (pager: Pager, sort: any[]) => {
+            console.debug(`Grid getRows called - pager:`, pager, 'sort:', sort);
+            
             const query: any = {
                 bucket: bucketId
             };
@@ -156,7 +182,15 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 }
             }
 
-            return this.flatData.getRows(this.grid.context, query, pager, sort);
+            console.debug('Grid query:', query);
+            
+            return this.flatData.getRows(this.grid.context, query, pager, sort)
+                .pipe(
+                    catchError(err => {
+                        console.error('Error fetching bucket items:', err);
+                        return [];
+                    })
+                );
         };
     }
 
@@ -164,9 +198,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         if (!rows.length) return false;
         
         try {
-            // Extract the bucket item IDs from the rows
             const itemIds = rows.map(row => {
-                // Ensure we have a valid ID - it should be a number
                 if (row.id === undefined || row.id === null) {
                     console.warn('Row missing id property:', row);
                     return null;
@@ -181,10 +213,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             
             console.debug('Attempting to remove items from bucket:', itemIds);
             
-            // Use the service's method which handles the delete operation properly
             const result = await this.bucketService.removePatronsFromPatronBucket(this.bucketId, itemIds);
             
-            // Handle success
             console.debug('Remove operation result:', result);
             this.toast.success($localize`${rows.length} patron(s) removed from bucket`);
             this.grid.reload();
@@ -192,7 +222,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         } catch (err) {
             console.error('Error removing patrons from bucket:', err);
             
-            // Special handling for "item not found" errors - treat as success if some were removed
             if (err.message && err.message.includes('CONTAINER_USER_BUCKET_ITEM_NOT_FOUND')) {
                 console.log('Some items were not found in bucket. They may have been already removed.');
                 this.toast.success($localize`Patrons removed from bucket`);
@@ -203,7 +232,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             this.toast.danger($localize`Error removing patrons: ${err.message || err}`);
             return false;
         } finally {
-            // Force reload of the grid to reflect changes
             setTimeout(() => this.grid.reload(), 100);
         }
     }
@@ -212,16 +240,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         if (!rows.length || !this.hasUpdatePerm) return;
 
         if (rows.length === 1) {
-            // Open single patron edit in a new tab
             const row = rows[0];
             const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
             window.open(url, '_blank');
         } else {
-            // Attempt to open multiple patron edit pages in new windows
-            // Note: Browser pop-up blockers might prevent multiple windows from opening.
             rows.forEach((row, index) => {
                 const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
-                // Use unique names and features to encourage opening in new windows
                 const windowName = `edit_patron_${row.target_user.id()}_${index}`;
                 const windowFeatures = 'width=1024,height=768,resizable=yes,scrollbars=yes';
                 window.open(url, windowName, windowFeatures);
@@ -232,7 +256,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     async moveAddToBucket(rows: any[], remove = false): Promise<void> {
         if (!rows.length) return;
         
-        // Extract the numeric user IDs instead of passing the whole user object
         const userIds = rows.map(row => {
             if (row.target_user && typeof row.target_user.id === 'function') {
                 return row.target_user.id();
@@ -291,16 +314,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Open the patron search dialog for adding patrons to the bucket.
-     * This method allows adding multiple patrons at once directly from search results.
-     * It's the primary recommended way to add patrons to a bucket.
-     */
     openAddPatronDialog() {
         if (!this.addPatronDialog) {
-            // Create dialog programmatically if ViewChild not available
             const modalRef = this.modal.open(PatronBucketAddDialogComponent, {
-                size: 'xl', // Changed from 'lg' to 'xl'
+                size: 'xl',
                 windowClass: 'patron-bucket-dialog-wide'
             });
             const dialog = modalRef.componentInstance as PatronBucketAddDialogComponent;
@@ -311,10 +328,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                     this.grid.reload();
                 }
             }, () => {
-                // Dialog dismissed
             });
         } else {
-            // Use ViewChild reference
             this.addPatronDialog.bucketId = this.bucketId;
             this.addPatronDialog.open({size: 'xl'}).subscribe(result => {
                 if (result) {
@@ -324,10 +339,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Quickly add a single patron to the bucket by barcode.
-     * This method is ideal for scanning physical patron cards one at a time.
-     */
     async quickAddPatron(): Promise<void> {
         if (!this.quickAddBarcode || this.quickAddBarcode.trim() === '') {
             return;
@@ -336,7 +347,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         try {
             this.progressDialog.open();
             
-            // First get the patron by barcode
             const response = await lastValueFrom(
                 this.net.request(
                     'open-ils.actor',
@@ -360,15 +370,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
 
             const evt = this.evt.parse(response);
             if (evt) {
-                // Define expected/common errors that don't need to be logged to console
                 const expectedErrors = ['ACTOR_CARD_NOT_FOUND', 'ACTOR_USER_NOT_FOUND', 'ACTOR_CARD_INACTIVE'];
                 
-                // Only log to console if it's not an expected error
                 if (!expectedErrors.includes(evt.textcode)) {
                     console.error('Error retrieving patron:', evt);
                 }
                 
-                // Provide user-friendly messages based on specific error codes
                 let errorTitle = $localize`Error Finding Patron`;
                 let errorMessage: string;
                 
@@ -402,7 +409,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             const patron = response;
             
             try {
-                // Check if patron is already in bucket using pcrud
                 const existingItems = await lastValueFrom(
                     this.pcrud.search('cubi', {
                         bucket: this.bucketId,
@@ -427,14 +433,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                     return;
                 }
                 
-                // Use the bucket service to add the patron
                 try {
                     const addResult = await this.bucketService.addPatronsToPatronBucket(
                         this.bucketId, 
                         [patron.id()]
                     );
                     
-                    // Check for error response
                     const addEvt = this.evt.parse(addResult);
                     if (addEvt) {
                         console.error('Error adding patron to bucket:', addEvt);
@@ -444,12 +448,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                         return;
                     }
                     
-                    // Update count and show success message
                     this.quickAddCount++;
                     const patronName = patron.family_name() + ', ' + patron.first_given_name();
                     this.toast.success($localize`Added patron "${patronName}" to bucket`);
                     
-                    this.quickAddBarcode = ''; // Clear the input
+                    this.quickAddBarcode = '';
                     this.grid.reload();
                 } catch (error) {
                     console.error('Error adding patron to bucket:', error);
@@ -464,7 +467,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 this.toast.danger($localize`Error processing request: ${innerError.message || innerError}`);
             }
             
-            // Focus back on the input field for the next scan
             setTimeout(() => {
                 if (this.barcodeInput) {
                     this.barcodeInput.nativeElement.focus();
@@ -477,7 +479,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         } finally {
             this.progressDialog.close();
             
-            // Always focus back on the input field, regardless of success or failure
             setTimeout(() => {
                 if (this.barcodeInput) {
                     this.barcodeInput.nativeElement.focus();
@@ -486,11 +487,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Handle the barcode file upload.
-     * This method allows processing multiple barcodes at once from a text file.
-     * Each line in the file should contain a single barcode.
-     */
     async handleBarcodeFileUpload(event: any): Promise<void> {
         if (!event.target.files || event.target.files.length === 0) {
             return;
@@ -500,12 +496,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         try {
             this.progressDialog.open();
             
-            // Read the file
             const fileContent = await this.readFileContents(file);
             
-            // Process the barcodes
             const barcodes = fileContent
-                .split(/[\r\n]+/) // Split by line breaks (handles both CRLF and LF)
+                .split(/[\r\n]+/)
                 .map(line => line.trim())
                 .filter(line => line.length > 0);
             
@@ -522,7 +516,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             
             this.progressDialog.dialogTitle = $localize`Processing Barcodes`;
             
-            // Process barcodes one by one
             for (const barcode of barcodes) {
                 try {
                     const response = await lastValueFrom(this.net.request(
@@ -538,7 +531,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                         max: barcodes.length,
                     });
                     
-                    // Check for API error
                     const evt = this.evt.parse(response);
                     if (evt) {
                         console.warn(`Error for barcode ${barcode}:`, evt);
@@ -546,9 +538,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                         continue;
                     }
                     
-                    // Response should be the patron
                     if (response && response.id()) {
-                        // Check if patron is already in bucket
                         const existingItems = await lastValueFrom(
                             this.pcrud.search('cubi', {
                                 bucket: this.bucketId,
@@ -557,18 +547,15 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                         );
                         
                         if (existingItems && existingItems.length > 0) {
-                            // Count duplicates but don't treat as error
                             duplicates++;
                             continue;
                         }
                         
-                        // Add to bucket
                         const addResult = await this.bucketService.addPatronsToPatronBucket(
                             this.bucketId, 
                             [response.id()]
                         );
                         
-                        // Check for error
                         const addEvt = this.evt.parse(addResult);
                         if (addEvt) {
                             console.warn(`Error adding patron with barcode ${barcode}:`, addEvt);
@@ -583,14 +570,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 }
             }
             
-            // Reset the file input
             event.target.value = '';
             
-            // Update counters
             this.fileUploadCount += added;
             this.duplicatesFound += duplicates;
             
-            // Show results
             this.progressDialog.close();
             if (added > 0) {
                 this.toast.success($localize`Added ${added} patron(s) to bucket from file.`);
@@ -604,7 +588,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 this.toast.warning($localize`${errors} barcode(s) could not be processed.`);
             }
             
-            // Reload the grid
             this.grid.reload();
             
         } catch (error) {
@@ -612,14 +595,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             console.error('Error processing barcode file:', error);
             this.toast.danger($localize`Error processing barcode file: ${error.message || error}`);
             
-            // Reset the file input
             event.target.value = '';
         }
     }
 
-    /**
-     * Helper function to read file contents
-     */
     private readFileContents(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -641,7 +620,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         });
     }
 
-    // Bulk action methods
     updateAllPatrons() {
         this.alertDialog.dialogTitle = $localize`Not Implemented`;
         this.alertDialog.dialogBody = $localize`Update All Patrons functionality is not implemented yet.`;
@@ -672,14 +650,28 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         this.alertDialog.open();
     }
 
-    /**
-     * Opens a dialog to allow pasting multiple patron barcodes.
-     * This replaces the multi-barcode feature from the pending component.
-     */
     openBarcodesPasteDialog() {
-        // Show "not yet implemented" message
         this.alertDialog.dialogTitle = $localize`Feature Not Available`;
         this.alertDialog.dialogBody = $localize`The "Paste Barcodes" feature is coming soon and is not yet implemented. Please use the "Upload Barcode File" option instead.`;
         this.alertDialog.open();
+    }
+
+    refreshGridData() {
+        if (!this.grid) {
+            console.warn('Grid component not available for refresh');
+            return;
+        }
+        
+        console.debug('Forcing grid data refresh');
+        
+        try {
+            if (this.flatData['clearGridCache']) {
+                this.flatData['clearGridCache'](this.grid.context);
+            }
+        } catch (e) {
+            console.warn('Failed to clear grid cache:', e);
+        }
+        
+        this.grid.reload();
     }
 }

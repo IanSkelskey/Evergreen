@@ -398,13 +398,33 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                 } catch (e) { console.warn('Error accessing bucket owner:', e); }
 
                 try {
+                    // Improved pub value extraction
                     if (typeof bucket.pub === 'function') {
                         // Handle different possible pub values
                         const pubValue = bucket.pub();
                         bucketData.pub = pubValue === 't' || pubValue === true;
+                        console.debug('Retrieved pub value from function:', pubValue, 'converted to:', bucketData.pub);
+                    } else if (bucket.pub !== undefined) {
+                        // Direct property access fallback
+                        bucketData.pub = bucket.pub === 't' || bucket.pub === true;
+                        console.debug('Retrieved pub value from property:', bucket.pub, 'converted to:', bucketData.pub);
                     }
-                } catch (e) { console.warn('Error accessing bucket pub flag:', e); }
+                } catch (e) { 
+                    console.warn('Error accessing bucket pub flag:', e); 
+                }
+            } else {
+                // If we don't have the bucket object but have row data, try to get pub from row
+                try {
+                    if (row.pub !== undefined) {
+                        bucketData.pub = row.pub === 't' || row.pub === true;
+                        console.debug('Retrieved pub value from row:', row.pub, 'converted to:', bucketData.pub);
+                    }
+                } catch (e) {
+                    console.warn('Error accessing row pub value:', e);
+                }
             }
+            
+            console.debug('Final bucket data for edit dialog:', bucketData);
             
             // Use the create dialog component for editing
             if (this.createBucketDialog) {

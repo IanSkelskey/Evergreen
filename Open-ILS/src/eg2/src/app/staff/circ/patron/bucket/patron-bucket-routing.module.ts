@@ -11,7 +11,10 @@ const routes: Routes = [
   },
   {
     path: 'content/:id',
-    component: PatronBucketItemComponent
+    component: PatronBucketItemComponent,
+    data: { 
+      reuseRoute: false 
+    }
   },
   {
     path: 'unauthorized',
