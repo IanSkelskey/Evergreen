@@ -14,7 +14,7 @@ import {firstValueFrom} from 'rxjs';
 @Component({
     selector: 'eg-patron-bucket-add-dialog',
     templateUrl: './patron-bucket-add-dialog.component.html',
-    styleUrls: ['./patron-bucket-add-dialog.component.css'] // Add the CSS file
+    styleUrls: ['./patron-bucket-add-dialog.component.css']
 })
 export class PatronBucketAddDialogComponent extends DialogComponent {
     @Input() bucketId: number;
@@ -27,6 +27,10 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
 
     selectedPatrons: IdlObject[] = [];
     selectedPatronIds: number[] = [];
+    addedPatronCount = 0;
+    
+    // Track which patrons have already been added to avoid duplicates
+    private addedPatronIds: Set<number> = new Set();
 
     constructor(
         private modal: NgbModal,
@@ -43,7 +47,7 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
     patronsActivated(patrons: IdlObject[]) {
         if (patrons && patrons.length) {
             this.selectedPatrons = patrons;
-            this.addSelectedPatronsToBucket();
+            this.addSelectedPatronsToBucket(false);
         }
     }
 
@@ -52,7 +56,7 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
         this.selectedPatronIds = patronIds || [];
     }
 
-    async addSelectedPatronsToBucket() {
+    async addSelectedPatronsToBucket(keepDialogOpen: boolean = false) {
         // If activated with specific patrons, use those
         let userIds: number[] = [];
         
@@ -66,13 +70,25 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
             return;
         }
 
+        // Filter out IDs that have already been added in this session
+        const newUserIds = userIds.filter(id => !this.addedPatronIds.has(id));
+        
+        // If no new patrons, show a message and clear selection
+        if (newUserIds.length === 0) {
+            this.toast.warning($localize`All selected patrons have already been added to this bucket in this session`);
+            if (keepDialogOpen) {
+                this.clearSelections();
+            }
+            return;
+        }
+
         this.progressDialog.open();
 
         try {
             const response = await firstValueFrom(this.net.request(
                 'open-ils.actor',
                 'open-ils.actor.container.item.create.batch',
-                this.auth.token(), 'user', this.bucketId, userIds
+                this.auth.token(), 'user', this.bucketId, newUserIds
             ));
             
             const evt = this.evt.parse(response);
@@ -83,11 +99,22 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
             }
             
             this.progressDialog.close();
+            
+            // Add the successful IDs to our tracking set
+            newUserIds.forEach(id => this.addedPatronIds.add(id));
+            
+            this.addedPatronCount += newUserIds.length;
             this.toast.success(
-                $localize`${userIds.length} patron(s) added to bucket`
+                $localize`${newUserIds.length} patron(s) added to bucket`
             );
             this.bucketService.requestPatronBucketsRefresh();
-            this.close(true);
+            
+            if (keepDialogOpen) {
+                // Reset selections but keep dialog open
+                this.clearSelections();
+            } else {
+                this.close(true);
+            }
         } catch (error) {
             this.progressDialog.close();
             this.toast.danger(
@@ -95,14 +122,40 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
             );
         }
     }
+    
+    // Clear selections properly
+    private clearSelections() {
+        // First check if patronSearch exists
+        if (this.patronSearch) {
+            try {
+                // Then fallback to clear method (older versions)
+                if (typeof this.patronSearch.clear === 'function') {
+                    this.patronSearch.clear();
+                }
+            } catch (e) {
+                console.warn('Error clearing patron search selections:', e);
+            }
+        }
+        
+        this.selectedPatrons = [];
+        this.selectedPatronIds = [];
+    }
+
+    // Add method to check if a patron is already added
+    isPatronAlreadyAdded(patronId: number): boolean {
+        return this.addedPatronIds.has(patronId);
+    }
 
     // Override the dialog open method to reset selections and set dialog size/class
     override open(options?: any) {
         this.selectedPatrons = [];
         this.selectedPatronIds = [];
+        this.addedPatronCount = 0;
+        this.addedPatronIds = new Set();
+        
         const dialogOptions = {
             ...options,
-            size: 'xl', // Use extra large size instead of large
+            size: 'xl', 
             windowClass: 'patron-bucket-dialog-wide'
         };
         return super.open(dialogOptions);

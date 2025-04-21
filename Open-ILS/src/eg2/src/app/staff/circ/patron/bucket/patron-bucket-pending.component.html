@@ -1,7 +1,7 @@
 <eg-title i18n-prefix prefix="Add Patrons to Bucket">
 </eg-title>
 
-<eg-staff-banner bannerText="Add Patrons to Bucket" i18n-bannerText>
+<eg-staff-banner bannerText="Add Patrons to Bucket (Legacy Mode)" i18n-bannerText>
 </eg-staff-banner>
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
@@ -10,6 +10,32 @@
 </eg-patron-search-dialog>
 
 <div class="container-fluid px-0">
+  <!-- Legacy notice with enhanced visuals -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="alert alert-warning border-warning">
+        <div class="d-flex align-items-center">
+          <span class="material-icons legacy-icon me-3">history</span>
+          <div>
+            <h5 class="mb-1" i18n>Legacy Feature</h5>
+            <p class="mb-1" i18n>This is a legacy feature that queues patrons before adding them to a bucket. For most use cases, the newer methods are more efficient:</p>
+            <ul class="mb-0 mt-2">
+              <li i18n><strong>"Search & Add Patrons"</strong> - For adding multiple patrons through search</li>
+              <li i18n><strong>"Quick Add"</strong> - For scanning individual patron barcodes</li>
+              <li i18n><strong>"Upload Barcode File"</strong> - For uploading a file of patron barcodes</li>
+            </ul>
+            <div class="mt-2">
+              <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary" i18n>
+                <span class="material-icons">arrow_back</span>
+                Return to Bucket Content
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bucket header section -->
   <div class="row mb-3">
     <div class="col-md-9">

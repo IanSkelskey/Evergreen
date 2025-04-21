@@ -6,7 +6,7 @@ import {PatronBucketComponent} from './patron-bucket.component';
 import {PatronBucketItemComponent} from './patron-bucket-item.component';
 import {PatronBucketPendingComponent} from './patron-bucket-pending.component';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
-import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component'; // Add this import
+import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './patron-bucket-state.service';
 import {PatronBucketRoutingModule} from './patron-bucket-routing.module';
@@ -17,6 +17,7 @@ import {GridModule} from '@eg/share/grid/grid.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
 import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
+import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
     declarations: [
@@ -24,7 +25,7 @@ import {PatronModule} from '@eg/staff/share/patron/patron.module';
         PatronBucketItemComponent,
         PatronBucketPendingComponent,
         PatronBucketAddDialogComponent,
-        PatronBucketCreateDialogComponent // Add this component
+        PatronBucketCreateDialogComponent
     ],
     imports: [
         PatronBucketRoutingModule,
@@ -36,7 +37,9 @@ import {PatronModule} from '@eg/staff/share/patron/patron.module';
         GridModule,
         FmRecordEditorModule,
         CommonWidgetsModule,
-        PatronModule
+        PatronModule,
+        NgbDropdownModule,
+        NgbTooltipModule
     ],
     providers: [
         PatronBucketService,

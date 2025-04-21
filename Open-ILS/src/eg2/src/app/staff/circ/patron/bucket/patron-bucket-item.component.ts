@@ -19,7 +19,7 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
 
 @Component({
@@ -39,6 +39,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     hasUpdatePerm = false;
     hasDeletePerm = false;
     quickAddBarcode: string = '';
+    // Add counters for the current session
+    quickAddCount = 0;
+    fileUploadCount = 0;
+    duplicatesFound = 0;
     @ViewChild('barcodeInput') barcodeInput: ElementRef;
 
     @ViewChild('grid', { static: true }) grid: GridComponent;
@@ -264,7 +268,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Add a new method to open the add patron dialog
+    /**
+     * Open the patron search dialog for adding patrons to the bucket.
+     * This method allows adding multiple patrons at once directly from search results.
+     * It's the primary recommended way to add patrons to a bucket.
+     */
     openAddPatronDialog() {
         if (!this.addPatronDialog) {
             // Create dialog programmatically if ViewChild not available
@@ -294,7 +302,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Quickly add a patron to the bucket by barcode
+     * Quickly add a single patron to the bucket by barcode.
+     * This method is ideal for scanning physical patron cards one at a time.
      */
     async quickAddPatron(): Promise<void> {
         if (!this.quickAddBarcode || this.quickAddBarcode.trim() === '') {
@@ -371,7 +380,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
             
             try {
                 // Check if patron is already in bucket using pcrud
-                // This replaces the call to the non-existent open-ils.actor.container.item.retrieve
                 const existingItems = await lastValueFrom(
                     this.pcrud.search('cubi', {
                         bucket: this.bucketId,
@@ -385,6 +393,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 );
 
                 if (existingItems && existingItems.length > 0) {
+                    this.duplicatesFound++;
                     this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
                     this.quickAddBarcode = '';
                     setTimeout(() => {
@@ -412,7 +421,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                         return;
                     }
                     
-                    this.toast.success($localize`Added patron "${patron.family_name()}, ${patron.first_given_name()}" to bucket`);
+                    // Update count and show success message
+                    this.quickAddCount++;
+                    const patronName = patron.family_name() + ', ' + patron.first_given_name();
+                    this.toast.success($localize`Added patron "${patronName}" to bucket`);
+                    
                     this.quickAddBarcode = ''; // Clear the input
                     this.grid.reload();
                 } catch (error) {
@@ -438,13 +451,6 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.error('Error in quick add patron:', error);
             this.toast.danger($localize`Error adding patron: ${error.message || error}`);
-            
-            // Still focus back on input for next attempt
-            setTimeout(() => {
-                if (this.barcodeInput) {
-                    this.barcodeInput.nativeElement.focus();
-                }
-            }, 100);
         } finally {
             this.progressDialog.close();
             
@@ -455,6 +461,161 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
                 }
             }, 100);
         }
+    }
+
+    /**
+     * Handle the barcode file upload.
+     * This method allows processing multiple barcodes at once from a text file.
+     * Each line in the file should contain a single barcode.
+     */
+    async handleBarcodeFileUpload(event: any): Promise<void> {
+        if (!event.target.files || event.target.files.length === 0) {
+            return;
+        }
+        
+        const file = event.target.files[0];
+        try {
+            this.progressDialog.open();
+            
+            // Read the file
+            const fileContent = await this.readFileContents(file);
+            
+            // Process the barcodes
+            const barcodes = fileContent
+                .split(/[\r\n]+/) // Split by line breaks (handles both CRLF and LF)
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            if (barcodes.length === 0) {
+                this.toast.warning($localize`No barcodes found in the uploaded file.`);
+                this.progressDialog.close();
+                return;
+            }
+            
+            let processed = 0;
+            let added = 0;
+            let errors = 0;
+            let duplicates = 0;
+            
+            this.progressDialog.dialogTitle = $localize`Processing Barcodes`;
+            
+            // Process barcodes one by one
+            for (const barcode of barcodes) {
+                try {
+                    const response = await lastValueFrom(this.net.request(
+                        'open-ils.actor',
+                        'open-ils.actor.user.fleshed.retrieve_by_barcode',
+                        this.auth.token(),
+                        barcode
+                    ));
+                    
+                    processed++;
+                    this.progressDialog.update({
+                        value: processed,
+                        max: barcodes.length,
+                    });
+                    
+                    // Check for API error
+                    const evt = this.evt.parse(response);
+                    if (evt) {
+                        console.warn(`Error for barcode ${barcode}:`, evt);
+                        errors++;
+                        continue;
+                    }
+                    
+                    // Response should be the patron
+                    if (response && response.id()) {
+                        // Check if patron is already in bucket
+                        const existingItems = await lastValueFrom(
+                            this.pcrud.search('cubi', {
+                                bucket: this.bucketId,
+                                target_user: response.id()
+                            })
+                        );
+                        
+                        if (existingItems && existingItems.length > 0) {
+                            // Count duplicates but don't treat as error
+                            duplicates++;
+                            continue;
+                        }
+                        
+                        // Add to bucket
+                        const addResult = await this.bucketService.addPatronsToPatronBucket(
+                            this.bucketId, 
+                            [response.id()]
+                        );
+                        
+                        // Check for error
+                        const addEvt = this.evt.parse(addResult);
+                        if (addEvt) {
+                            console.warn(`Error adding patron with barcode ${barcode}:`, addEvt);
+                            errors++;
+                        } else {
+                            added++;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error processing barcode ${barcode}:`, error);
+                    errors++;
+                }
+            }
+            
+            // Reset the file input
+            event.target.value = '';
+            
+            // Update counters
+            this.fileUploadCount += added;
+            this.duplicatesFound += duplicates;
+            
+            // Show results
+            this.progressDialog.close();
+            if (added > 0) {
+                this.toast.success($localize`Added ${added} patron(s) to bucket from file.`);
+            }
+            
+            if (duplicates > 0) {
+                this.toast.info($localize`${duplicates} patron(s) were already in the bucket.`);
+            }
+            
+            if (errors > 0) {
+                this.toast.warning($localize`${errors} barcode(s) could not be processed.`);
+            }
+            
+            // Reload the grid
+            this.grid.reload();
+            
+        } catch (error) {
+            this.progressDialog.close();
+            console.error('Error processing barcode file:', error);
+            this.toast.danger($localize`Error processing barcode file: ${error.message || error}`);
+            
+            // Reset the file input
+            event.target.value = '';
+        }
+    }
+
+    /**
+     * Helper function to read file contents
+     */
+    private readFileContents(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                try {
+                    const contents = e.target.result as string;
+                    resolve(contents);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            
+            reader.onerror = (e) => {
+                reject(new Error('Error reading file'));
+            };
+            
+            reader.readAsText(file);
+        });
     }
 
     // Bulk action methods
@@ -485,6 +646,17 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy {
     deleteAllPatrons() {
         this.alertDialog.dialogTitle = $localize`Not Implemented`;
         this.alertDialog.dialogBody = $localize`Delete All Patrons functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    /**
+     * Opens a dialog to allow pasting multiple patron barcodes.
+     * This replaces the multi-barcode feature from the pending component.
+     */
+    openBarcodesPasteDialog() {
+        // Show "not yet implemented" message
+        this.alertDialog.dialogTitle = $localize`Feature Not Available`;
+        this.alertDialog.dialogBody = $localize`The "Paste Barcodes" feature is coming soon and is not yet implemented. Please use the "Upload Barcode File" option instead.`;
         this.alertDialog.open();
     }
 }
