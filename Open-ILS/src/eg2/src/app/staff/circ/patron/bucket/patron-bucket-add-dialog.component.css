@@ -17,12 +17,46 @@
 
 :host ::ng-deep .modal-footer {
     margin-top: 0;
-    padding-top: 0.75rem;
+    padding: 0.75rem 1rem;
     border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Button styling in footer */
+:host ::ng-deep .modal-footer button .material-icons {
+    font-size: 1rem;
+    vertical-align: text-bottom;
+    margin-right: 0.25rem;
+}
+
+/* Status indicators styling */
+:host ::ng-deep .modal-footer .status-indicators {
+    display: flex;
+    align-items: center;
+}
+
+/* Vertical alignment of text and icons in buttons */
+:host ::ng-deep .modal-footer button {
+    display: inline-flex;
+    align-items: center;
 }
 
 /* Ensure the patron search fits properly within the modal */
 :host ::ng-deep eg-patron-search {
     display: block;
     width: 100%;
+}
+
+/* Improve visibility for outline buttons in light mode */
+:host ::ng-deep .modal-footer .btn-outline-primary {
+    border-width: 2px;  /* Make the border thicker */
+    font-weight: 500;   /* Make the text slightly bolder */
+}
+
+/* Stronger hover effect for better UX feedback */
+:host ::ng-deep .modal-footer .btn-outline-primary:hover:not(:disabled) {
+    color: #fff;
+    background-color: #0d6efd;
 }
