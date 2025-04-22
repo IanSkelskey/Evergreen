@@ -10,6 +10,7 @@ import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {PatronBucketRoutingModule} from './routing.module';
+import { PatronBucketQuickAddComponent } from './quick-add.component';
 
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
@@ -25,7 +26,8 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
         PatronBucketItemComponent,
         PatronBucketAddDialogComponent,
         PatronBucketEditDialogComponent,
-        PatronBucketUnauthorizedComponent
+        PatronBucketUnauthorizedComponent,
+        PatronBucketQuickAddComponent
     ],
     imports: [
         PatronBucketRoutingModule,
