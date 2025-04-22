@@ -1,0 +1,39 @@
+<div class="quick-add-controls">
+  <!-- Quick add barcode form -->
+  <form class="quick-add-form mb-2" (ngSubmit)="quickAddPatron()">
+    <div class="input-group">
+      <input type="text" class="form-control" 
+              [(ngModel)]="quickAddBarcode" 
+              name="quickAddBarcode" 
+              placeholder="Scan Patron Barcode" i18n-placeholder
+              aria-label="Patron Barcode" i18n-aria-label
+              #barcodeInput>
+      <button class="btn btn-outline-primary d-flex align-items-center" type="submit" 
+              ngbTooltip="Add one patron by scanning their barcode" i18n-ngbTooltip i18n>
+        <span class="material-icons">qr_code_scanner</span>
+        Quick Add
+      </button>
+    </div>
+  </form>
+  
+  <!-- File upload input (hidden) -->
+  <input #fileUploadInput type="file" class="d-none" accept=".txt,.csv" (change)="handleBarcodeFileUpload($event)">
+  
+  <!-- Stats for current session -->
+  <div class="quick-add-stats small text-muted mt-1" *ngIf="quickAddCount > 0 || fileUploadCount > 0">
+    <div class="d-flex justify-content-between">
+      <span i18n>Session Stats:</span>
+      <span>
+        <span class="badge bg-success" *ngIf="quickAddCount + fileUploadCount > 0">
+          {{quickAddCount + fileUploadCount}} added
+        </span>
+        <span class="badge bg-warning text-dark ms-1" *ngIf="duplicatesFound > 0">
+          {{duplicatesFound}} duplicates
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
