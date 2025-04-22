@@ -3,7 +3,6 @@ import {Router, ActivatedRoute} from '@angular/router';
 import {Observable, Subject, from, lastValueFrom, EMPTY, of} from 'rxjs';
 import {takeUntil, catchError, switchMap, map} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
-import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {EventService} from '@eg/core/event.service';
@@ -19,16 +18,16 @@ import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.compo
 import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
-import {PatronBucketService} from './patron-bucket.service';
-import {PatronBucketStateService} from './patron-bucket-state.service';
+import {PatronBucketService} from './bucket.service';
+import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
-import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component';
+import {PatronBucketEditDialogComponent} from './edit-dialog.component';
 
 @Component({
-    selector: 'eg-patron-bucket',
-    templateUrl: 'patron-bucket.component.html',
-    styleUrls: ['./patron-bucket.component.css']
+    selector: 'eg-patron-bucket-list',
+    templateUrl: 'list.component.html',
+    styleUrls: ['./list.component.css']
 })
 
 export class PatronBucketComponent implements OnInit, OnDestroy {
@@ -43,7 +42,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     @ViewChild('grid', { static: false }) grid: GridComponent;
     @ViewChild('newBucketDialog') private newBucketDialog: BucketDialogComponent;
-    @ViewChild('createBucketDialog') private createBucketDialog: PatronBucketCreateDialogComponent;
+    @ViewChild('editBucketDialog') private editBucketDialog: PatronBucketEditDialogComponent;
     @ViewChild('editDialog') private editDialog: FmRecordEditorComponent;
     @ViewChild('deleteDialog') private deleteDialog: ConfirmDialogComponent;
     @ViewChild('deleteFail') private deleteFail: AlertDialogComponent;
@@ -268,9 +267,9 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     openNewBucketDialog = async () => {
         try {
             // Use our enhanced dialog if available
-            if (this.createBucketDialog) {
+            if (this.editBucketDialog) {
                 try {
-                    const results = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
+                    const results = await lastValueFrom(this.editBucketDialog.open({size: 'lg'}));
                     // Only handle results if there's actual data
                     if (results) {
                         this.handleBucketCreationResult(results);
@@ -297,10 +296,10 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             } 
             // Create the new dialog programmatically as fallback
             else {
-                const modalRef = this.modal.open(PatronBucketCreateDialogComponent, {
+                const modalRef = this.modal.open(PatronBucketEditDialogComponent, {
                     size: 'lg'
                 });
-                const bucketDialog = modalRef.componentInstance as PatronBucketCreateDialogComponent;
+                const bucketDialog = modalRef.componentInstance as PatronBucketEditDialogComponent;
                 
                 try {
                     const results = await modalRef.result;
@@ -427,13 +426,13 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             console.debug('Final bucket data for edit dialog:', bucketData);
             
             // Use the create dialog component for editing
-            if (this.createBucketDialog) {
-                this.createBucketDialog.editMode = true;
-                this.createBucketDialog.bucketId = bucketId;
-                this.createBucketDialog.bucketData = bucketData;
+            if (this.editBucketDialog) {
+                this.editBucketDialog.editMode = true;
+                this.editBucketDialog.bucketId = bucketId;
+                this.editBucketDialog.bucketData = bucketData;
                 
                 try {
-                    const result = await lastValueFrom(this.createBucketDialog.open({size: 'lg'}));
+                    const result = await lastValueFrom(this.editBucketDialog.open({size: 'lg'}));
                     if (result && result.success) {
                         this.bucketService.requestPatronBucketsRefresh();
                         this.toast.success($localize`Bucket successfully updated`);

@@ -5,8 +5,8 @@ import { takeUntil } from 'rxjs/operators';
 
 @Component({
     selector: 'eg-patron-bucket-unauthorized',
-    templateUrl: 'patron-bucket-unauthorized.component.html',
-    styleUrls: ['patron-bucket-unauthorized.component.css']
+    templateUrl: 'unauthorized.component.html',
+    styleUrls: ['unauthorized.component.css']
 })
 export class PatronBucketUnauthorizedComponent implements OnInit, OnDestroy {
     secondsToRedirect = 5;
