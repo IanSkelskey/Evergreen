@@ -11,6 +11,7 @@ import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {PatronBucketRoutingModule} from './routing.module';
 import { PatronBucketQuickAddComponent } from './quick-add.component';
+import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
 
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
@@ -27,7 +28,8 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
         PatronBucketAddDialogComponent,
         PatronBucketEditDialogComponent,
         PatronBucketUnauthorizedComponent,
-        PatronBucketQuickAddComponent
+        PatronBucketQuickAddComponent,
+        PatronBarcodeUploadComponent
     ],
     imports: [
         PatronBucketRoutingModule,
@@ -49,4 +51,4 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class PatronBucketModule {}
+export class PatronBucketModule { }

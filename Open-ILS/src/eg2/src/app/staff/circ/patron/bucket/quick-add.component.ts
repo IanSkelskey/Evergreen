@@ -40,6 +40,15 @@ export class PatronBucketQuickAddComponent implements OnInit {
 
     ngOnInit() {}
 
+    // New public method to trigger file upload dialog
+    openFileUploadDialog(): void {
+        setTimeout(() => {
+            if (this.barcodeInput) {
+                this.barcodeInput.nativeElement.click();
+            }
+        }, 0);
+    }
+    
     async quickAddPatron(): Promise<void> {
         if (!this.quickAddBarcode || this.quickAddBarcode.trim() === '') {
             return;

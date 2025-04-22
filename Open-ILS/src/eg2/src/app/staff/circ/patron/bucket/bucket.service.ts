@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
-import {Subject, lastValueFrom} from 'rxjs';
+import {Subject, lastValueFrom, of} from 'rxjs';
+import {toArray, catchError, defaultIfEmpty} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -644,6 +645,28 @@ export class PatronBucketService {
         } catch (error) {
             console.error('Error deleting bucket:', error);
             return {success: false, message: error.message || 'Unknown error'};
+        }
+    }
+
+    // Check if a patron is already in a bucket
+    async checkPatronInBucket(bucketId: number, patronId: number): Promise<any[]> {
+        try {
+            return await lastValueFrom(
+                this.pcrud.search('cubi', {
+                    bucket: bucketId,
+                    target_user: patronId
+                }).pipe(
+                    toArray(),
+                    defaultIfEmpty([]),
+                    catchError(err => {
+                        console.error(`Error checking if patron ${patronId} is in bucket ${bucketId}:`, err);
+                        return of([]);
+                    })
+                )
+            );
+        } catch (error) {
+            console.error(`Error checking if patron ${patronId} is in bucket ${bucketId}:`, error);
+            return [];
         }
     }
 }
