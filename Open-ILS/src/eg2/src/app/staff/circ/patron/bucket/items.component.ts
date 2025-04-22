@@ -21,6 +21,7 @@ import {PatronBucketAddDialogComponent} from './add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
+import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
@@ -46,6 +47,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     @ViewChild('addToBucketDialog') addToBucketDialog: BucketDialogComponent;
     @ViewChild('progressDialog') progressDialog: ProgressDialogComponent;
     @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
+    @ViewChild('uploadBarcodeDialog') private uploadBarcodeDialog: PatronBarcodeUploadComponent;
     
     private destroy$ = new Subject<void>();
     isLoading = true;
@@ -334,10 +336,41 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         }
     }
 
-    openBarcodesPasteDialog() {
-        this.alertDialog.dialogTitle = $localize`Feature Not Available`;
-        this.alertDialog.dialogBody = $localize`The "Paste Barcodes" feature is coming soon and is not yet implemented. Please use the "Upload Barcode File" option instead.`;
-        this.alertDialog.open();
+    // Update this method to open the barcode upload dialog properly
+    openBarcodeUploadDialog() {
+        try {
+            if (!this.uploadBarcodeDialog) {
+                // If the ViewChild reference doesn't exist yet, create it with the modal service
+                const modalRef = this.modal.open(PatronBarcodeUploadComponent, {
+                    size: 'lg'
+                });
+                const dialog = modalRef.componentInstance as PatronBarcodeUploadComponent;
+                dialog.bucketId = this.bucketId;
+                
+                modalRef.result.then(result => {
+                    if (result && result.success) {
+                        console.debug('Upload dialog returned success:', result);
+                        // Refresh the grid to show newly added patrons
+                        this.refreshGridData();
+                    }
+                }, () => {
+                    console.debug('Upload dialog dismissed');
+                    // Dialog dismissed, no action needed
+                });
+            } else {
+                // Use the existing reference, similar to how addPatronDialog is used
+                this.uploadBarcodeDialog.bucketId = this.bucketId;
+                this.uploadBarcodeDialog.open({size: 'lg'}).subscribe(result => {
+                    if (result && result.success) {
+                        console.debug('Upload dialog returned success:', result);
+                        this.refreshGridData();
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error opening patron barcode upload dialog:', error);
+            this.toast.danger($localize`Error opening upload dialog: ${error.message || error}`);
+        }
     }
 
     updateAllPatrons() {
@@ -367,6 +400,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     deleteAllPatrons() {
         this.alertDialog.dialogTitle = $localize`Not Implemented`;
         this.alertDialog.dialogBody = $localize`Delete All Patrons functionality is not implemented yet.`;
+        this.alertDialog.open();
+    }
+
+    openBarcodesPasteDialog() {
+        this.alertDialog.dialogTitle = $localize`Not Implemented`;
+        this.alertDialog.dialogBody = $localize`Paste Barcodes functionality is not implemented yet.`;
         this.alertDialog.open();
     }
 

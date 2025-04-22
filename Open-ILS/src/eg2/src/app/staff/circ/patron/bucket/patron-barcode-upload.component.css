@@ -1,0 +1,111 @@
+/* Fixed height containers to prevent layout jumps */
+.file-selection-row {
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+/* Make the file input container have fixed dimensions */
+.file-input-wrapper {
+  margin-bottom: 1rem;
+}
+
+/* Fix the clear button to ensure proper alignment */
+.clear-btn {
+  height: 38px;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-btn .material-icons {
+  font-size: 1rem;
+  margin-right: 0;
+}
+
+/* Style for the placeholder when no file is selected */
+.patron-preview-placeholder {
+  margin-bottom: 1rem;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  color: #6c757d;
+  opacity: 0.7;
+  margin: 0 auto;
+}
+
+/* Status summary styling */
+.status-summary {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Patron table styling */
+.patron-table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+}
+
+/* Style for different patron status rows */
+.table-warning {
+  background-color: rgba(255, 243, 205, 0.5) !important;
+}
+
+.table-danger {
+  background-color: rgba(248, 215, 218, 0.5) !important;
+}
+
+tr.table-warning td, tr.table-danger td {
+  border-color: inherit;
+}
+
+/* Material icons consistent styling */
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Small icon size for info text */
+.small .material-icons {
+  font-size: 0.875rem;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Additional dialog display fixes */
+:host {
+  display: block;
+}
+
+:host ::ng-deep .modal {
+  display: block !important;
+}
+
+:host ::ng-deep .modal-dialog {
+  margin: 1.75rem auto;
+  max-width: 800px;
+}
+
+:host ::ng-deep .modal-content {
+  position: relative;
+  width: 100%;
+}
+
+/* Ensure the modal body can scroll if needed */
+:host ::ng-deep .modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Improve dialog visibility */
+:host ::ng-deep .modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}

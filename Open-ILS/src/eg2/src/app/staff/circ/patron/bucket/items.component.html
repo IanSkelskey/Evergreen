@@ -8,6 +8,7 @@
 <eg-alert-dialog #alertDialog></eg-alert-dialog>
 <eg-bucket-dialog #addToBucketDialog></eg-bucket-dialog>
 <eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
+<eg-patron-barcode-upload #uploadBarcodeDialog></eg-patron-barcode-upload>
 <eg-patron-barcodes-paste-dialog #barcodesPasteDialog></eg-patron-barcodes-paste-dialog>
 <eg-patron-barcode-confirm-dialog #barcodeConfirmDialog></eg-patron-barcode-confirm-dialog>
 
@@ -76,7 +77,7 @@
                 More Add Options
               </button>
               <div ngbDropdownMenu>
-                <button ngbDropdownItem (click)="quickAddComp.fileUploadInput.click()" i18n>
+                <button ngbDropdownItem (click)="openBarcodeUploadDialog()" i18n>
                   <span class="material-icons">upload_file</span>
                   Upload Barcode File
                   <span class="small text-muted ms-1">(Text file with barcodes)</span>

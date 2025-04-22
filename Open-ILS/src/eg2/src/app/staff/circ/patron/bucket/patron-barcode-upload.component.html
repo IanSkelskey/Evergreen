@@ -1,0 +1,142 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Upload Patron Barcodes</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+  </div>
+  
+  <div class="modal-body">
+    <!-- File selection section -->
+    <div class="file-selection mb-4">
+      <h5 i18n>1. Select a barcode file</h5>
+      <p class="text-muted" i18n>
+        Select a text file (.txt, .csv) containing one patron barcode per line
+      </p>
+      
+      <div class="file-input-wrapper mb-3">
+        <!-- File selection row with fixed height to prevent jumping -->
+        <div class="d-flex align-items-center file-selection-row">
+          <div class="input-group">
+            <input type="text" class="form-control" [value]="selectedFile?.name || ''" readonly
+                  placeholder="No file selected" i18n-placeholder>
+            <label class="input-group-text btn btn-outline-primary" for="barcodeFileInput" i18n>
+              Browse
+            </label>
+          </div>
+          <!-- Fixed clear button -->
+          <button *ngIf="selectedFile" 
+                  class="btn btn-outline-danger ms-2 clear-btn" 
+                  type="button"
+                  title="Clear selected file" i18n-title
+                  (click)="removeSelectedFile()">
+            <span class="d-flex align-items-center">
+              <span class="material-icons">clear</span>
+              <span class="ms-1" i18n>Clear</span>
+            </span>
+          </button>
+        </div>
+        <input type="file" #barcodeFileInput id="barcodeFileInput" class="d-none" 
+              accept=".txt,.csv" (change)="onFileSelected($event)">
+      </div>
+      
+      <!-- Small note about how this works -->
+      <div class="text-muted small fst-italic" *ngIf="!selectedFile && !isLoading">
+        <span class="material-icons small">info</span>
+        <span i18n>Select a file to automatically preview patron information</span>
+      </div>
+    </div>
+    
+    <!-- Step 2 - Always show the heading -->
+    <h5 class="mb-3" i18n>2. Review patrons to add</h5>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="progress-container mb-3">
+      <div class="alert alert-info d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span>{{ loadingStep }}...</span>
+      </div>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+             role="progressbar"
+             [style.width.%]="(progressValue / progressMax) * 100"
+             [attr.aria-valuenow]="progressValue" 
+             [attr.aria-valuemin]="0" 
+             [attr.aria-valuemax]="progressMax">
+          {{ progressValue }} / {{ progressMax }}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Empty state - no file selected -->
+    <div *ngIf="!isLoading && !hasPreviewedPatrons" class="patron-preview-placeholder">
+      <div class="alert alert-secondary text-center">
+        <span class="material-icons d-block mb-2 placeholder-icon">upload_file</span>
+        <p class="mb-1" i18n>Select a barcode file above to preview patrons</p>
+        <p class="small mb-0 text-muted" i18n>Patron information will appear here after file processing</p>
+      </div>
+    </div>
+    
+    <!-- Preview section -->
+    <div *ngIf="hasPreviewedPatrons && !isLoading" class="patron-preview mb-4">
+      <p class="text-muted mb-1" i18n>
+        The following patrons were found in the file:
+      </p>
+      
+      <!-- Status summary -->
+      <div class="alert alert-info status-summary">
+        {{ getProcessingStatus() }}
+      </div>
+      
+      <!-- Patron list table -->
+      <div class="table-responsive patron-table-container">
+        <table class="table table-sm table-hover">
+          <thead>
+            <tr>
+              <th i18n>Barcode</th>
+              <th i18n>Patron Name</th>
+              <th i18n>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let patron of patrons" 
+                [class.table-warning]="patron.isDuplicate"
+                [class.table-danger]="patron.error">
+              <td>{{ patron.barcode }}</td>
+              <td>{{ patron.name }}</td>
+              <td>
+                <span *ngIf="patron.isDuplicate" class="text-warning" i18n>
+                  <span class="material-icons">warning</span>
+                  Already in bucket
+                </span>
+                <span *ngIf="patron.error" class="text-danger" i18n>
+                  <span class="material-icons">error</span>
+                  {{ patron.error }}
+                </span>
+                <span *ngIf="patron.id > 0 && !patron.isDuplicate && !patron.error" 
+                      class="text-success" i18n>
+                  <span class="material-icons">check_circle</span>
+                  Ready to add
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal-footer">
+    <div class="d-flex justify-content-between w-100">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
+      </div>
+      <div>
+        <button class="btn btn-success" 
+                [disabled]="!hasPreviewedPatrons || stats.toBeAdded === 0 || isLoading" 
+                (click)="addPatronsToBucket()" i18n>
+          <span class="material-icons">person_add</span>
+          Add {{ stats.toBeAdded }} Patron<ng-container *ngIf="stats.toBeAdded !== 1">s</ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>
