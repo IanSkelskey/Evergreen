@@ -16,6 +16,7 @@ interface PatronPreview {
   name: string;
   isDuplicate: boolean;
   error?: string;
+  selected?: boolean; // New property for checkbox selection
 }
 
 @Component({
@@ -52,6 +53,20 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
     invalidBarcodes: 0,
     duplicates: 0,
     toBeAdded: 0
+  };
+
+  // New properties to support improved UI
+  patronFilter: 'all' | 'valid' | 'duplicate' | 'invalid' = 'all';
+  
+  // Enhanced error message mapping with more user-friendly text
+  private errorMessageMap: {[key: string]: string} = {
+    'ACTOR_CARD_NOT_FOUND': $localize`No patron found with this barcode`,
+    'NO_PATRON': $localize`Patron record not found`,
+    'INVALID_BARCODE': $localize`Invalid barcode format`,
+    'PERMISSION_DENIED': $localize`You don't have permission to access this patron`,
+    'DATABASE_ERROR': $localize`Database error occurred`,
+    'ACTOR_USER_NOT_FOUND': $localize`Patron account not found`,
+    'DEFAULT': $localize`Could not process this barcode`
   };
 
   constructor(
@@ -110,6 +125,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
       duplicates: 0,
       toBeAdded: 0
     };
+    // Reset filter to 'all' when list is reset
+    this.patronFilter = 'all';
   }
 
   async previewFile(): Promise<void> {
@@ -179,7 +196,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
               barcode: barcode,
               name: `Error: ${evt.textcode}`,
               isDuplicate: false,
-              error: evt.desc || evt.textcode
+              error: evt.desc || evt.textcode,
+              selected: false // Initialize as not selected
             });
             continue;
           }
@@ -190,7 +208,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
               id: patronId,
               barcode: barcode,
               name: `${response.family_name()}, ${response.first_given_name()}`,
-              isDuplicate: false
+              isDuplicate: false,
+              selected: true // Initialize valid patrons as selected by default
             };
             
             // Check for internal duplicates in the current upload
@@ -203,8 +222,7 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
             patron.isDuplicate = isInternalDuplicate || isExternalDuplicate;
             
             if (patron.isDuplicate) {
-              this.stats.duplicates++;
-              
+              patron.selected = false; // Duplicates should not be selected
               // Add a more specific message for internal duplicates
               if (isInternalDuplicate) {
                 patron.error = $localize`Duplicate patron in this upload`;
@@ -225,7 +243,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
               barcode: barcode,
               name: 'Invalid patron',
               isDuplicate: false,
-              error: 'Could not retrieve patron information'
+              error: 'Could not retrieve patron information',
+              selected: false
             });
           }
         } catch (error) {
@@ -236,7 +255,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
             barcode: barcode,
             name: 'Error',
             isDuplicate: false,
-            error: error.message || String(error)
+            error: error.message || String(error),
+            selected: false
           });
         }
       }
@@ -269,8 +289,9 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
       return;
     }
     
-    if (this.stats.toBeAdded === 0) {
-      this.toast.warning($localize`No new patrons to add. All patrons are either invalid or already in the bucket.`);
+    const patronsToAdd = this.getPatronsToAdd();
+    if (patronsToAdd.length === 0) {
+      this.toast.warning($localize`No patrons selected to add. Please select at least one valid patron.`);
       return;
     }
     
@@ -280,10 +301,8 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
     this.progressMax = 100;
     
     try {
-      // Get valid patron IDs not already in the bucket
-      const patronIds = this.patrons
-        .filter(p => p.id > 0 && !p.isDuplicate)
-        .map(p => p.id);
+      // Get valid selected patron IDs not already in the bucket
+      const patronIds = patronsToAdd.map(p => p.id);
       
       // Use the bulk add method from the bucket service
       const result = await this.bucketService.addPatronsToPatronBucket(
@@ -395,5 +414,117 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
         console.error("Error resetting file input:", e);
       }
     }
+  }
+
+  // New methods to support the improved UI
+  
+  /**
+   * Converts technical error codes to user-friendly messages
+   */
+  getFriendlyErrorMessage(error: string): string {
+    if (!error) return this.errorMessageMap['DEFAULT'];
+    
+    // Check for known error codes and return friendly message
+    for (const [code, message] of Object.entries(this.errorMessageMap)) {
+      if (error.includes(code)) {
+        return message;
+      }
+    }
+    
+    // For ACTOR_CARD_NOT_FOUND which is common
+    if (error.includes('ACTOR_CARD_NOT_FOUND')) {
+      return this.errorMessageMap['ACTOR_CARD_NOT_FOUND'];
+    }
+    
+    // If no specific message found, return the default message
+    return this.errorMessageMap['DEFAULT'];
+  }
+  
+  /**
+   * Filters patrons based on the selected filter type
+   */
+  filterPatrons(filter: 'all' | 'valid' | 'duplicate' | 'invalid'): void {
+    this.patronFilter = filter;
+  }
+  
+  /**
+   * Returns filtered patrons based on the current filter selection
+   */
+  getFilteredPatrons(): PatronPreview[] {
+    if (this.patronFilter === 'all') {
+      return this.patrons;
+    } else if (this.patronFilter === 'valid') {
+      return this.patrons.filter(p => p.id > 0 && !p.isDuplicate && !p.error);
+    } else if (this.patronFilter === 'duplicate') {
+      return this.patrons.filter(p => p.isDuplicate);
+    } else if (this.patronFilter === 'invalid') {
+      return this.patrons.filter(p => p.error && !p.isDuplicate);
+    }
+    return this.patrons;
+  }
+  
+  /**
+   * Returns all valid patrons that can be added (not duplicates, no errors)
+   */
+  getFilteredValidPatrons(): PatronPreview[] {
+    return this.getFilteredPatrons().filter(p => p.id > 0 && !p.isDuplicate && !p.error);
+  }
+  
+  /**
+   * Returns the patrons that are selected to be added
+   */
+  getPatronsToAdd(): PatronPreview[] {
+    return this.patrons.filter(p => p.id > 0 && !p.isDuplicate && !p.error && p.selected);
+  }
+  
+  /**
+   * Toggles selection state for a specific patron
+   * With added animation effect for the selection counter
+   */
+  togglePatronSelection(patron: PatronPreview): void {
+    patron.selected = !patron.selected;
+    // Update stats.toBeAdded based on selections
+    this.updateToBeAddedCount();
+  }
+  
+  /**
+   * Updates the count of patrons to be added based on selections
+   */
+  private updateToBeAddedCount(): void {
+    this.stats.toBeAdded = this.getPatronsToAdd().length;
+  }
+  
+  /**
+   * Toggles selection for all valid patrons
+   * With updated counter
+   */
+  toggleSelectAllPatrons(selected: boolean): void {
+    this.getFilteredValidPatrons().forEach(patron => {
+      patron.selected = selected;
+    });
+    this.updateToBeAddedCount();
+  }
+  
+  /**
+   * Checks if all valid patrons are selected
+   */
+  areAllValidPatronsSelected(): boolean {
+    const validPatrons = this.getFilteredValidPatrons();
+    if (validPatrons.length === 0) return false;
+    return validPatrons.every(p => p.selected);
+  }
+  
+  /**
+   * Checks if any patrons are selected
+   */
+  hasSelectedPatrons(): boolean {
+    return this.patrons.some(p => p.selected);
+  }
+  
+  /**
+   * Returns the count of selected patrons
+   */
+  getSelectedCount(): number {
+    return this.patrons.filter(p => p.selected).length;
   }
 }
