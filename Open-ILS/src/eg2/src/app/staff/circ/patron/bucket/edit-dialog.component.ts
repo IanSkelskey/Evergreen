@@ -4,17 +4,17 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DialogComponent } from '@eg/share/dialog/dialog.component';
 import { ProgressDialogComponent } from '@eg/share/dialog/progress.component';
 import { StringComponent } from '@eg/share/string/string.component';
-import { PatronBucketService } from './patron-bucket.service';
+import { PatronBucketService } from './bucket.service';
 import { ToastService } from '@eg/share/toast/toast.service';
 import { IdlService } from '@eg/core/idl.service'; // Fix import path from @eg/idle/idl.service
 import { AuthService } from '@eg/core/auth.service';
 
 @Component({
-  selector: 'eg-patron-bucket-create-dialog',
-  templateUrl: './patron-bucket-create-dialog.component.html',
-  styleUrls: ['./patron-bucket-create-dialog.component.css']
+  selector: 'eg-patron-bucket-edit-dialog',
+  templateUrl: './edit-dialog.component.html',
+  styleUrls: ['./edit-dialog.component.css']
 })
-export class PatronBucketCreateDialogComponent extends DialogComponent implements OnInit {
+export class PatronBucketEditDialogComponent extends DialogComponent implements OnInit {
   @ViewChild('progressDialog') private progressDialog: ProgressDialogComponent;
   @ViewChild('successString') private successString: StringComponent;
   

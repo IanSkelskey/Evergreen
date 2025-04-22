@@ -2,14 +2,14 @@ import {NgModule, CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
-import {PatronBucketComponent} from './patron-bucket.component';
-import {PatronBucketItemComponent} from './patron-bucket-item.component';
-import {PatronBucketAddDialogComponent} from './patron-bucket-add-dialog.component';
-import {PatronBucketCreateDialogComponent} from './patron-bucket-create-dialog.component';
-import {PatronBucketUnauthorizedComponent} from './patron-bucket-unauthorized.component';
-import {PatronBucketService} from './patron-bucket.service';
-import {PatronBucketStateService} from './patron-bucket-state.service';
-import {PatronBucketRoutingModule} from './patron-bucket-routing.module';
+import {PatronBucketComponent} from './list.component';
+import {PatronBucketItemComponent} from './items.component';
+import {PatronBucketAddDialogComponent} from './add-dialog.component';
+import {PatronBucketEditDialogComponent} from './edit-dialog.component';
+import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
+import {PatronBucketService} from './bucket.service';
+import {PatronBucketStateService} from './state.service';
+import {PatronBucketRoutingModule} from './routing.module';
 
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
@@ -24,7 +24,7 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
         PatronBucketComponent,
         PatronBucketItemComponent,
         PatronBucketAddDialogComponent,
-        PatronBucketCreateDialogComponent,
+        PatronBucketEditDialogComponent,
         PatronBucketUnauthorizedComponent
     ],
     imports: [

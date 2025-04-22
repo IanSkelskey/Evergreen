@@ -7,14 +7,14 @@ import {AuthService} from '@eg/core/auth.service';
 import {EventService} from '@eg/core/event.service';
 import {PatronSearchComponent} from '@eg/staff/share/patron/search.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {PatronBucketService} from './patron-bucket.service';
+import {PatronBucketService} from './bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {firstValueFrom} from 'rxjs';
 
 @Component({
     selector: 'eg-patron-bucket-add-dialog',
-    templateUrl: './patron-bucket-add-dialog.component.html',
-    styleUrls: ['./patron-bucket-add-dialog.component.css']
+    templateUrl: './add-dialog.component.html',
+    styleUrls: ['./add-dialog.component.css']
 })
 export class PatronBucketAddDialogComponent extends DialogComponent {
     @Input() bucketId: number;

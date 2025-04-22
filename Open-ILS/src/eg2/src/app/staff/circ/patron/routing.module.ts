@@ -53,7 +53,7 @@ const routes: Routes = [{
 }, {
     path: 'bucket',
     loadChildren: () =>
-        import('./bucket/patron-bucket.module').then(m => m.PatronBucketModule)
+        import('./bucket/bucket.module').then(m => m.PatronBucketModule)
 }, {
     path: ':id',
     redirectTo: ':id/checkout'
