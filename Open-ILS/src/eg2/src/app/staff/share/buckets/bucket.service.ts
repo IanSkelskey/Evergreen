@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, lastValueFrom, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { NetService } from '@eg/core/net.service';
@@ -401,76 +401,5 @@ export class BucketService {
         return throwError(err);
       })
     );
-  }
-
-  /**
-   * Check access to a patron bucket
-   * @param bucket The bucket object
-   */
-  async checkBucketAccess(bucket: any): Promise<true> {
-    if (!bucket) {
-      throw new Error('Bucket not found');
-    }
-    
-    // Check if current user can access this bucket
-    if (bucket.owner() != this.auth.user().id() && bucket.pub() != 't') {
-      throw new Error('Permission denied: This is not your bucket and it is not public');
-    }
-    
-    return true;
-  }
-
-  /**
-   * Log a record bucket as recently used (backwards compatibility method)
-   */
-  logRecordBucket(bucketId: number): void {
-    this.logBucket(bucketId);
-  }
-
-  /**
-   * Log a patron bucket as recently used (backwards compatibility method)
-   */
-  logPatronBucket(bucketId: number): void {
-    this.logBucket(bucketId);
-  }
-
-  /**
-   * Request refresh for bib buckets (backward compatibility method) 
-   */
-  requestBibBucketsRefresh(): void {
-    this.requestBucketsRefresh('biblio');
-  }
-
-  /**
-   * Retrieve patron bucket items
-   */
-  async retrievePatronBucketItems(bucketId: number): Promise<any[]> {
-    try {
-      const response = await lastValueFrom(
-        this.retrieveBucketItems('user', bucketId)
-      );
-      
-      return response.map(item => ({
-        id: item.id(),
-        userId: item.target_user()
-      }));
-    } catch (error) {
-      console.error('Error retrieving patron bucket items:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Remove patrons from patron bucket
-   */
-  async removePatronsFromPatronBucket(bucketId: number, itemIds: number[]): Promise<any> {
-    try {
-      return await lastValueFrom(
-        this.removeItemsFromBucket('user', itemIds)
-      );
-    } catch (error) {
-      console.error('Error removing patrons from bucket:', error);
-      throw error;
-    }
   }
 }

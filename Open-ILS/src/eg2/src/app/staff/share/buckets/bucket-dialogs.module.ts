@@ -5,16 +5,28 @@ import { BucketItemTransferDialogComponent } from './item-transfer-dialog.compon
 import { BucketFormSharedModule } from './bucket-form-shared.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
+// Import the modules that contain the required components
+import { StringModule } from '@eg/share/string/string.module';
+import { EgCommonModule } from '@eg/common.module';
+import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
+
 @NgModule({
     declarations: [
+        // Only declare components that belong specifically to this module
         BucketItemTransferDialogComponent
     ],
     imports: [
+        // Standard Angular modules
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
         NgbModule,
-        BucketFormSharedModule
+        
+        // Our custom modules
+        BucketFormSharedModule,
+        StringModule,         // For StringComponent
+        EgCommonModule,       // For DialogComponent and ConfirmDialogComponent
+        CommonWidgetsModule   // For ComboboxComponent and ComboboxEntryComponent
     ],
     exports: [
         BucketItemTransferDialogComponent,
