@@ -1,82 +1,313 @@
-/* Fix for modal footer positioning */
+/* Modal structure improvements */
 :host ::ng-deep .modal-content {
   display: flex;
   flex-direction: column;
-  min-height: auto !important; /* Override any min-height that might be causing the gap */
+  min-height: auto !important;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 :host ::ng-deep .modal-dialog.modal-xl {
-  max-width: 1200px; /* Make the dialog wider */
+  max-width: 1000px;
+  margin: 1.75rem auto;
+  width: calc(100% - 2rem);
+}
+
+:host ::ng-deep .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.25rem;
 }
 
 :host ::ng-deep .modal-body {
-  padding-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
   flex: 1 1 auto;
   overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 
 :host ::ng-deep .modal-footer {
   margin-top: 0;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid #dee2e6;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #f8f9fa;
 }
 
-/* Footer button styling */
-:host ::ng-deep .modal-footer button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+/* Improved tab styling */
+:host ::ng-deep .custom-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
 }
 
-:host ::ng-deep .modal-footer button .material-icons {
-  font-size: 1rem;
-  vertical-align: middle;
-  margin-right: 0;
+:host ::ng-deep .nav-tabs .nav-link {
+  margin-bottom: -2px;
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  color: #495057;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
 }
 
-/* Form styling */
+:host ::ng-deep .nav-tabs .nav-link:hover {
+  border-color: #e9ecef #e9ecef #dee2e6;
+  background-color: rgba(0,0,0,0.04);
+}
+
+:host ::ng-deep .nav-tabs .nav-link.active {
+  color: #0d6efd;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  border-bottom: 2px solid #0d6efd;
+  font-weight: 600;
+  position: relative;
+}
+
+:host ::ng-deep .nav-tabs .nav-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  z-index: 1;
+}
+
+/* Better form styling */
 .form-label.fw-bold {
   margin-bottom: 0.5rem;
+  color: #212529;
 }
 
-textarea {
-  resize: vertical;
-  min-height: 80px;
+input.form-control,
+textarea.form-control,
+:host ::ng-deep select.form-control {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-/* Material icons styling */
-.material-icons {
-  font-size: 1rem;
-  vertical-align: middle;
-  margin-right: 0.25rem;
+input.form-control:focus,
+textarea.form-control:focus,
+:host ::ng-deep select.form-control:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-/* Alert styling */
-.alert {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
+.form-text {
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #6c757d;
 }
 
-.alert .material-icons {
-  font-size: 1.2rem;
+/* Form group styling */
+.form-group {
+  margin-bottom: 1.5rem;
 }
 
 /* Improved button styling */
 .btn {
   display: inline-flex;
   align-items: center;
-}
-
-/* Improve tab styling */
-:host ::ng-deep .nav-tabs {
-  border-bottom: 1px solid #dee2e6;
-  margin-bottom: 1rem;
-}
-
-:host ::ng-deep .nav-link.active {
+  gap: 0.5rem;
   font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-width: 2px;
+}
+
+.btn:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.btn-outline-secondary {
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.action-button {
+  min-width: 180px;
+  justify-content: center;
+}
+
+/* Close button styling */
+.close-button {
+  opacity: 0.7;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.close-button:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Material icons styling */
+.material-icons {
+  font-size: 1.1rem;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Loading indicator */
+.loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Success message styling */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #198754;
+  font-weight: 500;
+}
+
+/* Bucket form container */
+.bucket-form-container {
+  padding: 0.5rem 0;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+}
+
+legend.h6 {
+  font-weight: 600;
+  padding: 0;
+}
+
+/* Responsiveness */
+@media (max-width: 991.98px) {
+  .action-button {
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  :host ::ng-deep .modal-dialog.modal-xl {
+    max-width: 95%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  :host ::ng-deep .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  
+  :host ::ng-deep .nav-tabs .nav-link {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label.fw-bold {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  :host ::ng-deep .modal-content {
+    background-color: #343a40;
+    color: #f8f9fa;
+  }
+  
+  :host ::ng-deep .modal-header,
+  :host ::ng-deep .modal-footer {
+    background-color: #2c3136;
+    border-color: #495057;
+  }
+  
+  :host ::ng-deep .nav-tabs {
+    border-bottom-color: #495057;
+  }
+  
+  :host ::ng-deep .nav-tabs .nav-link {
+    color: #e9ecef;
+  }
+  
+  :host ::ng-deep .nav-tabs .nav-link.active {
+    color: #8bb9fe;
+    background-color: #343a40;
+    border-color: #495057 #495057 #343a40;
+    border-bottom: 2px solid #8bb9fe;
+  }
+  
+  .form-label.fw-bold {
+    color: #e9ecef;
+  }
+  
+  input.form-control,
+  textarea.form-control,
+  :host ::ng-deep select.form-control {
+    background-color: #495057;
+    border-color: #6c757d;
+    color: #f8f9fa;
+  }
+  
+  .form-text {
+    color: #adb5bd;
+  }
+  
+  .btn-outline-secondary {
+    color: #adb5bd;
+    border-color: #6c757d;
+  }
+  
+  .btn-outline-secondary:hover {
+    background-color: #5a6268;
+    color: #f8f9fa;
+  }
+  
+  :host ::ng-deep .nav-tabs .nav-link:hover {
+    background-color: rgba(255,255,255,0.05);
+  }
+}
+
+/* Accessibility focus indicators */
+:focus-visible {
+  outline: 2px solid #0d6efd !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .btn:focus {
+    outline: 3px solid ButtonText;
+  }
+  
+  :host ::ng-deep .nav-tabs .nav-link.active {
+    border: 2px solid Highlight;
+  }
 }

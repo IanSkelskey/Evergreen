@@ -6,46 +6,51 @@
     <h4 class="modal-title">
       <ng-container *ngIf="!dialogTitle; else customTitle">
         <span *ngIf="itemIds.length === 1" i18n>
-          <span class="material-icons">{{dialogIcon}}</span> Add Item #{{itemIds[0]}} to Bucket
+          <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span> Add Item #{{itemIds[0]}} to Bucket
         </span>
         <span *ngIf="itemIds.length > 1" i18n>
-          <span class="material-icons">{{dialogIcon}}</span> Add {{itemIds.length}} Items to Bucket
+          <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span> Add {{itemIds.length}} Items to Bucket
         </span>
         <span *ngIf="itemIds.length === 0" i18n>
-          <span class="material-icons">create_new_folder</span> Add New Bucket
+          <span class="material-icons" aria-hidden="true">create_new_folder</span> Add New Bucket
         </span>
       </ng-container>
 
       <ng-template #customTitle>
-        <span><span class="material-icons">{{dialogIcon}}</span> {{dialogTitle}}</span>
+        <span><span class="material-icons" aria-hidden="true">{{dialogIcon}}</span> {{dialogTitle}}</span>
       </ng-template>
     </h4>
-    <button type="button" class="btn-close btn-close-white"
+    <button type="button" class="btn-close btn-close-white close-button"
       i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </div>
-  <div class="modal-body">
-    <ul ngbNav #bucketDialogTabs="ngbNav" class="nav-tabs" [(activeId)]="activeTabId" 
+  
+  <div class="modal-body" aria-live="polite">
+    <ul ngbNav #bucketDialogTabs="ngbNav" class="nav-tabs custom-tabs" [(activeId)]="activeTabId" 
         [keyboard]="true" [roles]="false" role="tablist"
         (activeIdChange)="onTabChange($event)">
       <li role="presentation" [ngbNavItem]="1" [disabled]="!showExistingBuckets">
         <a role="tab" ngbNavLink i18n>Existing bucket</a>
         <ng-template ngbNavContent>
-          <div class="row mt-3">
-            <div class="col-lg-3">
-              <label class="form-label fw-bold" for="existing-bucket-name" i18n>Name of existing bucket</label>
+          <div class="row mt-4 form-group">
+            <div class="col-lg-3 col-md-4">
+              <label class="form-label fw-bold" for="existing-bucket-name" i18n>Select an existing bucket</label>
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-5 col-md-8">
               <eg-combobox [entries]="formatBucketEntries()"
                 (onChange)="bucketChanged($event)"
-                domId="existing-bucket-name">
+                domId="existing-bucket-name"
+                placeholder="Search or select bucket">
               </eg-combobox>
             </div>
-            <div class="col-lg-4">
-              <button type="button" class="btn btn-primary" (click)="addToSelected()" i18n
+            <div class="col-lg-4 col-md-12 mt-md-3 mt-lg-0">
+              <button type="button" class="btn btn-primary action-button" (click)="addToSelected()" i18n
                 [disabled]="!selectedBucket || pendingOperation">
-                <span class="material-icons">add_circle</span>
-                <span *ngIf="!pendingOperation">Add To Selected Bucket</span>
-                <span *ngIf="pendingOperation">Adding...</span>
+                <span class="material-icons" aria-hidden="true">add_circle</span>
+                <span *ngIf="!pendingOperation">Add to Selected Bucket</span>
+                <span *ngIf="pendingOperation" class="loading-text">
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Adding...
+                </span>
               </button>
             </div>
           </div>
@@ -54,35 +59,46 @@
       <li role="presentation" [ngbNavItem]="2">
         <a role="tab" ngbNavLink i18n>New bucket</a>
         <ng-template ngbNavContent>
-          <eg-bucket-form #bucketForm
-            [bucketClass]="bucketClass"
-            [editMode]="false"
-            [disabled]="pendingOperation"
-            [showPublicOption]="true"
-            [hideFormActions]="false"
-            (formSubmit)="onBucketFormSubmit($event)"
-            (formCancel)="onBucketFormCancel()"
-            (formValidityChange)="onBucketFormValidity($event)">
-          </eg-bucket-form>
+          <div class="bucket-form-container mt-4">
+            <fieldset>
+              <legend class="h6 mb-3" i18n>Bucket Information</legend>
+              <eg-bucket-form #bucketForm
+                [bucketClass]="bucketClass"
+                [editMode]="false"
+                [disabled]="pendingOperation"
+                [showPublicOption]="true"
+                [hideFormActions]="false"
+                (formSubmit)="onBucketFormSubmit($event)"
+                (formCancel)="onBucketFormCancel()"
+                (formValidityChange)="onBucketFormValidity($event)">
+              </eg-bucket-form>
+            </fieldset>
+          </div>
         </ng-template>
       </li>
       <li role="presentation" [ngbNavItem]="3" [disabled]="!showExistingBuckets">
         <a role="tab" ngbNavLink i18n>Shared bucket</a>
         <ng-template ngbNavContent>
-          <div class="row mt-3">
-            <div class="col-lg-3">
-              <label for="sharedBucketId" class="form-label fw-bold" i18n>ID of shared bucket</label>
+          <div class="row mt-4 form-group">
+            <div class="col-lg-3 col-md-4">
+              <label for="sharedBucketId" class="form-label fw-bold" i18n>Enter Shared Bucket ID</label>
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-5 col-md-8">
               <input type="number" class="form-control" id="sharedBucketId"
+                placeholder="Enter ID number" 
+                aria-describedby="sharedBucketHelp"
                 [(ngModel)]="sharedBucketId"/>
+              <small id="sharedBucketHelp" class="form-text text-muted mt-1" i18n>Enter the numeric ID of the shared bucket you want to use</small>
             </div>
-            <div class="col-lg-4">
-              <button type="button" class="btn btn-primary" (click)="addToShared()" i18n
+            <div class="col-lg-4 col-md-12 mt-md-3 mt-lg-0">
+              <button type="button" class="btn btn-primary action-button" (click)="addToShared()" i18n
                 [disabled]="!sharedBucketId || pendingOperation">
-                <span class="material-icons">share</span>
+                <span class="material-icons" aria-hidden="true">share</span>
                 <span *ngIf="!pendingOperation">Add To Shared Bucket</span>
-                <span *ngIf="pendingOperation">Adding...</span>
+                <span *ngIf="pendingOperation" class="loading-text">
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Adding...
+                </span>
               </button>
             </div>
           </div>
@@ -91,12 +107,19 @@
     </ul>
     <div [ngbNavOutlet]="bucketDialogTabs"></div>
   </div>
+  
   <div class="modal-footer">
     <div class="d-flex justify-content-between w-100">
-      <div></div>
+      <div>
+        <!-- Success message area -->
+        <div *ngIf="operationSuccess" class="success-message text-success">
+          <span class="material-icons" aria-hidden="true">check_circle</span>
+          <span>{{successString.text}}</span>
+        </div>
+      </div>
       <div class="d-flex gap-2">
         <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>
-          <span class="material-icons">close</span> Cancel
+          <span class="material-icons" aria-hidden="true">close</span> Cancel
         </button>
       </div>
     </div>
