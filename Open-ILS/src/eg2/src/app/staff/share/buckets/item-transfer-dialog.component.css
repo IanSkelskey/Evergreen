@@ -1,0 +1,82 @@
+/* Fix for modal footer positioning */
+:host ::ng-deep .modal-content {
+  display: flex;
+  flex-direction: column;
+  min-height: auto !important; /* Override any min-height that might be causing the gap */
+}
+
+:host ::ng-deep .modal-dialog.modal-xl {
+  max-width: 1200px; /* Make the dialog wider */
+}
+
+:host ::ng-deep .modal-body {
+  padding-bottom: 1rem;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+:host ::ng-deep .modal-footer {
+  margin-top: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Footer button styling */
+:host ::ng-deep .modal-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+:host ::ng-deep .modal-footer button .material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+  margin-right: 0;
+}
+
+/* Form styling */
+.form-label.fw-bold {
+  margin-bottom: 0.5rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Material icons styling */
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Alert styling */
+.alert {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alert .material-icons {
+  font-size: 1.2rem;
+}
+
+/* Improved button styling */
+.btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Improve tab styling */
+:host ::ng-deep .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 1rem;
+}
+
+:host ::ng-deep .nav-link.active {
+  font-weight: 500;
+}

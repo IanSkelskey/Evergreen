@@ -1,0 +1,51 @@
+.required::after {
+  content: " *";
+  color: red;
+}
+
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.form-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alert .material-icons {
+  font-size: 1.2rem;
+}
+
+.bucket-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Add focus styles for better accessibility */
+input:focus, 
+textarea:focus, 
+select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Style for disabled inputs */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}

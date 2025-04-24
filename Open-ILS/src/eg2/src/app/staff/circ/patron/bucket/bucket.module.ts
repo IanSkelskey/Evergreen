@@ -10,9 +10,9 @@ import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {PatronBucketRoutingModule} from './routing.module';
-import { PatronBucketQuickAddComponent } from './quick-add.component';
+import {PatronBucketQuickAddComponent} from './quick-add.component';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
-
+import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 import {EgCommonModule} from '@eg/common.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {GridModule} from '@eg/share/grid/grid.module';
@@ -20,6 +20,8 @@ import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
 import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
+import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
+import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 
 @NgModule({
     declarations: [
@@ -43,11 +45,14 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
         CommonWidgetsModule,
         PatronModule,
         NgbDropdownModule,
-        NgbTooltipModule
+        NgbTooltipModule,
+        BucketModule,
+        BucketDialogsModule // Add the BucketDialogsModule import
     ],
     providers: [
         PatronBucketService,
         PatronBucketStateService,
+        BucketService
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

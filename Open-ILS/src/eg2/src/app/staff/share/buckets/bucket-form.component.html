@@ -1,0 +1,71 @@
+<div class="bucket-form-container">
+  <div *ngIf="formError" class="alert alert-danger">
+    <span class="material-icons align-middle me-1">error</span>
+    {{formError}}
+  </div>
+
+  <form [formGroup]="bucketForm" class="form-validated">
+    <div class="mb-3">
+      <label for="bucketName" class="form-label required" i18n>Bucket Name</label>
+      <input type="text" class="form-control" 
+             id="bucketName" 
+             formControlName="name"
+             [class.is-invalid]="hasError('name')"
+             [attr.aria-invalid]="hasError('name')"
+             placeholder="Enter a name for this bucket" i18n-placeholder 
+             autocomplete="off">
+      <div class="invalid-feedback" *ngIf="hasError('name', 'required')" i18n>
+        Name is required
+      </div>
+      <div class="invalid-feedback" *ngIf="hasError('name', 'maxlength')" i18n>
+        Name cannot exceed 70 characters
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="bucketDescription" class="form-label" i18n>Description</label>
+      <textarea class="form-control" 
+                id="bucketDescription" 
+                formControlName="description"
+                [class.is-invalid]="hasError('description')"
+                rows="3"
+                placeholder="Optional description" i18n-placeholder></textarea>
+      <div class="invalid-feedback" *ngIf="hasError('description', 'maxlength')" i18n>
+        Description cannot exceed 140 characters
+      </div>
+    </div>
+
+    <div class="mb-3" *ngIf="!editMode || bucketForm.get('bucketType').enabled">
+      <label for="bucketType" class="form-label" i18n>Bucket Type</label>
+      <select class="form-select" formControlName="bucketType" id="bucketType">
+        <option *ngFor="let type of bucketTypes" [value]="type.value">
+          {{type.label}}
+        </option>
+      </select>
+      <div class="form-text" i18n *ngIf="!editMode">For most cases, use "Staff Client" type</div>
+      <div class="form-text" i18n *ngIf="editMode">Bucket type cannot be changed after creation</div>
+    </div>
+
+    <!-- Public checkbox - can be hidden with showPublicOption input -->
+    <div class="mb-3 form-check" *ngIf="showPublicOption">
+      <input type="checkbox" class="form-check-input" 
+             id="isPublic" formControlName="isPublic">
+      <label class="form-check-label" for="isPublic" i18n>
+        Make this bucket public
+      </label>
+      <div class="form-text" i18n>Public buckets can be seen by all users</div>
+    </div>
+
+    <!-- Form actions -->
+    <div class="bucket-form-actions" *ngIf="!hideFormActions">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()" i18n>Cancel</button>
+      <button type="button" class="btn btn-success" 
+              (click)="submitForm()"
+              [disabled]="bucketForm.invalid || pending">
+        <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        <span *ngIf="!editMode" i18n>Create Bucket</span>
+        <span *ngIf="editMode" i18n>Save Changes</span>
+      </button>
+    </div>
+  </form>
+</div>
