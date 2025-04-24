@@ -193,3 +193,35 @@ a.btn .material-icons {
     background-color: #e2e6ea;
     border-color: #dae0e5;
 }
+
+/* Money value styling */
+.money-value {
+    display: block;
+}
+
+.money-value.text-danger {
+    color: #dc3545 !important;
+}
+
+.money-value.text-success {
+    color: #28a745 !important;
+}
+
+/* Adjust tooltip appearance */
+:host ::ng-deep .tooltip-inner {
+    max-width: 300px;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.85);
+    font-size: 0.875rem;
+}
+
+/* Make links more consistent with tooltips */
+a[ngbTooltip] {
+    text-decoration: none;
+    border-bottom: 1px dotted #007bff;
+}
+
+a[ngbTooltip]:hover {
+    text-decoration: none;
+    border-bottom: 1px solid #007bff;
+}
