@@ -371,6 +371,8 @@ export class PatronBucketService {
             // Check if user has permission to access this bucket
             await this.checkBucketAccess(bucketId);
             
+            console.debug(`Retrieving all patron bucket items for bucket ${bucketId}`);
+            
             const query = { 
                 bucket: bucketId 
             };
@@ -382,51 +384,65 @@ export class PatronBucketService {
                 }
             };
             
-            let items = await lastValueFrom(this.pcrud.search('cubi', query, options));
+            // Use atomic to get all items at once
+            const items = await lastValueFrom(this.pcrud.search('cubi', query, options, {atomic: true}));
             
             // Normalize to array
-            if (!items) items = [];
-            if (!Array.isArray(items)) items = [items];
+            const itemsArray = !items ? [] : (Array.isArray(items) ? items : [items]);
             
             // Debug the raw items
-            console.debug('Raw bucket items before mapping:', items);
+            console.debug(`Raw bucket items before mapping: ${itemsArray.length} items`, itemsArray);
             
-            return items.map(item => {
-                const user = item.target_user();
-                
-                // Debug card access
-                console.debug('User:', user ? user.id() : 'null');
-                console.debug('Card:', user && user.card ? user.card() : 'null');
-                
-                // Fix barcode access with more robust error handling
-                let barcode = '';
+            return itemsArray.map(item => {
                 try {
-                    // Try direct access first
-                    if (user && user.card && user.card() && typeof user.card().barcode === 'function') {
-                        barcode = user.card().barcode();
+                    const user = item.target_user();
+                    
+                    // Debug card access
+                    if (user) {
+                        console.debug(`User ${user.id()}: ${user.family_name()}, ${user.first_given_name()}`);
+                        console.debug(`Card: ${user.card() ? user.card().barcode() : 'No card'}`);
                     }
-                } catch (e) {
-                    console.warn('Error accessing barcode:', e);
+                    
+                    // Fix barcode access with more robust error handling
+                    let barcode = '';
+                    try {
+                        // Try direct access first
+                        if (user && user.card && user.card() && typeof user.card().barcode === 'function') {
+                            barcode = user.card().barcode();
+                        }
+                    } catch (e) {
+                        console.warn('Error accessing barcode:', e);
+                    }
+                    
+                    // Fix patron name with error handling
+                    let firstName = '';
+                    let lastName = '';
+                    try {
+                        firstName = user && typeof user.first_given_name === 'function' ? user.first_given_name() : '';
+                        lastName = user && typeof user.family_name === 'function' ? user.family_name() : '';
+                    } catch (e) {
+                        console.warn('Error accessing patron name:', e);
+                    }
+                    
+                    return {
+                        id: item.id(),
+                        bucketId: item.bucket(),
+                        userId: user ? user.id() : 0,
+                        patron_name: lastName ? lastName + ', ' + firstName : 'Unknown Patron',
+                        barcode: barcode || 'No Barcode',
+                        patron: user
+                    };
+                } catch (error) {
+                    console.error('Error processing bucket item:', error, item);
+                    return {
+                        id: item.id(),
+                        bucketId: item.bucket(),
+                        userId: 0,
+                        patron_name: 'Error',
+                        barcode: 'Error',
+                        patron: null
+                    };
                 }
-                
-                // Fix patron name with error handling
-                let firstName = '';
-                let lastName = '';
-                try {
-                    firstName = user && typeof user.first_given_name === 'function' ? user.first_given_name() : '';
-                    lastName = user && typeof user.family_name === 'function' ? user.family_name() : '';
-                } catch (e) {
-                    console.warn('Error accessing patron name:', e);
-                }
-                
-                return {
-                    id: item.id(),
-                    bucketId: item.bucket(),
-                    userId: user ? user.id() : 0,
-                    patron_name: lastName ? lastName + ', ' + firstName : 'Unknown Patron',
-                    barcode: barcode || 'No Barcode',
-                    patron: user
-                };
             });
         } catch (error) {
             console.error('Error retrieving patron bucket items:', error);

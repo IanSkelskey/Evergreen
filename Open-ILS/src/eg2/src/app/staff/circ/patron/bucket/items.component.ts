@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit} from '@angular/core';
 import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
-import {lastValueFrom, EMPTY, Subject} from 'rxjs';
-import {catchError, takeUntil, filter} from 'rxjs/operators';
+import {lastValueFrom, EMPTY, Subject, Observable, from, of, forkJoin} from 'rxjs';
+import {catchError, takeUntil, filter, map, switchMap, toArray} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -10,13 +10,14 @@ import {OrgService} from '@eg/core/org.service';
 import {EventService} from '@eg/core/event.service';
 import {PermService} from '@eg/core/perm.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
-import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
+import {GridDataSource} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {PatronBucketService} from './bucket.service';
+import {PatronService} from '@eg/staff/share/patron/patron.service';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -29,13 +30,11 @@ import {ɵ$localize as $localize} from '@angular/localize';
     templateUrl: 'items.component.html',
     styleUrls: ['items.component.css']
 })
-
 export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewInit {
     bucketId: number;
     bucket: IdlObject;
     returnTo: string;
     dataSource: GridDataSource = new GridDataSource();
-    cellTextGenerator: GridCellTextGenerator;
     noSelectedRows = true;
     oneSelectedRow = false;
     hasUpdatePerm = false;
@@ -53,6 +52,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     isLoading = true;
     private currentUrl: string;
     private previousBucketId: number;
+    private bucketItemMap: Map<number, number> = new Map(); // Maps patron IDs to bucket item IDs
 
     constructor(
         private router: Router,
@@ -65,17 +65,18 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         private toast: ToastService,
         private flatData: GridFlatDataService,
         private bucketService: PatronBucketService,
+        private patronService: PatronService,
         private modal: NgbModal,
         private perm: PermService
-    ) {}
+    ) {
+        // Initialize datasource like the search component does
+        this.dataSource = new GridDataSource();
+        this.dataSource.getRows = (pager: Pager, sort: any[]) => {
+            return this.getRows(pager, sort);
+        };
+    }
 
     ngOnInit() {
-        this.cellTextGenerator = {
-            'family_name': row => row['family_name'],
-            'first_given_name': row => row['first_given_name'],
-            'barcode': row => row['target_user']?.card()?.barcode()
-        };
-
         this.perm.hasWorkPermAt(['UPDATE_USER']).then(result => this.hasUpdatePerm = !!result);
         this.perm.hasWorkPermAt(['DELETE_USER']).then(result => this.hasDeletePerm = !!result);
 
@@ -133,7 +134,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
             
             this.bucket = bucket;
             this.bucketService.logPatronBucket(this.bucketId);
-            this.initDataSource(this.bucketId);
+            // Data source is already initialized in the constructor; no need to call initDataSource
             this.gridSelectionChange([]);
             this.isLoading = false;
             
@@ -158,53 +159,148 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         this.oneSelectedRow = keys.length === 1;
     }
 
-    initDataSource(bucketId: number) {
-        console.debug('Initializing datasource for bucket ID:', bucketId);
+    // Instead of initDataSource - follow search component's pattern
+    getRows(pager: Pager, sort: any[]): Observable<IdlObject> {
+        if (!this.bucketId) {
+            return of();
+        }
         
-        this.dataSource.getRows = (pager: Pager, sort: any[]) => {
-            console.debug(`Grid getRows called - pager:`, pager, 'sort:', sort);
-            
-            const query: any = {
-                bucket: bucketId
-            };
-
-            let queryFilters = [];
-            if (this.dataSource.filters) {
-                Object.keys(this.dataSource.filters).forEach(key => {
-                    queryFilters = queryFilters.concat(this.dataSource.filters[key]);
-                });
-
-                if (queryFilters.length > 0) {
-                    query['-and'] = queryFilters;
-                }
-            }
-
-            console.debug('Grid query:', query);
-            
-            return this.flatData.getRows(this.grid.context, query, pager, sort)
-                .pipe(
-                    catchError(err => {
-                        console.error('Error fetching bucket items:', err);
-                        return [];
-                    })
-                );
-        };
+        return this.retrieveBucketPatrons(this.bucketId, pager, sort).pipe(
+            map(user => this.localFleshUser(user))
+        );
     }
 
-    async removeFromBucket(rows: any[]): Promise<boolean> {
-        if (!rows.length) return false;
+    // Similar to the search component's localFleshUser
+    localFleshUser(user: IdlObject): IdlObject {
+        if (user && typeof user.home_ou === 'function') {
+            // Try to fetch the org unit object if we have an ID
+            try {
+                const homeOu = user.home_ou();
+                if (homeOu && !isNaN(Number(homeOu))) {
+                    user.home_ou(this.org.get(homeOu));
+                }
+            } catch (e) {
+                console.warn('Error fleshing home_ou', e);
+            }
+        }
+        return user;
+    }
+
+    /**
+     * Retrieves patrons contained in the bucket
+     * This is the key method that transforms bucket items into patron objects
+     */
+    private retrieveBucketPatrons(bucketId: number, pager: Pager, sort: any[]): Observable<IdlObject> {
+        console.debug(`Retrieving patron bucket items for bucket ${bucketId}`);
+        
+        // First get all bucket items without pagination
+        return from(this.bucketService.retrievePatronBucketItems(bucketId)).pipe(
+            switchMap(items => {
+                // If no items in the bucket, return empty array
+                if (!items || items.length === 0) {
+                    console.debug('No items found in bucket');
+                    return of();
+                }
+
+                console.debug(`Found ${items.length} bucket items, retrieving patron data`);
+
+                // Extract patron IDs and create a mapping of patron ID to bucket item ID
+                const patronIds = [];
+                this.bucketItemMap.clear();
+                    
+                items.forEach(item => {
+                    if (item.userId) {
+                        patronIds.push(item.userId);
+                        this.bucketItemMap.set(item.userId, item.id);
+                    } else {
+                        console.warn('Found bucket item without userId:', item);
+                    }
+                });
+
+                if (patronIds.length === 0) {
+                    console.debug('No patron IDs extracted from bucket items');
+                    return of();
+                }
+                
+                console.debug(`Processing ${patronIds.length} patron IDs: ${patronIds.join(', ')}`);
+
+                // Create sort object for pcrud
+                const sortObj = {};
+                if (sort && sort.length > 0) {
+                    sort.forEach(s => {
+                        sortObj[s.name] = s.dir.toUpperCase();
+                    });
+                } else {
+                    // Default sort
+                    sortObj['family_name'] = 'ASC';
+                    sortObj['first_given_name'] = 'ASC';
+                }
+
+                // Use similar approach to search.component.ts
+                // Note: we're intentionally not applying pager.offset here because
+                // we need to get ALL bucket items first, then paginate the results
+                return this.pcrud.search('au', 
+                    {id: patronIds}, 
+                    {
+                        flesh: 2,
+                        flesh_fields: {
+                            au: ['card', 'home_ou', 'profile'],
+                            pgt: ['name']
+                        },
+                        order_by: sortObj
+                    }
+                ).pipe(
+                    // Collect all patrons from the search
+                    toArray(),
+                    // Apply client-side pagination after getting all patrons
+                    map(patrons => {
+                        console.debug(`Received ${patrons.length} patrons from server`);
+                        
+                        // Apply pagination to the full result set
+                        const start = pager.offset;
+                        const end = start + pager.limit;
+                        const pagedPatrons = patrons.slice(start, end);
+                        
+                        console.debug(`Returning patrons ${start} to ${end-1} (if available)`);
+                        return pagedPatrons;
+                    }),
+                    // Flatten the array to emit one patron at a time
+                    switchMap(pagedPatrons => {
+                        if (pagedPatrons.length === 0) return of();
+                        return from(pagedPatrons);
+                    }),
+                    // Now map each patron to include the bucket item ID
+                    map((patron: any) => {
+                        // Attach bucket item ID to patron object for operations like delete
+                        patron._bucket_item_id = this.bucketItemMap.get(patron.id());
+                        return patron;
+                    })
+                );
+            }),
+            catchError(err => {
+                console.error('Error retrieving patrons for bucket:', err);
+                this.toast.danger($localize`Error loading patron data: ${err.message || err}`);
+                return of();
+            })
+        );
+    }
+
+    async removeFromBucket(patrons: IdlObject[]): Promise<boolean> {
+        if (!patrons.length) return false;
         
         try {
-            const itemIds = rows.map(row => {
-                if (row.id === undefined || row.id === null) {
-                    console.warn('Row missing id property:', row);
+            // Extract bucket item IDs from the patron objects using our mapping
+            const itemIds = patrons.map(patron => {
+                const bucketItemId = this.bucketItemMap.get(patron.id());
+                if (bucketItemId === undefined) {
+                    console.warn('Patron missing bucket item ID in map:', patron);
                     return null;
                 }
-                return Number(row.id);
+                return Number(bucketItemId);
             }).filter(id => id !== null);
             
             if (itemIds.length === 0) {
-                this.toast.danger($localize`Unable to remove patrons - no valid item IDs found`);
+                this.toast.danger($localize`Unable to remove patrons - no valid bucket item IDs found`);
                 return false;
             }
             
@@ -213,7 +309,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
             const result = await this.bucketService.removePatronsFromPatronBucket(this.bucketId, itemIds);
             
             console.debug('Remove operation result:', result);
-            this.toast.success($localize`${rows.length} patron(s) removed from bucket`);
+            this.toast.success($localize`${patrons.length} patron(s) removed from bucket`);
             this.grid.reload();
             return true;
         } catch (err) {
@@ -233,34 +329,28 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         }
     }
 
-    async editSelectedPatrons(rows: any[]): Promise<void> {
-        if (!rows.length || !this.hasUpdatePerm) return;
+    async editSelectedPatrons(patrons: IdlObject[]): Promise<void> {
+        if (!patrons.length || !this.hasUpdatePerm) return;
 
-        if (rows.length === 1) {
-            const row = rows[0];
-            const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
+        if (patrons.length === 1) {
+            const patron = patrons[0];
+            const url = `/eg2/staff/circ/patron/${patron.id()}/edit`;
             window.open(url, '_blank');
         } else {
-            rows.forEach((row, index) => {
-                const url = `/eg2/staff/circ/patron/${row.target_user.id()}/edit`;
-                const windowName = `edit_patron_${row.target_user.id()}_${index}`;
+            patrons.forEach((patron, index) => {
+                const url = `/eg2/staff/circ/patron/${patron.id()}/edit`;
+                const windowName = `edit_patron_${patron.id()}_${index}`;
                 const windowFeatures = 'width=1024,height=768,resizable=yes,scrollbars=yes';
                 window.open(url, windowName, windowFeatures);
             });
         }
     }
 
-    async moveAddToBucket(rows: any[], remove = false): Promise<void> {
-        if (!rows.length) return;
+    async moveAddToBucket(patrons: IdlObject[], remove = false): Promise<void> {
+        if (!patrons.length) return;
         
-        const userIds = rows.map(row => {
-            if (row.target_user && typeof row.target_user.id === 'function') {
-                return row.target_user.id();
-            } else {
-                console.warn('Invalid user object in row:', row);
-                return null;
-            }
-        }).filter(id => id !== null);
+        // Extract patron IDs directly from the patron objects
+        const userIds = patrons.map(patron => patron.id()).filter(id => id !== null);
         
         if (userIds.length === 0) {
             this.toast.danger($localize`Unable to add patrons - no valid IDs found`);
@@ -288,7 +378,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                 
                 if (remove) {
                     console.debug('Attempting to remove patrons from source bucket...');
-                    const removeResult = await this.removeFromBucket(rows);
+                    const removeResult = await this.removeFromBucket(patrons);
                     console.debug('Remove result:', removeResult);
                     
                     if (removeResult) {
