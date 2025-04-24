@@ -23,7 +23,7 @@ import {MarkDamagedDialogComponent
 import {CopyAlertsDialogComponent
 } from '@eg/staff/share/holdings/copy-alerts-dialog.component';
 import {BucketDialogComponent
-} from '@eg/staff/share/buckets/bucket-dialog.component';
+} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {BackdateDialogComponent} from '@eg/staff/share/circ/backdate-dialog.component';

@@ -15,7 +15,7 @@ import {EventService} from '@eg/core/event.service';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
-import {BucketUserShareComponent} from '@eg/staff/share/buckets/bucket-user-share.component';
+import {BucketUserShareComponent} from '@eg/staff/cat/bucket/bucket-user-share.component';
 import {Pager} from '@eg/share/util/pager';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';

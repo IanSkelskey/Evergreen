@@ -33,7 +33,7 @@ import {ReplaceBarcodeDialogComponent
 import {DeleteHoldingDialogComponent
 } from '@eg/staff/share/holdings/delete-volcopy-dialog.component';
 import {BucketDialogComponent
-} from '@eg/staff/share/buckets/bucket-dialog.component';
+} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {ConjoinedItemsDialogComponent
 } from '@eg/staff/share/holdings/conjoined-items-dialog.component';
 import {MakeBookableDialogComponent

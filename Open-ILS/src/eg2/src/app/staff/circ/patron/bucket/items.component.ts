@@ -19,7 +19,7 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';

@@ -9,21 +9,21 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
 // import {AdminPageComponent} from '@eg/staff/share/admin-page/admin-page.component';
-import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
-import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
+import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
+import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
 
 /**
  * Record bucket grid interface

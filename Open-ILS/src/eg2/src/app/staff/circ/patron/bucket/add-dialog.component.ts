@@ -2,9 +2,6 @@ import {Component, ViewChild, Input} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {IdlObject} from '@eg/core/idl.service';
 import {ToastService} from '@eg/share/toast/toast.service';
-import {NetService} from '@eg/core/net.service';
-import {AuthService} from '@eg/core/auth.service';
-import {EventService} from '@eg/core/event.service';
 import {PatronSearchComponent} from '@eg/staff/share/patron/search.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './bucket.service';
@@ -34,9 +31,6 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
     constructor(
         private modal: NgbModal,
         private toast: ToastService,
-        private net: NetService,
-        private auth: AuthService,
-        private evt: EventService,
         private bucketService: PatronBucketService
     ) {
         super(modal);

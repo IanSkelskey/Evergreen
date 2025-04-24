@@ -11,7 +11,7 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {Pager} from '@eg/share/util/pager';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {PatronMergeDialogComponent} from './merge-dialog.component';
 import {FormatService} from '@eg/core/format.service';
 import {LocaleService} from '@eg/core/locale.service';
