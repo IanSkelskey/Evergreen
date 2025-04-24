@@ -194,7 +194,34 @@ a.btn .material-icons {
     border-color: #dae0e5;
 }
 
-/* Money value styling */
+/* Fix tooltip appearance */
+:host ::ng-deep .tooltip-inner {
+    max-width: 300px;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.85);
+    font-size: 0.875rem;
+    color: #ffffff; /* Explicitly set text color to white */
+    border-radius: 0.25rem;
+}
+
+/* Add arrow styling for better visibility */
+:host ::ng-deep .tooltip .arrow::before {
+    border-top-color: rgba(0, 0, 0, 0.85);
+    border-bottom-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Make links more consistent with tooltips */
+a[ngbTooltip] {
+    text-decoration: none;
+    border-bottom: 1px dotted #007bff;
+}
+
+a[ngbTooltip]:hover {
+    text-decoration: none;
+    border-bottom: 1px solid #007bff;
+}
+
+/* Money value styling - ensure proper coloring */
 .money-value {
     display: block;
 }
@@ -207,21 +234,41 @@ a.btn .material-icons {
     color: #28a745 !important;
 }
 
-/* Adjust tooltip appearance */
-:host ::ng-deep .tooltip-inner {
-    max-width: 300px;
-    padding: 0.5rem;
-    background-color: rgba(0, 0, 0, 0.85);
-    font-size: 0.875rem;
+a.text-danger.money-value {
+    color: #dc3545 !important;
+    text-decoration: none;
+    border-bottom: 1px dotted #dc3545;
 }
 
-/* Make links more consistent with tooltips */
-a[ngbTooltip] {
+a.text-danger.money-value:hover {
     text-decoration: none;
-    border-bottom: 1px dotted #007bff;
+    border-bottom: 1px solid #dc3545;
 }
 
-a[ngbTooltip]:hover {
-    text-decoration: none;
-    border-bottom: 1px solid #007bff;
+/* Improve cell link styling to look more like text-only links */
+.text-link-cell a {
+  display: inline;
+  text-decoration: none;
+  background-color: transparent;
+  border-bottom: none;
+}
+
+.text-link-cell a span {
+  color: #007bff;
+  border-bottom: 1px dotted #007bff;
+  cursor: pointer;
+}
+
+.text-link-cell a:hover span {
+  border-bottom: 1px solid #007bff;
+}
+
+/* Specific style for money values */
+a.text-danger.money-value span {
+  color: #dc3545 !important;
+  border-bottom: 1px dotted #dc3545;
+}
+
+a.text-danger.money-value:hover span {
+  border-bottom: 1px solid #dc3545;
 }
