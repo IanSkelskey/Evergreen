@@ -457,21 +457,80 @@ export class PatronBucketService {
             // Check if user has permission to add items to this bucket
             await this.checkBucketAccess(bucketId, true);
             
+            if (!patronIds || patronIds.length === 0) {
+                return {
+                    success: true,
+                    added: 0,
+                    alreadyInBucket: 0,
+                    total: 0,
+                    addedIds: [],
+                    existingIds: []
+                };
+            }
+
+            console.debug(`Adding ${patronIds.length} patrons to bucket ${bucketId}`);
+            
+            // Check which patrons are already in the bucket
+            const existingPatrons = new Map<number, boolean>();
+            const existingPatronIds: number[] = [];
+            
+            // Process each patron to check if they're already in the bucket
+            for (const patronId of patronIds) {
+                const existingItems = await this.checkPatronInBucket(bucketId, patronId);
+                if (existingItems && existingItems.length > 0) {
+                    existingPatrons.set(patronId, true);
+                    existingPatronIds.push(patronId);
+                }
+            }
+            
+            // Filter out patrons that are already in the bucket
+            const newPatronIds = patronIds.filter(id => !existingPatrons.has(id));
+            
+            // If all patrons are already in the bucket, return early
+            if (newPatronIds.length === 0) {
+                return {
+                    success: true,
+                    added: 0,
+                    alreadyInBucket: existingPatronIds.length,
+                    total: patronIds.length,
+                    addedIds: [],
+                    existingIds: existingPatronIds
+                };
+            }
+            
+            // Create items for patrons that aren't already in the bucket
             const items = [];
-            patronIds.forEach(patronId => {
+            newPatronIds.forEach(patronId => {
                 const item = this.idl.create('cubi');
                 item.bucket(bucketId);
                 item.target_user(patronId);
                 items.push(item);
             });
             
-            return await lastValueFrom(
+            // Add the new patrons to the bucket
+            const response = await lastValueFrom(
                 this.net.request(
                     'open-ils.actor',
                     'open-ils.actor.container.item.create',
                     this.auth.token(), 'user', items
                 )
             );
+            
+            const evt = this.evt.parse(response);
+            if (evt) {
+                console.error('Error in bucket item creation:', evt);
+                throw new Error(evt.toString());
+            }
+            
+            return {
+                success: true,
+                added: newPatronIds.length,
+                alreadyInBucket: existingPatronIds.length,
+                total: patronIds.length,
+                addedIds: newPatronIds,
+                existingIds: existingPatronIds,
+                response: response
+            };
         } catch (error) {
             console.error('Error adding patrons to bucket:', error);
             throw new Error(`Error adding patrons to bucket: ${error.message || error}`);
