@@ -133,15 +133,17 @@
     </div>
   </div>
 
-  <!-- Grid section - updated to match search component patterns -->
+  <!-- Grid section - updated to match legacy implementation -->
   <div class="row">
     <div class="col-12">
       <eg-grid #grid idlClass="au" i18n-persistKey 
-        persistKey="circ.patron_bucket_items"
+        persistKey="user.bucket.view"
         [dataSource]="dataSource" 
-        (rowSelectionChange)="gridSelectionChange($event)"
-        [sortable]="true" [filterable]="true">
+        [sortable]="true" [filterable]="true"
+        [showDeclaredFieldsOnly]="true"
+        (rowSelectionChange)="gridSelectionChange($event)">
         
+        <!-- Toolbar actions -->
         <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
             [disabled]="noSelectedRows"
             (onClick)="removeFromBucket($event)"
@@ -167,29 +169,32 @@
             (onClick)="editSelectedPatrons($event)"
             icon="edit">
         </eg-grid-toolbar-action>
-
-        <eg-grid-column path="id" [index]="true" 
+        
+        <!-- Required hidden ID field -->
+        <eg-grid-column path="id" [index]="true" [hidden]="true"
           i18n-label label="ID"></eg-grid-column>
+        
+        <!-- Match exact columns from legacy implementation -->
         <eg-grid-column name="card.barcode" [cellTemplate]="barcodeTemplate"
-          i18n-label label="Card"></eg-grid-column>
-        <eg-grid-column path="profile.name" 
-          i18n-label label="Profile"></eg-grid-column>
-        <eg-grid-column name="family_name" [cellTemplate]="familyNameTemplate"
-          [sortable]="true" [multiSortable]="true"
-          i18n-label label="Last Name"></eg-grid-column>
+          i18n-label label="Barcode"></eg-grid-column>
+          
         <eg-grid-column path="first_given_name" 
           [sortable]="true" [multiSortable]="true"
           i18n-label label="First Name"></eg-grid-column>
-        <eg-grid-column path="second_given_name" [hidden]="true"
+          
+        <eg-grid-column path="second_given_name" 
           i18n-label label="Middle Name"></eg-grid-column>
-        <eg-grid-column path="home_ou.shortname" 
+          
+        <eg-grid-column name="family_name" [cellTemplate]="familyNameTemplate"
+          [sortable]="true" [multiSortable]="true"
+          i18n-label label="Last Name"></eg-grid-column>
+          
+        <eg-grid-column path="home_ou.name" 
           i18n-label label="Home Library"></eg-grid-column>
-        <eg-grid-column path="create_date" i18n-label label="Created On"
-          datatype="timestamp" [sortable]="true"></eg-grid-column>
-        <eg-grid-column path="usrname" 
-          i18n-label label="Username"></eg-grid-column>
-        <eg-grid-column path="active" 
-          i18n-label label="Active" [hidden]="true"></eg-grid-column>
+          
+        <eg-grid-column path="money_summary.balance_owed" datatype="money"
+          [cellTemplate]="moneyTemplate"
+          i18n-label label="Balance Owed"></eg-grid-column>
       </eg-grid>
     </div>
   </div>
@@ -198,11 +203,38 @@
 <!-- Update templates to match the search component -->
 <ng-template #barcodeTemplate let-r="row">
   <a *ngIf="r.card()"
-    href="/eg2/staff/circ/patron/{{r.id()}}/checkout" target="_blank">{{r.card().barcode()}}</a>
+    href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+    target="_blank"
+    [ngbTooltip]="'Open patron ' + r.card().barcode() + ' checkout page'" i18n-ngbTooltip>
+    {{r.card().barcode()}}
+  </a>
 </ng-template>
 
 <ng-template #familyNameTemplate let-r="row">
-  <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" target="_blank">{{r.family_name()}}</a>
+  <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+    target="_blank"
+    [ngbTooltip]="'View patron: ' + r.family_name() + ', ' + r.first_given_name()" i18n-ngbTooltip>
+    {{r.family_name()}}
+  </a>
+</ng-template>
+
+<ng-template #moneyTemplate let-r="row">
+  <!-- Link to bills page when there's a positive balance owed -->
+  <a *ngIf="r.money_summary()?.balance_owed() > 0"
+     href="/eg2/staff/circ/patron/{{r.id()}}/bills" 
+     target="_blank"
+     [ngbTooltip]="'View bills for ' + r.family_name() + ' (' + (r.money_summary()?.balance_owed() | currency) + ')'" 
+     i18n-ngbTooltip
+     class="text-danger money-value">
+    {{r.money_summary()?.balance_owed() | currency}}
+  </a>
+  
+  <!-- Display without link for zero or negative balances -->
+  <span *ngIf="r.money_summary()?.balance_owed() <= 0"
+        [ngClass]="{'text-success': r.money_summary()?.balance_owed() < 0}" 
+        class="money-value">
+    {{r.money_summary()?.balance_owed() | currency}}
+  </span>
 </ng-template>
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>

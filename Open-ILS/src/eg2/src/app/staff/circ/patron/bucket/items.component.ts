@@ -242,10 +242,11 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                 return this.pcrud.search('au', 
                     {id: patronIds}, 
                     {
-                        flesh: 2,
+                        flesh: 3,
                         flesh_fields: {
-                            au: ['card', 'home_ou', 'profile'],
-                            pgt: ['name']
+                            au: ['card', 'home_ou', 'profile', 'money_summary', 'mailing_address', 'billing_address'],
+                            pgt: ['name'],
+                            aou: ['name']
                         },
                         order_by: sortObj
                     }
