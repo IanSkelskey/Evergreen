@@ -85,29 +85,41 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
         this.progressDialog.open();
 
         try {
-            const response = await firstValueFrom(this.net.request(
-                'open-ils.actor',
-                'open-ils.actor.container.item.create.batch',
-                this.auth.token(), 'user', this.bucketId, newUserIds
-            ));
-            
-            const evt = this.evt.parse(response);
-            if (evt) {
-                this.progressDialog.close();
-                this.toast.danger(evt.toString());
-                return;
-            }
+            // Use bucket service instead of direct API call
+            const response = await this.bucketService.addPatronsToPatronBucket(
+                this.bucketId, newUserIds
+            );
             
             this.progressDialog.close();
             
-            // Add the successful IDs to our tracking set
-            newUserIds.forEach(id => this.addedPatronIds.add(id));
+            // Add the successful IDs to our tracking set - include both new and existing IDs
+            if (response.addedIds) {
+                response.addedIds.forEach(id => this.addedPatronIds.add(id));
+            }
+            if (response.existingIds) {
+                response.existingIds.forEach(id => this.addedPatronIds.add(id));
+            }
             
-            this.addedPatronCount += newUserIds.length;
-            this.toast.success(
-                $localize`${newUserIds.length} patron(s) added to bucket`
-            );
-            this.bucketService.requestPatronBucketsRefresh();
+            // Show appropriate message based on what happened
+            let message: string;
+            if (response.added > 0 && response.alreadyInBucket > 0) {
+                message = $localize`${response.added} patron(s) added to bucket. ${response.alreadyInBucket} patron(s) were already in the bucket.`;
+            } else if (response.added > 0) {
+                message = $localize`${response.added} patron(s) added to bucket.`;
+            } else if (response.alreadyInBucket > 0) {
+                message = $localize`${response.alreadyInBucket} patron(s) were already in the bucket. No new patrons added.`;
+            } else {
+                message = $localize`No patrons were added to the bucket.`;
+            }
+            
+            this.addedPatronCount += response.added;
+            
+            // Show warning if some were duplicates, success otherwise
+            if (response.alreadyInBucket > 0) {
+                this.toast.warning(message);
+            } else {
+                this.toast.success(message);
+            }
             
             if (keepDialogOpen) {
                 // Reset selections but keep dialog open
