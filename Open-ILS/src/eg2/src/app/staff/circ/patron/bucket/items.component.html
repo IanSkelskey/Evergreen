@@ -202,39 +202,48 @@
 
 <!-- Update templates to match the search component -->
 <ng-template #barcodeTemplate let-r="row">
-  <a *ngIf="r.card()"
-    href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
-    target="_blank"
-    [ngbTooltip]="'Open patron ' + r.card().barcode() + ' checkout page'" i18n-ngbTooltip>
-    {{r.card().barcode()}}
-  </a>
+  <div class="text-link-cell">
+    <a *ngIf="r.card()"
+      href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+      target="_blank">
+      <span [ngbTooltip]="'Open patron ' + r.card().barcode() + ' checkout page'" i18n-ngbTooltip>
+        {{r.card().barcode()}}
+      </span>
+    </a>
+  </div>
 </ng-template>
 
 <ng-template #familyNameTemplate let-r="row">
-  <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
-    target="_blank"
-    [ngbTooltip]="'View patron: ' + r.family_name() + ', ' + r.first_given_name()" i18n-ngbTooltip>
-    {{r.family_name()}}
-  </a>
+  <div class="text-link-cell">
+    <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+      target="_blank">
+      <span [ngbTooltip]="'View patron: ' + r.family_name() + ', ' + r.first_given_name()" i18n-ngbTooltip>
+        {{r.family_name()}}
+      </span>
+    </a>
+  </div>
 </ng-template>
 
 <ng-template #moneyTemplate let-r="row">
   <!-- Link to bills page when there's a positive balance owed -->
-  <a *ngIf="r.money_summary()?.balance_owed() > 0"
-     href="/eg2/staff/circ/patron/{{r.id()}}/bills" 
-     target="_blank"
-     [ngbTooltip]="'View bills for ' + r.family_name() + ' (' + (r.money_summary()?.balance_owed() | currency) + ')'" 
-     i18n-ngbTooltip
-     class="text-danger money-value">
-    {{r.money_summary()?.balance_owed() | currency}}
-  </a>
-  
-  <!-- Display without link for zero or negative balances -->
-  <span *ngIf="r.money_summary()?.balance_owed() <= 0"
-        [ngClass]="{'text-success': r.money_summary()?.balance_owed() < 0}" 
-        class="money-value">
-    {{r.money_summary()?.balance_owed() | currency}}
-  </span>
+  <div class="text-link-cell">
+    <a *ngIf="r.money_summary()?.balance_owed() > 0"
+       href="/eg2/staff/circ/patron/{{r.id()}}/bills" 
+       target="_blank"
+       class="text-danger money-value">
+      <span [ngbTooltip]="'View bills for ' + r.family_name() + ' (' + (r.money_summary()?.balance_owed() | currency) + ')'" 
+        i18n-ngbTooltip>
+        {{r.money_summary()?.balance_owed() | currency}}
+      </span>
+    </a>
+    
+    <!-- Display without link for zero or negative balances -->
+    <span *ngIf="r.money_summary()?.balance_owed() <= 0"
+          [ngClass]="{'text-success': r.money_summary()?.balance_owed() < 0}" 
+          class="money-value">
+      {{r.money_summary()?.balance_owed() | currency}}
+    </span>
+  </div>
 </ng-template>
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
