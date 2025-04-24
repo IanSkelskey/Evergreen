@@ -75,7 +75,7 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
         
         // If no new patrons, show a message and clear selection
         if (newUserIds.length === 0) {
-            this.toast.warning($localize`All selected patrons have already been added to this bucket in this session`);
+            this.toast.warning($localize`All selected patrons have already been added to this bucket.`);
             if (keepDialogOpen) {
                 this.clearSelections();
             }
@@ -156,6 +156,18 @@ export class PatronBucketAddDialogComponent extends DialogComponent {
     // Add method to check if a patron is already added
     isPatronAlreadyAdded(patronId: number): boolean {
         return this.addedPatronIds.has(patronId);
+    }
+
+    // Override close method to check if we should refresh (patrons were added)
+    override close(value?: any) {
+        // If patrons were added during this session, always signal a change when closing
+        // so the grid refreshes, regardless of how the dialog was closed
+        if (this.addedPatronCount > 0 && value === undefined) {
+            // Pass true to indicate changes were made
+            super.close(true);
+        } else {
+            super.close(value);
+        }
     }
 
     // Override the dialog open method to reset selections and set dialog size/class
