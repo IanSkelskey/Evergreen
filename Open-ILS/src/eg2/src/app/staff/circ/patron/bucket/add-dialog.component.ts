@@ -9,7 +9,6 @@ import {PatronSearchComponent} from '@eg/staff/share/patron/search.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBucketService} from './bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
-import {firstValueFrom} from 'rxjs';
 
 @Component({
     selector: 'eg-patron-bucket-add-dialog',
