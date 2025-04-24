@@ -7,7 +7,7 @@ import {PrintService} from '@eg/share/print/print.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {StaffCatalogService} from './catalog.service';
 import {BucketDialogComponent
-} from '@eg/staff/share/buckets/bucket-dialog.component';
+} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 const MAX_FROM_SEARCH_RESULTS = 1000;
