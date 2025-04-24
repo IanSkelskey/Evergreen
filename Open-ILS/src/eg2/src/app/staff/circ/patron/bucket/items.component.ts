@@ -19,7 +19,7 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
@@ -43,10 +43,10 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     @ViewChild('grid', { static: true }) grid: GridComponent;
     @ViewChild('confirmDialog') confirmDialog: ConfirmDialogComponent;
     @ViewChild('alertDialog') alertDialog: AlertDialogComponent;
-    @ViewChild('addToBucketDialog') addToBucketDialog: BucketDialogComponent;
     @ViewChild('progressDialog') progressDialog: ProgressDialogComponent;
     @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
     @ViewChild('uploadBarcodeDialog') private uploadBarcodeDialog: PatronBarcodeUploadComponent;
+    @ViewChild('itemTransferDialog') private itemTransferDialog: BucketItemTransferDialogComponent;
     
     private destroy$ = new Subject<void>();
     isLoading = true;
@@ -360,45 +360,74 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         
         console.debug('Adding users to bucket with IDs:', userIds);
         
-        this.addToBucketDialog.bucketClass = 'user';
-        this.addToBucketDialog.itemIds = userIds;
-        
         try {
-            const dialogObservable = this.addToBucketDialog.open({
-                size: 'lg'
-            }).pipe(
-                catchError((error: unknown) => {
-                    console.error('Error in dialog observable:', error);
-                    return EMPTY;
-                })
-            );
-            
-            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
-            if (results) {
-                console.debug('Dialog returned success:', results);
+            // Use the item transfer dialog component directly
+            if (!this.itemTransferDialog) {
+                // If the ViewChild isn't available, use NgbModal to create it
+                const modalRef = this.modal.open(BucketItemTransferDialogComponent, {
+                    size: 'lg'
+                });
                 
-                if (remove) {
-                    console.debug('Attempting to remove patrons from source bucket...');
+                // Configure the dialog instance
+                const dialogInstance = modalRef.componentInstance as BucketItemTransferDialogComponent;
+                dialogInstance.bucketClass = 'user';
+                dialogInstance.bucketType = 'staff_client';
+                dialogInstance.itemIds = userIds;
+                dialogInstance.dialogTitle = patrons.length === 1 ?
+                    $localize`Add Patron to Bucket` :
+                    $localize`Add ${patrons.length} Patrons to Bucket`;
+                dialogInstance.dialogIcon = 'person';
+                
+                // Wait for dialog result
+                const result = await modalRef.result;
+                
+                if (result && result.success && remove) {
                     const removeResult = await this.removeFromBucket(patrons);
-                    console.debug('Remove result:', removeResult);
-                    
                     if (removeResult) {
-                        this.toast.success(
-                            $localize`Patrons successfully moved to another bucket`
-                        );
+                        this.toast.success($localize`Patrons successfully moved to another bucket`);
                     } else {
                         this.toast.warning(
                             $localize`Patrons were copied to the destination bucket but could not be removed from the source bucket`
                         );
                     }
-                } else {
+                } else if (result && result.success) {
                     this.toast.success($localize`Patrons copied to selected bucket`);
                 }
-                this.grid.reload();
+            } else {
+                // Configure the existing dialog instance
+                this.itemTransferDialog.bucketClass = 'user';
+                this.itemTransferDialog.bucketType = 'staff_client';
+                this.itemTransferDialog.itemIds = userIds;
+                this.itemTransferDialog.dialogTitle = patrons.length === 1 ?
+                    $localize`Add Patron to Bucket` :
+                    $localize`Add ${patrons.length} Patrons to Bucket`;
+                this.itemTransferDialog.dialogIcon = 'person';
+                
+                // Open the dialog and wait for the result
+                const result = await lastValueFrom(this.itemTransferDialog.open({size: 'lg'}));
+                
+                if (result && result.success && remove) {
+                    const removeResult = await this.removeFromBucket(patrons);
+                    if (removeResult) {
+                        this.toast.success($localize`Patrons successfully moved to another bucket`);
+                    } else {
+                        this.toast.warning(
+                            $localize`Patrons were copied to the destination bucket but could not be removed from the source bucket`
+                        );
+                    }
+                } else if (result && result.success) {
+                    this.toast.success($localize`Patrons copied to selected bucket`);
+                }
             }
+            
+            // Reload the grid to reflect any changes
+            this.grid.reload();
         } catch (error) {
-            console.error('Error in add to bucket dialog:', error);
-            this.toast.danger($localize`Error processing bucket operation: ${error.message || error}`);
+            // This will catch dialog dismissals too, which isn't really an error
+            if (error !== 'dismiss') {
+                console.error('Error in add to bucket dialog:', error);
+                this.toast.danger($localize`Error processing bucket operation: ${error.message || error}`);
+            }
         }
     }
 
@@ -476,7 +505,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
         this.alertDialog.open();
     }
 
-    viewChangesets() {
+    viewChangeset() {
         this.alertDialog.dialogTitle = $localize`Not Implemented`;
         this.alertDialog.dialogBody = $localize`View Changesets functionality is not implemented yet.`;
         this.alertDialog.open();

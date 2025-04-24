@@ -1,5 +1,4 @@
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {AdminPageModule} from '@eg/staff/share/admin-page/admin-page.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
@@ -15,6 +14,9 @@ import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record
 import {RecordBucketItemComponent} from '@eg/staff/cat/bucket/record-bucket-item.component';
 import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
+import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
+import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
 
 @NgModule({
     declarations: [
@@ -25,7 +27,8 @@ import {HoldsModule} from '@eg/staff/share/holds/holds.module';
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
-        RecordBucketItemComponent
+        RecordBucketItemComponent,
+        BucketDialogComponent
     ],
     imports: [
         StaffCommonModule,
@@ -34,7 +37,8 @@ import {HoldsModule} from '@eg/staff/share/holds/holds.module';
         HoldsModule,
         FmRecordEditorModule,
         TreeModule,
-        RecordBucketRoutingModule
+        RecordBucketRoutingModule,
+        BucketDialogsModule
     ],
     exports: [
         BucketTransferDialogComponent,
@@ -44,9 +48,11 @@ import {HoldsModule} from '@eg/staff/share/holds/holds.module';
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
-        RecordBucketItemComponent
+        RecordBucketItemComponent,
+        BucketDialogComponent
     ],
     providers: [
+        BucketService
     ]
 })
 
