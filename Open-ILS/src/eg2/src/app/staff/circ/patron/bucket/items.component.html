@@ -133,15 +133,14 @@
     </div>
   </div>
 
-  <!-- Grid section - unchanged -->
+  <!-- Grid section - updated to match search component patterns -->
   <div class="row">
     <div class="col-12">
-      <eg-grid #grid idlClass="cubi" i18n-persistKey 
+      <eg-grid #grid idlClass="au" i18n-persistKey 
         persistKey="circ.patron_bucket_items"
-        [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+        [dataSource]="dataSource" 
         (rowSelectionChange)="gridSelectionChange($event)"
-        [sortable]="true" [filterable]="true"
-        ignoreFields="bucket">
+        [sortable]="true" [filterable]="true">
         
         <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
             [disabled]="noSelectedRows"
@@ -164,35 +163,46 @@
         </eg-grid-toolbar-action>
 
         <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
-            [disabled]="noSelectedRows"
+            [disabled]="noSelectedRows || !hasUpdatePerm"
             (onClick)="editSelectedPatrons($event)"
             icon="edit">
         </eg-grid-toolbar-action>
 
-        <eg-grid-column path="id" [index]="true" i18n-label label="ID" />
-        <eg-grid-column name="barcode" path="target_user.card.barcode" i18n-label label="Barcode" [cellTemplate]="barcodeTemplate" />
-        <eg-grid-column name="family_name" path="target_user.family_name" />
-        <eg-grid-column name="first_given_name" path="target_user.first_given_name" />
-        <eg-grid-column name="second_given_name" path="target_user.second_given_name" [hidden]="true" />
-        <eg-grid-column name="home_ou.name" path="target_user.home_ou.name" i18n-label label="Home Library" />
-        <eg-grid-column name="create_time" path="create_time" i18n-label label="Create Time" datatype="timestamp" />
-        <eg-grid-column name="target_user" path="target_user" i18n-label label="Username" />
-        <eg-grid-column name="pos" path="pos" i18n-label label="Position" [hidden]="true" />
+        <eg-grid-column path="id" [index]="true" 
+          i18n-label label="ID"></eg-grid-column>
+        <eg-grid-column name="card.barcode" [cellTemplate]="barcodeTemplate"
+          i18n-label label="Card"></eg-grid-column>
+        <eg-grid-column path="profile.name" 
+          i18n-label label="Profile"></eg-grid-column>
+        <eg-grid-column name="family_name" [cellTemplate]="familyNameTemplate"
+          [sortable]="true" [multiSortable]="true"
+          i18n-label label="Last Name"></eg-grid-column>
+        <eg-grid-column path="first_given_name" 
+          [sortable]="true" [multiSortable]="true"
+          i18n-label label="First Name"></eg-grid-column>
+        <eg-grid-column path="second_given_name" [hidden]="true"
+          i18n-label label="Middle Name"></eg-grid-column>
+        <eg-grid-column path="home_ou.shortname" 
+          i18n-label label="Home Library"></eg-grid-column>
+        <eg-grid-column path="create_date" i18n-label label="Created On"
+          datatype="timestamp" [sortable]="true"></eg-grid-column>
+        <eg-grid-column path="usrname" 
+          i18n-label label="Username"></eg-grid-column>
+        <eg-grid-column path="active" 
+          i18n-label label="Active" [hidden]="true"></eg-grid-column>
       </eg-grid>
     </div>
   </div>
 </div>
 
-<ng-template #barcodeTemplate let-row="row">
-  <a *ngIf="row.target_user?.card()?.barcode()" 
-     href="/eg2/staff/circ/patron/{{row.target_user.id()}}/edit" 
-     target="_blank"
-     title="Edit Patron ({{row.target_user.card().barcode()}})">
-    {{row.target_user.card().barcode()}}
-  </a>
-  <span *ngIf="!row.target_user?.card()?.barcode()">
-    <em>No barcode</em>
-  </span>
+<!-- Update templates to match the search component -->
+<ng-template #barcodeTemplate let-r="row">
+  <a *ngIf="r.card()"
+    href="/eg2/staff/circ/patron/{{r.id()}}/checkout" target="_blank">{{r.card().barcode()}}</a>
+</ng-template>
+
+<ng-template #familyNameTemplate let-r="row">
+  <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" target="_blank">{{r.family_name()}}</a>
 </ng-template>
 
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
