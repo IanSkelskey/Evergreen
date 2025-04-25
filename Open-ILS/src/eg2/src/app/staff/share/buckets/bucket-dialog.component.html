@@ -1,0 +1,56 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" *ngIf="!editMode">
+      <ng-container i18n>Create New {{getBucketClassLabel()}} Bucket</ng-container>
+    </h4>
+    <h4 class="modal-title" *ngIf="editMode">
+      <ng-container i18n>Edit {{getBucketClassLabel()}} Bucket</ng-container>
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+  </div>
+
+  <div class="modal-body">
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      <span class="material-icons align-middle me-1">error</span>
+      {{errorMessage}}
+    </div>
+
+    <!-- Info message for create mode -->
+    <div class="alert alert-info" *ngIf="!editMode">
+      <span class="material-icons align-middle me-1">info</span>
+      <span>
+        <ng-container i18n>{{getBucketClassLabel()}} buckets allow you to group items together for batch operations.</ng-container>
+      </span>
+    </div>
+
+    <!-- Use the shared bucket form component -->
+    <eg-bucket-form #bucketForm
+      [bucketClass]="bucketClass"
+      [editMode]="editMode"
+      [bucketData]="bucketData"
+      [showPublicOption]="showPublicOption"
+      [bucketTypes]="bucketTypes"
+      [disabled]="pending"
+      [hideFormActions]="true"
+      (formSubmit)="onFormSubmit($event)"
+      (formCancel)="onFormCancel()"
+      (formValidityChange)="onFormValidityChange($event)">
+    </eg-bucket-form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" 
+            (click)="close()" 
+            [disabled]="pending" 
+            i18n>Cancel</button>
+    <button type="button" class="btn btn-success" 
+            (click)="createOrUpdateBucket()"
+            [disabled]="!formValid || pending">
+      <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      <span *ngIf="!editMode" i18n>Create Bucket</span>
+      <span *ngIf="editMode" i18n>Save Changes</span>
+    </button>
+  </div>
+</ng-template>

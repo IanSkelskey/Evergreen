@@ -32,8 +32,8 @@ import {ReplaceBarcodeDialogComponent
 } from '@eg/staff/share/holdings/replace-barcode-dialog.component';
 import {DeleteHoldingDialogComponent
 } from '@eg/staff/share/holdings/delete-volcopy-dialog.component';
-import {BucketDialogComponent
-} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketItemTransferDialogComponent
+} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {ConjoinedItemsDialogComponent
 } from '@eg/staff/share/holdings/conjoined-items-dialog.component';
 import {MakeBookableDialogComponent
@@ -120,7 +120,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
     @ViewChild('deleteHolding', { static: true })
     private deleteHolding: DeleteHoldingDialogComponent;
     @ViewChild('bucketDialog', { static: true })
-    private bucketDialog: BucketDialogComponent;
+    private bucketDialog: BucketItemTransferDialogComponent;
     @ViewChild('conjoinedDialog', { static: true })
     private conjoinedDialog: ConjoinedItemsDialogComponent;
     @ViewChild('makeBookableDialog', { static: true })
@@ -1087,6 +1087,8 @@ export class HoldingsMaintenanceComponent implements OnInit {
         if (copyIds.length > 0) {
             this.bucketDialog.bucketClass = 'copy';
             this.bucketDialog.itemIds = copyIds;
+            this.bucketDialog.dialogTitle = 'Add Items to Bucket';
+            this.bucketDialog.dialogIcon = 'inventory_2';
             this.bucketDialog.open({size: 'lg'});
         }
     }

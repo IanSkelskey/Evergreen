@@ -15,7 +15,7 @@ import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
 import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
@@ -678,23 +678,30 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     };
 
     openNewBucketDialog = async (rows: any[]) => {
-        this.newBucketDialog.bucketClass = 'biblio';
-
         try {
-            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
-                catchError((error: unknown) => {
-                    console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
-                    return EMPTY;
-                }),
-                takeUntil(this.destroy$),
-            );
+            if (this.newBucketDialog) {
+                this.newBucketDialog.bucketClass = 'biblio';
+                this.newBucketDialog.editMode = false;
+                this.newBucketDialog.bucketId = null;
+                this.newBucketDialog.bucketData = null;
+                this.newBucketDialog.showPublicOption = true;
+                
+                const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                    catchError((error: unknown) => {
+                        console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                        return EMPTY;
+                    }),
+                    takeUntil(this.destroy$),
+                );
 
-            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
-            console.debug('New bucket results:', results);
+                const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+                console.debug('New bucket results:', results);
 
-            this.grid.reload();
-            this.updateCounts();
-
+                if (results && results.success) {
+                    this.grid.reload();
+                    this.updateCounts();
+                }
+            }
         } catch (error) {
             console.error('Error in new bucket dialog:', error);
         }
@@ -741,12 +748,47 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     openEditBucketDialog = async (rows: any[]) => {
         console.debug('edit bucket',rows);
         if (!rows.length) { return; }
-        const bucket = rows[0];
-        this.editDialog.mode = 'update';
-        this.editDialog.recordId = bucket.id;
-        this.editDialog.open()
-            // eslint-disable-next-line rxjs/no-nested-subscribe
-            .subscribe(ok => this.grid.reload());
+        
+        try {
+            const bucket = rows[0];
+            
+            if (!this.newBucketDialog) {
+                // Fall back to the fm-editor
+                this.editDialog.mode = 'update';
+                this.editDialog.recordId = bucket.id;
+                this.editDialog.open()
+                    .subscribe(ok => this.grid.reload());
+                return;
+            }
+            
+            this.newBucketDialog.bucketClass = 'biblio';
+            this.newBucketDialog.editMode = true;
+            this.newBucketDialog.bucketId = bucket.id;
+            this.newBucketDialog.bucketData = {
+                id: bucket.id,
+                name: bucket.name,
+                description: bucket.description,
+                btype: bucket.btype,
+                owner: bucket.owner,
+                pub: bucket.pub === 't' || bucket.pub === true
+            };
+            this.newBucketDialog.showPublicOption = true;
+            
+            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                catchError((error: unknown) => {
+                    console.debug('Error in dialog observable:', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
+
+            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+            if (results && results.success) {
+                this.grid.reload();
+            }
+        } catch (error) {
+            console.error('Error in edit bucket dialog:', error);
+        }
     };
 
     async uploadRecords(rows: any[]): Promise<void> {

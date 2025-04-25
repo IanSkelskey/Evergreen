@@ -11,8 +11,7 @@
     </h1>
 </ng-template>
 
-<eg-bucket-dialog #addToBucketDialog>
-</eg-bucket-dialog>
+<eg-bucket-item-transfer-dialog #addToBucketDialog bucketClass="biblio"></eg-bucket-item-transfer-dialog>
 
 <ng-template #titleTemplate let-r="row">
   <ng-container *ngIf="r['target_biblio_record_entry.simple_record.title']">

@@ -14,7 +14,6 @@ import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record
 import {RecordBucketItemComponent} from '@eg/staff/cat/bucket/record-bucket-item.component';
 import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 
@@ -28,7 +27,6 @@ import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
         RecordBucketItemComponent,
-        BucketDialogComponent
     ],
     imports: [
         StaffCommonModule,
@@ -49,7 +47,6 @@ import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
         RecordBucketItemComponent,
-        BucketDialogComponent
     ],
     providers: [
         RecordBucketService

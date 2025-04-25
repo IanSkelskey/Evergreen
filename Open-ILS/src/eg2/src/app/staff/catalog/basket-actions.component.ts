@@ -6,8 +6,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {StaffCatalogService} from './catalog.service';
-import {BucketDialogComponent
-} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 const MAX_FROM_SEARCH_RESULTS = 1000;
@@ -21,7 +20,7 @@ export class BasketActionsComponent {
     basketAction: string;
 
     @ViewChild('addBasketToBucketDialog', { static: true })
-        addToBucketDialog: BucketDialogComponent;
+        addToBucketDialog: BucketItemTransferDialogComponent;
 
     @ViewChild('addAllProgress', {static: true})
         addAllProgress: ProgressDialogComponent;

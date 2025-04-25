@@ -11,7 +11,7 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {Pager} from '@eg/share/util/pager';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {PatronMergeDialogComponent} from './merge-dialog.component';
 import {FormatService} from '@eg/core/format.service';
 import {LocaleService} from '@eg/core/locale.service';
@@ -58,7 +58,7 @@ export interface PatronSearch {
 export class PatronSearchComponent implements OnInit, AfterViewInit {
 
     @ViewChild('searchGrid') searchGrid: GridComponent;
-    @ViewChild('addToBucket') addToBucket: BucketDialogComponent;
+    @ViewChild('addToBucket') addToBucket: BucketItemTransferDialogComponent;
     @ViewChild('mergeDialog') mergeDialog: PatronMergeDialogComponent;
 
     startWithFired = false;

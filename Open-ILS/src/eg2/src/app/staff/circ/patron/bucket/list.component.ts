@@ -14,7 +14,7 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
@@ -22,7 +22,6 @@ import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
-import {PatronBucketEditDialogComponent} from './edit-dialog.component';
 
 @Component({
     selector: 'eg-patron-bucket-list',
@@ -42,7 +41,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     @ViewChild('grid', { static: false }) grid: GridComponent;
     @ViewChild('newBucketDialog') private newBucketDialog: BucketDialogComponent;
-    @ViewChild('editBucketDialog') private editBucketDialog: PatronBucketEditDialogComponent;
+    @ViewChild('editBucketDialog') private editBucketDialog: BucketDialogComponent;
     @ViewChild('editDialog') private editDialog: FmRecordEditorComponent;
     @ViewChild('deleteDialog') private deleteDialog: ConfirmDialogComponent;
     @ViewChild('deleteFail') private deleteFail: AlertDialogComponent;
@@ -266,8 +265,14 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
 
     openNewBucketDialog = async () => {
         try {
-            // Use our enhanced dialog if available
+            // Use our shared bucket dialog component
             if (this.editBucketDialog) {
+                this.editBucketDialog.bucketClass = 'user';
+                this.editBucketDialog.editMode = false;
+                this.editBucketDialog.bucketId = null;
+                this.editBucketDialog.bucketData = null;
+                this.editBucketDialog.showPublicOption = true;
+                
                 try {
                     const results = await lastValueFrom(this.editBucketDialog.open({size: 'lg'}));
                     // Only handle results if there's actual data
@@ -279,11 +284,9 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                     console.debug('Bucket creation canceled');
                 }
             } 
-            // Fallback to the old dialog if necessary
+            // Fallback to the original method using newBucketDialog if available
             else if (this.newBucketDialog) {
                 this.newBucketDialog.bucketClass = 'user';
-                this.newBucketDialog.bucketType = 'staff_client';
-                this.newBucketDialog.itemIds = [];
                 try {
                     const results = await lastValueFrom(this.newBucketDialog.open());
                     if (results) {
@@ -294,12 +297,14 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                     console.debug('Bucket creation canceled');
                 }
             } 
-            // Create the new dialog programmatically as fallback
+            // Create the dialog programmatically as fallback
             else {
-                const modalRef = this.modal.open(PatronBucketEditDialogComponent, {
+                const modalRef = this.modal.open(BucketDialogComponent, {
                     size: 'lg'
                 });
-                const bucketDialog = modalRef.componentInstance as PatronBucketEditDialogComponent;
+                const bucketDialog = modalRef.componentInstance as BucketDialogComponent;
+                bucketDialog.bucketClass = 'user';
+                bucketDialog.editMode = false;
                 
                 try {
                     const results = await modalRef.result;
@@ -425,15 +430,17 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             
             console.debug('Final bucket data for edit dialog:', bucketData);
             
-            // Use the create dialog component for editing
+            // Use the shared bucket dialog component for editing
             if (this.editBucketDialog) {
+                this.editBucketDialog.bucketClass = 'user';
                 this.editBucketDialog.editMode = true;
                 this.editBucketDialog.bucketId = bucketId;
                 this.editBucketDialog.bucketData = bucketData;
+                this.editBucketDialog.showPublicOption = true;
                 
                 try {
                     const result = await lastValueFrom(this.editBucketDialog.open({size: 'lg'}));
-                    if (result && result.success) {
+                    if (result) {
                         this.bucketService.requestPatronBucketsRefresh();
                         this.toast.success($localize`Bucket successfully updated`);
                     }

@@ -15,7 +15,6 @@ import {Pager} from '@eg/share/util/pager';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
 // Add import for the new item transfer dialog
 import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
@@ -46,7 +45,7 @@ export class RecordBucketItemComponent implements OnInit {
     @ViewChild('confirmDialog') confirmDialog: ConfirmDialogComponent;
     @ViewChild('alertDialog') alertDialog: AlertDialogComponent;
     @ViewChild('promptDialog') promptDialog: PromptDialogComponent;
-    @ViewChild('addToBucketDialog') addToBucketDialog: BucketDialogComponent;
+    @ViewChild('addToBucketDialog') addToBucketDialog: BucketItemTransferDialogComponent;
     // Add ViewChild for the new dialog
     @ViewChild('itemTransferDialog') itemTransferDialog: BucketItemTransferDialogComponent;
     @ViewChild('holdTransferDialog') holdTransferDialog: HoldTransferViaBibsDialogComponent;
@@ -216,19 +215,21 @@ export class RecordBucketItemComponent implements OnInit {
 
     openAddToBucketDialog = async (rows: any[]): Promise<boolean | null> => {
         if (!rows.length) { return false; }
-        // Use the new item transfer dialog for item transfers
-        this.itemTransferDialog.bucketClass = 'biblio';
-        this.itemTransferDialog.itemIds = rows.map(r => r['target_biblio_record_entry.id']);
+        
+        this.addToBucketDialog.bucketClass = 'biblio';
+        this.addToBucketDialog.itemIds = rows.map(r => r['target_biblio_record_entry.id']);
+        
         try {
-            const dialogObservable = this.itemTransferDialog.open({size: 'lg'}).pipe(
+            const dialogObservable = this.addToBucketDialog.open({size: 'lg'}).pipe(
                 catchError((error: unknown) => {
                     console.debug('Dialog dismissed or closed without selection');
                     return EMPTY;
                 })
             );
+            
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             console.debug('Add to bucket results:', results);
-            this.grid.reload(); // only needed if adding to the same bucket we're in :-)
+            this.grid.reload();
             
             // Return null to indicate user dismissal, false for error, true for success
             return results && results.success ? true : null;

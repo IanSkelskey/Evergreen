@@ -10,12 +10,14 @@ import { BucketIdSelectorComponent } from './bucket-id-selector.component';
 import { StringModule } from '@eg/share/string/string.module';
 import { EgCommonModule } from '@eg/common.module';
 import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
+import { BucketDialogComponent } from './bucket-dialog.component';
 
 @NgModule({
     declarations: [
         // Only declare components that belong specifically to this module
         BucketItemTransferDialogComponent,
-        BucketIdSelectorComponent
+        BucketIdSelectorComponent,
+        BucketDialogComponent
     ],
     imports: [
         // Standard Angular modules
@@ -33,7 +35,8 @@ import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
     exports: [
         BucketItemTransferDialogComponent,
         BucketIdSelectorComponent,
-        BucketFormSharedModule
+        BucketFormSharedModule,
+        BucketDialogComponent
     ]
 })
 export class BucketDialogsModule {}

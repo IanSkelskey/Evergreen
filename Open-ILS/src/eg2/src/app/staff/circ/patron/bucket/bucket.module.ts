@@ -5,7 +5,6 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {PatronBucketComponent} from './list.component';
 import {PatronBucketItemComponent} from './items.component';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
-import {PatronBucketEditDialogComponent} from './edit-dialog.component';
 import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
@@ -28,7 +27,6 @@ import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module
         PatronBucketComponent,
         PatronBucketItemComponent,
         PatronBucketAddDialogComponent,
-        PatronBucketEditDialogComponent,
         PatronBucketUnauthorizedComponent,
         PatronBucketQuickAddComponent,
         PatronBarcodeUploadComponent
