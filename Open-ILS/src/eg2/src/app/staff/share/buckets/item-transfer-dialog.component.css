@@ -11,6 +11,7 @@
   max-width: 1000px;
   margin: 1.75rem auto;
   width: calc(100% - 2rem);
+  min-width: 550px;
 }
 
 :host ::ng-deep .modal-header {
@@ -123,6 +124,27 @@ textarea.form-control:focus,
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+.btn-success {
+  background-color: #198754;
+  border-color: #198754;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  border-color: #146c43;
+}
+
+.btn-success:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+.btn-success:disabled {
+  background-color: #198754;
+  border-color: #198754;
+  opacity: 0.65;
+}
+
 .btn-primary {
   background-color: #0d6efd;
   border-color: #0d6efd;
@@ -203,11 +225,11 @@ legend.h6 {
   padding: 0;
 }
 
-/* Responsiveness */
-@media (max-width: 991.98px) {
+/* Enhanced responsiveness */
+@media (max-width: 1199.98px) {
   .action-button {
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
   }
   
   :host ::ng-deep .modal-dialog.modal-xl {
@@ -215,7 +237,7 @@ legend.h6 {
   }
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 899.98px) {
   :host ::ng-deep .nav-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -233,6 +255,34 @@ legend.h6 {
   
   .form-label.fw-bold {
     margin-bottom: 0.25rem;
+    display: block;
+  }
+  
+  .row.mt-4.form-group {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 699.98px) {
+  .d-flex.gap-2 {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-button {
+    margin: 0.5rem 0;
+    width: 100%;
+  }
+  
+  .modal-footer .d-flex {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+    margin: 0.25rem 0;
   }
 }
 
@@ -288,6 +338,20 @@ legend.h6 {
   .btn-outline-secondary:hover {
     background-color: #5a6268;
     color: #f8f9fa;
+  }
+  
+  .btn-success {
+    background-color: #157347;
+    border-color: #146c43;
+  }
+  
+  .btn-success:hover {
+    background-color: #126c42;
+    border-color: #10633c;
+  }
+  
+  .btn-success:focus {
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.5);
   }
   
   :host ::ng-deep .nav-tabs .nav-link:hover {

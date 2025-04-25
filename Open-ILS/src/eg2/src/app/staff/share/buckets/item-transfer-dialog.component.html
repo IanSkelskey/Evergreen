@@ -32,18 +32,18 @@
         <a role="tab" ngbNavLink i18n>Existing bucket</a>
         <ng-template ngbNavContent>
           <div class="row mt-4 form-group">
-            <div class="col-lg-3 col-md-4">
+            <div class="col-lg-3 col-md-4 col-sm-12 mb-2 mb-md-0">
               <label class="form-label fw-bold" for="existing-bucket-name" i18n>Select an existing bucket</label>
             </div>
-            <div class="col-lg-5 col-md-8">
+            <div class="col-lg-5 col-md-8 col-sm-12 mb-3 mb-lg-0">
               <eg-combobox [entries]="formatBucketEntries()"
                 (onChange)="bucketChanged($event)"
                 domId="existing-bucket-name"
                 placeholder="Search or select bucket">
               </eg-combobox>
             </div>
-            <div class="col-lg-4 col-md-12 mt-md-3 mt-lg-0">
-              <button type="button" class="btn btn-primary action-button" (click)="addToSelected()" i18n
+            <div class="col-lg-4 col-md-12 col-sm-12">
+              <button type="button" class="btn btn-success action-button" (click)="addToSelected()" i18n
                 [disabled]="!selectedBucket || pendingOperation">
                 <span class="material-icons" aria-hidden="true">add_circle</span>
                 <span *ngIf="!pendingOperation">Add to Selected Bucket</span>
@@ -80,18 +80,18 @@
         <a role="tab" ngbNavLink i18n>Shared bucket</a>
         <ng-template ngbNavContent>
           <div class="row mt-4 form-group">
-            <div class="col-lg-3 col-md-4">
+            <div class="col-lg-3 col-md-4 col-sm-12 mb-2 mb-md-0">
               <label class="form-label fw-bold" i18n>Enter Shared Bucket ID</label>
             </div>
-            <div class="col-lg-9 col-md-8">
-              <div class="d-flex gap-2">
+            <div class="col-lg-9 col-md-8 col-sm-12">
+              <div class="d-flex gap-2 flex-wrap">
                 <div class="flex-grow-1">
                   <eg-bucket-id-selector
                     [(bucketId)]="sharedBucketId"
                     [placeholder]="'Enter ID number'"
                     [buttonLabel]="'Add To Shared Bucket'"
                     [buttonIcon]="'share'"
-                    [buttonClass]="'btn-primary action-button'"
+                    [buttonClass]="'btn-success action-button'"
                     [processing]="pendingOperation"
                     [disabled]="pendingOperation"
                     [helpText]="'Enter the numeric ID of the shared bucket you want to use'"

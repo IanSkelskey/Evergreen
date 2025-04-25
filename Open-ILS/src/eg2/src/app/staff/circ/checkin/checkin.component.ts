@@ -87,7 +87,7 @@ export class CheckinComponent implements OnInit, AfterViewInit {
     @ViewChild('barcodeSelect') private barcodeSelect: BarcodeSelectComponent;
     @ViewChild('markDamagedDialog') private markDamagedDialog: MarkDamagedDialogComponent;
     @ViewChild('copyAlertsDialog') private copyAlertsDialog: CopyAlertsDialogComponent;
-    @ViewChild('bucketDialog') private bucketDialog: BucketItemTransferDialogComponent;
+    @ViewChild('bucketDialog', { static: false }) private bucketDialog: BucketItemTransferDialogComponent;
     @ViewChild('itemNeverCircedStr') private itemNeverCircedStr: StringComponent;
     @ViewChild('backdateDialog') private backdateDialog: BackdateDialogComponent;
     @ViewChild('cancelTransitDialog') private cancelTransitDialog: CancelTransitDialogComponent;

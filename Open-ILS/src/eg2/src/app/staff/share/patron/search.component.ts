@@ -56,9 +56,10 @@ export interface PatronSearch {
 })
 
 export class PatronSearchComponent implements OnInit, AfterViewInit {
-
     @ViewChild('searchGrid') searchGrid: GridComponent;
-    @ViewChild('addToBucket') addToBucket: BucketItemTransferDialogComponent;
+    @ViewChild('addToBucket', { static: false }) 
+    addToBucket: BucketItemTransferDialogComponent;
+    
     @ViewChild('mergeDialog') mergeDialog: PatronMergeDialogComponent;
 
     startWithFired = false;
@@ -357,7 +358,15 @@ export class PatronSearchComponent implements OnInit, AfterViewInit {
     }
 
     addSelectedToBucket(rows: IdlObject[]) {
+        if (!this.addToBucket) {
+            console.error('Bucket dialog component not initialized');
+            return;
+        }
         this.addToBucket.itemIds = rows.map(r => r.id());
+        this.addToBucket.bucketClass = 'user';
+        this.addToBucket.bucketType = 'staff_client';
+        this.addToBucket.dialogTitle = 'Add Patrons to Bucket';
+        this.addToBucket.dialogIcon = 'people';
         this.addToBucket.open().subscribe();
     }
 
