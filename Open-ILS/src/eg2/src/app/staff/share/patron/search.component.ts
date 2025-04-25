@@ -367,7 +367,7 @@ export class PatronSearchComponent implements OnInit, AfterViewInit {
         this.addToBucket.bucketType = 'staff_client';
         this.addToBucket.dialogTitle = 'Add Patrons to Bucket';
         this.addToBucket.dialogIcon = 'people';
-        this.addToBucket.open().subscribe();
+        this.addToBucket.open({size: 'lg'}).subscribe();
     }
 
     mergePatrons(rows: IdlObject[]) {
