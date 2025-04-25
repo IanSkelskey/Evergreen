@@ -81,25 +81,24 @@
         <ng-template ngbNavContent>
           <div class="row mt-4 form-group">
             <div class="col-lg-3 col-md-4">
-              <label for="sharedBucketId" class="form-label fw-bold" i18n>Enter Shared Bucket ID</label>
+              <label class="form-label fw-bold" i18n>Enter Shared Bucket ID</label>
             </div>
-            <div class="col-lg-5 col-md-8">
-              <input type="number" class="form-control" id="sharedBucketId"
-                placeholder="Enter ID number" 
-                aria-describedby="sharedBucketHelp"
-                [(ngModel)]="sharedBucketId"/>
-              <small id="sharedBucketHelp" class="form-text text-muted mt-1" i18n>Enter the numeric ID of the shared bucket you want to use</small>
-            </div>
-            <div class="col-lg-4 col-md-12 mt-md-3 mt-lg-0">
-              <button type="button" class="btn btn-primary action-button" (click)="addToShared()" i18n
-                [disabled]="!sharedBucketId || pendingOperation">
-                <span class="material-icons" aria-hidden="true">share</span>
-                <span *ngIf="!pendingOperation">Add To Shared Bucket</span>
-                <span *ngIf="pendingOperation" class="loading-text">
-                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                  Adding...
-                </span>
-              </button>
+            <div class="col-lg-9 col-md-8">
+              <div class="d-flex gap-2">
+                <div class="flex-grow-1">
+                  <eg-bucket-id-selector
+                    [(bucketId)]="sharedBucketId"
+                    [placeholder]="'Enter ID number'"
+                    [buttonLabel]="'Add To Shared Bucket'"
+                    [buttonIcon]="'share'"
+                    [buttonClass]="'btn-primary action-button'"
+                    [processing]="pendingOperation"
+                    [disabled]="pendingOperation"
+                    [helpText]="'Enter the numeric ID of the shared bucket you want to use'"
+                    (idSubmit)="addToShared()">
+                  </eg-bucket-id-selector>
+                </div>
+              </div>
             </div>
           </div>
         </ng-template>
