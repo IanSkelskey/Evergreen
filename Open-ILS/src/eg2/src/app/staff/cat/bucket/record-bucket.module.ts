@@ -16,7 +16,7 @@ import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
 import {BucketDialogComponent} from '@eg/staff/cat/bucket/bucket-dialog.component';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
-import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 
 @NgModule({
     declarations: [
@@ -52,7 +52,7 @@ import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
         BucketDialogComponent
     ],
     providers: [
-        BucketService
+        RecordBucketService
     ]
 })
 

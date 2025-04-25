@@ -4,7 +4,7 @@ import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {CatalogSearchContext, FacetFilter} from '@eg/share/catalog/search-context';
 import {StaffCatalogService} from '../catalog.service';
-import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 import {AuthService} from '@eg/core/auth.service';
 import {OrgService} from '@eg/core/org.service';
 import {ToastService} from '@eg/share/toast/toast.service';
@@ -48,7 +48,7 @@ export class ResultFacetsComponent implements OnInit {
         private cat: CatalogService,
         private catUrl: CatalogUrlService,
         private staffCat: StaffCatalogService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
         private auth: AuthService,
         private org: OrgService,
         private toast: ToastService,

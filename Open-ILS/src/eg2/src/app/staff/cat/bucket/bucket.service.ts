@@ -8,7 +8,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService,IdlObject} from '@eg/core/idl.service';
 
 @Injectable()
-export class BucketService {
+export class RecordBucketService {
     maxRecentRecordBuckets = 10;
     private favoriteRecordBucketFlags: {[bucketId: number]: IdlObject} = {};
 

@@ -8,7 +8,7 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {BucketService} from '@eg/staff/cat/bucket/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
@@ -91,7 +91,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private net: NetService,
         private evt: EventService,
         private flatData: GridFlatDataService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
     ) {}
 
     async ngOnInit() {
