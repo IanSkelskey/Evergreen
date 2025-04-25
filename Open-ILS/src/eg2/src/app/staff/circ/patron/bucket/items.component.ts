@@ -423,10 +423,20 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
             // Reload the grid to reflect any changes
             this.grid.reload();
         } catch (error) {
-            // This will catch dialog dismissals too, which isn't really an error
-            if (error !== 'dismiss') {
+            // Improved error handling for dialog dismissals
+            const isDismissal = 
+                error === 'dismiss' || // Direct dismiss string
+                error === 'backdrop click' || // Click outside modal
+                error === 'escape' || // ESC key pressed
+                (error && error.name === 'EmptyError') || // RxJS EmptyError (from lastValueFrom)
+                (typeof error === 'object' && error !== null && 'type' in error && error.type === 'dismiss');
+            
+            if (!isDismissal) {
                 console.error('Error in add to bucket dialog:', error);
                 this.toast.danger($localize`Error processing bucket operation: ${error.message || error}`);
+            } else {
+                // User canceled the operation - this is normal, just log it
+                console.debug('Dialog dismissed by user:', error);
             }
         }
     }

@@ -214,7 +214,7 @@ export class RecordBucketItemComponent implements OnInit {
         }
     }
 
-    openAddToBucketDialog = async (rows: any[]): Promise<boolean> => {
+    openAddToBucketDialog = async (rows: any[]): Promise<boolean | null> => {
         if (!rows.length) { return false; }
         // Use the new item transfer dialog for item transfers
         this.itemTransferDialog.bucketClass = 'biblio';
@@ -222,14 +222,16 @@ export class RecordBucketItemComponent implements OnInit {
         try {
             const dialogObservable = this.itemTransferDialog.open({size: 'lg'}).pipe(
                 catchError((error: unknown) => {
-                    console.error('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                    console.debug('Dialog dismissed or closed without selection');
                     return EMPTY;
                 })
             );
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             console.debug('Add to bucket results:', results);
             this.grid.reload(); // only needed if adding to the same bucket we're in :-)
-            return results !== null;
+            
+            // Return null to indicate user dismissal, false for error, true for success
+            return results && results.success ? true : null;
         } catch (error) {
             console.error('Error in add to bucket dialog:', error);
             return false;
@@ -276,7 +278,14 @@ export class RecordBucketItemComponent implements OnInit {
         try {
             // Use the new dialog for move-to-bucket as well
             const addResult = await this.openAddToBucketDialog(rows);
-            if (addResult) {
+            
+            // null means user dismissed the dialog (not an error condition)
+            if (addResult === null) {
+                console.debug('moveToBucket: operation cancelled by user');
+                return;
+            }
+            
+            if (addResult === true) {
                 console.debug('moveToBucket: add part accomplished');
                 const removeResult = await this.removeFromBucket(rows);
                 if (removeResult) {
@@ -288,7 +297,18 @@ export class RecordBucketItemComponent implements OnInit {
                 console.error('moveToBucket: failed to add to new bucket');
             }
         } catch(error) {
-            console.error('moveToBucket, error', error);
+            const isDismissal = 
+                error === 'dismiss' || 
+                error === 'backdrop click' || 
+                error === 'escape' ||
+                (error && error.name === 'EmptyError') ||
+                (typeof error === 'object' && error !== null && 'type' in error && error.type === 'dismiss');
+                
+            if (!isDismissal) {
+                console.error('moveToBucket, error', error);
+            } else {
+                console.debug('Dialog dismissed by user:', error);
+            }
         }
     }
 
