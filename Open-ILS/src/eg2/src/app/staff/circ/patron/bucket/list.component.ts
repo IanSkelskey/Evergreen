@@ -16,7 +16,6 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
-import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
@@ -48,7 +47,6 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     @ViewChild('retrieveByIdFail') private retrieveByIdFail: AlertDialogComponent;
     @ViewChild('results') private results: DialogComponent;
     @ViewChild('transferDialog') private transferDialog: BucketTransferDialogComponent;
-    @ViewChild('shareBucketDialog') private shareBucketDialog: BucketShareDialogComponent;
     @ViewChild('bucketIdInput', { static: false }) bucketIdInput: ElementRef;
 
     private destroy$ = new Subject<void>();
@@ -522,19 +520,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     }
 
     openShareBucketDialog = async (rows: any[]) => {
-        if (!rows.length) return;
-        
-        this.shareBucketDialog.containerObjects = rows.map(row => row.bucket);
-        
-        try {
-            const results = await lastValueFrom(this.shareBucketDialog.open());
-            if (results?.success) {
-                this.bucketService.requestPatronBucketsRefresh();
-                this.toast.success($localize`Bucket sharing updated`);
-            }
-        } catch (error) {
-            console.error('Error in share dialog:', error);
-        }
+        this.toast.info($localize`Sharing patron buckets is not implemented yet. Coming soon!`);
     }
 
     // Add this method to handle the View Content button click

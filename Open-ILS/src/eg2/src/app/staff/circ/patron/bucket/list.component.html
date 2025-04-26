@@ -98,6 +98,12 @@
         (onClick)="openEditBucketDialog($event)">
     </eg-grid-toolbar-action>
 
+    <!-- Add new Share action -->
+    <eg-grid-toolbar-action label="Share Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openShareBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
     <eg-grid-toolbar-action label="Delete Bucket" i18n-label
         [disabled]="noSelectedRows"
         (onClick)="openDeleteBucketDialog($event)">
@@ -126,4 +132,6 @@
   </a>
 </ng-template>
 
+<!-- Add the bucket share dialog template -->
+<eg-bucket-share-dialog #shareBucketDialog></eg-bucket-share-dialog>
 <eg-bucket-dialog #editBucketDialog></eg-bucket-dialog>

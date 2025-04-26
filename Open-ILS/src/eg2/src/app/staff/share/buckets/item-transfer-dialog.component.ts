@@ -181,7 +181,7 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
                 if (this.showExistingBuckets) {
                     this.addToBucket(bktId);
                 } else {
-                    this.bucketService.logBucket(bktId);
+                    this.bucketService.logBucket(this.bucketClass, bktId);
                     this.bucketService.requestBucketsRefresh(this.bucketClass);
                     this.createSucceeded.emit({bucketId: bktId});
                     this.pendingOperation = false; // <-- ensure pending is reset
@@ -207,25 +207,22 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         }
 
         this.pendingOperation = true;
-        this.bucketService.logBucket(bucketId);
+        this.bucketService.logBucket(this.bucketClass, bucketId);
         
         // Use bucket service to add items
         this.bucketService.addItemsToBucket(
             this.bucketClass,
             bucketId,
             this.itemIds
-        ).subscribe(
-            result => {
-                this.toast.success(this.successString.text);
-                this.bucketService.requestBucketsRefresh(this.bucketClass);
-                this.addSucceeded.emit({bucketId: bucketId});
-                this.close({success: true, bucket: bucketId});
-            },
-            error => {
-                this.pendingOperation = false;
-                this.toast.danger(error);
-            }
-        );
+        ).then(result => {
+            this.toast.success(this.successString.text);
+            this.bucketService.requestBucketsRefresh(this.bucketClass);
+            this.addSucceeded.emit({bucketId: bucketId});
+            this.close({success: true, bucket: bucketId});
+        }).catch(error => {
+            this.pendingOperation = false;
+            this.toast.danger(error);
+        });
     }
 
     onBucketFormCancel() {

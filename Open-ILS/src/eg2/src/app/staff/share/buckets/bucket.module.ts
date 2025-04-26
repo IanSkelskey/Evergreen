@@ -19,7 +19,7 @@ import { BucketFormSharedModule } from './bucket-form-shared.module';
         EgCommonModule,
         CommonWidgetsModule,
         NgbModule,
-        BucketFormSharedModule 
+        BucketFormSharedModule
     ],
     exports: [
         BucketFormSharedModule
