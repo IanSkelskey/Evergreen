@@ -21,11 +21,11 @@ import {BucketFormComponent} from './bucket-form.component';
     selector: 'eg-bucket-item-transfer-dialog',
     templateUrl: 'item-transfer-dialog.component.html',
     styleUrls: ['item-transfer-dialog.component.css',
-    './bucket.module.css']
+    './buckets.css']
 })
 export class BucketItemTransferDialogComponent extends DialogComponent implements OnInit, OnDestroy, AfterViewInit {
 
-    activeTabId = 1; // Existing Buckets tab
+    activeTabId: number; // Initial value set in ngOnInit/reset
     selectedBucket: number;
     sharedBucketId: number;
     sharedBucketName: string;
@@ -78,15 +78,17 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
             this.reset(); // Reset data on dialog open
             this.dialogInitialized = true;
             
+            // Set initial tab based on whether existing buckets should be shown
+            this.activeTabId = this.showExistingBuckets ? 1 : 2; 
+            
             if (this.showExistingBuckets) {
                 // Use the bucket service to get the buckets
                 this.bucketService.retrieveUserBuckets(
                     this.bucketClass, 
                     this.bucketType
                 ).subscribe(buckets => this.buckets = buckets);
-            } else {
-                this.activeTabId = 2; // New Bucket tab
             }
+            // No need for else block to set activeTabId = 2, handled above
         });
     }
     
@@ -114,8 +116,12 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
             this.bucketType = 'staff_client';
         }
 
-        // Show existing buckets tab if we have items to add
+        // Show existing buckets tab content if we have items to add
+        // This flag now controls content visibility within tab 1, not the tab itself
         this.showExistingBuckets = this.itemIds.length > 0;
+        
+        // Reset active tab based on showExistingBuckets
+        this.activeTabId = this.showExistingBuckets ? 1 : 2;
     }
 
     addToSelected() {
@@ -241,8 +247,8 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
     onTabChange(tabId: number) {
         this.activeTabId = tabId;
         this.pendingOperation = false;
-        this.bucketFormValid = false;
-        // Force change detection to ensure ViewChild is updated
+        this.bucketFormValid = false; // Reset form validity when switching tabs
+        // Force change detection if switching to the form tab to ensure ViewChild updates
         if (tabId === 2) {
             setTimeout(() => this.cdr.detectChanges());
         }

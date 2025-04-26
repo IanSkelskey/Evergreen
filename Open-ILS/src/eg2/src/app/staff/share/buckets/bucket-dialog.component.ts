@@ -15,7 +15,7 @@ import { BucketFormComponent } from './bucket-form.component';
   templateUrl: './bucket-dialog.component.html',
   styleUrls: [
     './bucket-dialog.component.css',
-    './bucket.module.css'
+    './buckets.css'
   ]
 })
 export class BucketDialogComponent extends DialogComponent implements OnInit {

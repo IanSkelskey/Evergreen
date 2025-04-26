@@ -28,12 +28,13 @@
     <ul ngbNav #bucketDialogTabs="ngbNav" class="nav-tabs custom-tabs" [(activeId)]="activeTabId" 
         [keyboard]="true" [roles]="false" role="tablist"
         (activeIdChange)="onTabChange($event)">
-      <li role="presentation" [ngbNavItem]="1" [disabled]="!showExistingBuckets">
+      <li role="presentation" [ngbNavItem]="1"> <!-- Removed [disabled]="!showExistingBuckets" -->
         <a role="tab" ngbNavLink i18n>Existing bucket</a>
         <ng-template ngbNavContent>
-          <div class="row mt-4 form-group">
+          <!-- Section for selecting user's buckets -->
+          <div class="row mt-4 form-group" *ngIf="showExistingBuckets">
             <div class="col-lg-3 col-md-4 col-sm-12 mb-2 mb-md-0">
-              <label class="form-label fw-bold" for="existing-bucket-name" i18n>Select an existing bucket</label>
+              <label class="form-label fw-bold" for="existing-bucket-name" i18n>Select your bucket</label>
             </div>
             <div class="col-lg-5 col-md-8 col-sm-12 mb-3 mb-lg-0">
               <eg-combobox [entries]="formatBucketEntries()"
@@ -52,6 +53,33 @@
                   Adding...
                 </span>
               </button>
+            </div>
+          </div>
+
+          <!-- Separator -->
+          <hr *ngIf="showExistingBuckets" class="my-4">
+
+          <!-- Section for entering shared bucket ID -->
+          <div class="row mt-4 form-group">
+            <div class="col-lg-3 col-md-4 col-sm-12 mb-2 mb-md-0">
+              <label class="form-label fw-bold" i18n>Or enter Shared Bucket ID</label>
+            </div>
+            <div class="col-lg-9 col-md-8 col-sm-12">
+              <div class="d-flex gap-2 flex-wrap">
+                <div class="flex-grow-1">
+                  <eg-bucket-id-selector
+                    [(bucketId)]="sharedBucketId"
+                    [placeholder]="'Enter ID number'"
+                    [buttonLabel]="'Add To Shared Bucket'"
+                    [buttonIcon]="'share'"
+                    [buttonClass]="'btn-success action-button'"
+                    [processing]="pendingOperation"
+                    [disabled]="pendingOperation"
+                    [helpText]="'Enter the numeric ID of the shared bucket you want to use'"
+                    (idSubmit)="addToShared()">
+                  </eg-bucket-id-selector>
+                </div>
+              </div>
             </div>
           </div>
         </ng-template>
@@ -73,33 +101,6 @@
                 (formValidityChange)="onBucketFormValidity($event)">
               </eg-bucket-form>
             </fieldset>
-          </div>
-        </ng-template>
-      </li>
-      <li role="presentation" [ngbNavItem]="3" [disabled]="!showExistingBuckets">
-        <a role="tab" ngbNavLink i18n>Shared bucket</a>
-        <ng-template ngbNavContent>
-          <div class="row mt-4 form-group">
-            <div class="col-lg-3 col-md-4 col-sm-12 mb-2 mb-md-0">
-              <label class="form-label fw-bold" i18n>Enter Shared Bucket ID</label>
-            </div>
-            <div class="col-lg-9 col-md-8 col-sm-12">
-              <div class="d-flex gap-2 flex-wrap">
-                <div class="flex-grow-1">
-                  <eg-bucket-id-selector
-                    [(bucketId)]="sharedBucketId"
-                    [placeholder]="'Enter ID number'"
-                    [buttonLabel]="'Add To Shared Bucket'"
-                    [buttonIcon]="'share'"
-                    [buttonClass]="'btn-success action-button'"
-                    [processing]="pendingOperation"
-                    [disabled]="pendingOperation"
-                    [helpText]="'Enter the numeric ID of the shared bucket you want to use'"
-                    (idSubmit)="addToShared()">
-                  </eg-bucket-id-selector>
-                </div>
-              </div>
-            </div>
           </div>
         </ng-template>
       </li>

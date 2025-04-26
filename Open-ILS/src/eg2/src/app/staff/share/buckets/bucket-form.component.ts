@@ -7,7 +7,7 @@ import { AuthService } from '@eg/core/auth.service';
   selector: 'eg-bucket-form',
   templateUrl: './bucket-form.component.html',
   styleUrls: ['./bucket-form.component.css',
-    './bucket.module.css']
+    './buckets.css']
 })
 export class BucketFormComponent implements OnInit, OnChanges {
   // Inputs for configuration

@@ -87,7 +87,8 @@ textarea {
 
 /* Tab styling */
 .custom-tabs {
-  border-bottom: 2px solid #dee2e6;
+  /* Use a CSS variable for the border color, falling back to the original */
+  border-bottom: 2px solid var(--bs-border-color, #dee2e6); 
   margin-bottom: 1rem;
 }
 

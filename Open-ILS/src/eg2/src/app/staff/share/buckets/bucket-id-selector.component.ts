@@ -17,7 +17,7 @@ import {
   selector: 'eg-bucket-id-selector',
   templateUrl: './bucket-id-selector.component.html',
   styleUrls: ['./bucket-id-selector.component.css',
-    './bucket.module.css']
+    './buckets.css']
 })
 export class BucketIdSelectorComponent implements AfterViewInit, OnChanges {
   // Input configurations
