@@ -1,0 +1,133 @@
+/* Shared styles for all bucket components */
+
+/* General form and element styling */
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+.form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Material icons styling */
+.material-icons {
+  font-size: 1.1rem;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Alert styling */
+.alert {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Button styling aligned with Evergreen guidelines */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+
+/* Action button - blue per style guide */
+.action-button {
+  min-width: 180px;
+  justify-content: center;
+}
+
+/* Success button - green for "major positive" actions */
+.btn-success {
+  background-color: #198754; /* Bootstrap green */
+  border-color: #198754;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  border-color: #146c43;
+}
+
+.btn-success:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* Loading indicators */
+.loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+/* Form containers and actions */
+.bucket-form-container {
+  padding: 0.5rem 0;
+}
+
+.bucket-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Tab styling */
+.custom-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1rem;
+}
+
+.nav-tabs .nav-link.active {
+  color: #0d6efd; /* Bootstrap blue for "action" elements */
+  border-bottom: 2px solid #0d6efd;
+  font-weight: 600;
+}
+
+/* Success message styling */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #198754;
+  font-weight: 500;
+}
+
+/* Focus styles for accessibility */
+input:focus, 
+textarea:focus, 
+select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  border-color: #86b7fe;
+  z-index: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .action-button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .bucket-form-actions {
+    flex-direction: column;
+  }
+  
+  .bucket-form-actions .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}

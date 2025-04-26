@@ -20,7 +20,8 @@ import {BucketFormComponent} from './bucket-form.component';
 @Component({
     selector: 'eg-bucket-item-transfer-dialog',
     templateUrl: 'item-transfer-dialog.component.html',
-    styleUrls: ['item-transfer-dialog.component.css']
+    styleUrls: ['item-transfer-dialog.component.css',
+    './bucket.module.css']
 })
 export class BucketItemTransferDialogComponent extends DialogComponent implements OnInit, OnDestroy, AfterViewInit {
 

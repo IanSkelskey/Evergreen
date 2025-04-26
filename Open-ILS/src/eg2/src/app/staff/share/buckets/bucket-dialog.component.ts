@@ -13,7 +13,10 @@ import { BucketFormComponent } from './bucket-form.component';
 @Component({
   selector: 'eg-bucket-dialog',
   templateUrl: './bucket-dialog.component.html',
-  styleUrls: ['./bucket-dialog.component.css']
+  styleUrls: [
+    './bucket-dialog.component.css',
+    './bucket.module.css'
+  ]
 })
 export class BucketDialogComponent extends DialogComponent implements OnInit {
   @ViewChild('progressDialog') private progressDialog: ProgressDialogComponent;
