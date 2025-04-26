@@ -382,8 +382,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                 const result = await modalRef.result;
                 
                 if (result && result.success && remove) {
-                    const removeResult = await this.removeFromBucket(patrons);
-                    if (removeResult) {
+                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(this.bucketId, patrons.map(p => p._bucket_item_id).filter(id => id));
+                    if (removeResult && removeResult.success) {
                         this.toast.success($localize`Patrons successfully moved to another bucket`);
                     } else {
                         this.toast.warning(
@@ -407,8 +407,8 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                 const result = await lastValueFrom(this.itemTransferDialog.open({size: 'lg'}));
                 
                 if (result && result.success && remove) {
-                    const removeResult = await this.removeFromBucket(patrons);
-                    if (removeResult) {
+                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(this.bucketId, patrons.map(p => p._bucket_item_id).filter(id => id));
+                    if (removeResult && removeResult.success) {
                         this.toast.success($localize`Patrons successfully moved to another bucket`);
                     } else {
                         this.toast.warning(

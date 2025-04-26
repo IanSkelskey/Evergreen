@@ -45,7 +45,7 @@ import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module
         NgbDropdownModule,
         NgbTooltipModule,
         BucketModule,
-        BucketDialogsModule // Add the BucketDialogsModule import
+        BucketDialogsModule
     ],
     providers: [
         PatronBucketService,

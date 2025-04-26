@@ -113,22 +113,9 @@ export class PatronBucketQuickAddComponent implements OnInit {
             const patron = response;
             
             try {
-                // Fix: Ensure the observable always emits something (empty array if no results)
-                const existingItems = await lastValueFrom(
-                    this.pcrud.search('cubi', {
-                        bucket: this.bucketId,
-                        target_user: patron.id()
-                    }).pipe(
-                        toArray(),
-                        defaultIfEmpty([]), // Emit empty array if no results
-                        catchError(err => {
-                            console.error('Error checking if patron is in bucket:', err);
-                            return of([]); // Return empty array on error
-                        })
-                    )
-                );
-
-                // Now we safely check if there are existing items
+                // Check if patron already exists in the bucket
+                const existingItems = await this.bucketService.checkPatronInBucket(this.bucketId, patron.id());
+                
                 if (existingItems && existingItems.length > 0) {
                     this.duplicatesFound++;
                     this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
@@ -137,34 +124,22 @@ export class PatronBucketQuickAddComponent implements OnInit {
                     return;
                 }
                 
-                // FIX: Go back to using the bucket service rather than direct API calls
-                try {
-                    const addResult = await this.bucketService.addPatronsToPatronBucket(
-                        this.bucketId, 
-                        [patron.id()]
-                    );
-                    
-                    const addEvt = this.evt.parse(addResult);
-                    if (addEvt) {
-                        console.error('Error adding patron to bucket:', addEvt);
-                        this.alertDialog.dialogTitle = $localize`Error Adding Patron`;
-                        this.alertDialog.dialogBody = addEvt.toString();
-                        await this.alertDialog.open();
-                        return;
-                    }
-                    
+                // Add patron to the bucket
+                const addResult = await this.bucketService.addPatronsToPatronBucket(
+                    this.bucketId, 
+                    [patron.id()]
+                );
+                
+                if (addResult.added > 0) {
                     this.quickAddCount++;
                     const patronName = patron.family_name() + ', ' + patron.first_given_name();
                     this.toast.success($localize`Added patron "${patronName}" to bucket`);
                     
                     this.quickAddBarcode = '';
                     this.patronAdded.emit(true);
-                } catch (error) {
-                    console.error('Error adding patron to bucket:', error);
-                    this.alertDialog.dialogTitle = $localize`Error Adding Patron`;
-                    this.alertDialog.dialogBody = error.message || String(error);
-                    await this.alertDialog.open();
-                    return;
+                } else if (addResult.alreadyInBucket > 0) {
+                    this.duplicatesFound++;
+                    this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
                 }
                 
             } catch (innerError) {
