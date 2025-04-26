@@ -1,11 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject, lastValueFrom } from 'rxjs';
-import { AuthService } from '@eg/core/auth.service';
-import { NetService } from '@eg/core/net.service';
 import { PcrudService } from '@eg/core/pcrud.service';
-import { EventService } from '@eg/core/event.service';
-import { IdlService, IdlObject } from '@eg/core/idl.service';
-import { StoreService } from '@eg/core/store.service';
+import { IdlObject } from '@eg/core/idl.service';
 import { BucketService } from '@eg/staff/share/buckets/bucket.service';
 
 /**
@@ -25,12 +21,7 @@ export class PatronBucketService {
   patronBucketsRefreshRequested$ = this.patronBucketsRefreshRequested.asObservable();
     
   constructor(
-    private store: StoreService,
-    private net: NetService,
-    private auth: AuthService,
     private pcrud: PcrudService,
-    private idl: IdlService,
-    private evt: EventService,
     private bucketService: BucketService
   ) {}
   
@@ -293,7 +284,7 @@ export class PatronBucketService {
    * @param itemIds Array of bucket item IDs to remove
    * @returns Result object with counts and detailed results
    */
-  async removePatronsFromPatronBucket(bucketId: number, itemIds: number[]): Promise<any> {
+  async removePatronsFromPatronBucket(itemIds: number[]): Promise<any> {
     // Delegate to shared bucket service
     return this.bucketService.removeItemsFromBucket('user', itemIds);
   }
