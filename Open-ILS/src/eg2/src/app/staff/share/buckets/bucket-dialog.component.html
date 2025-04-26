@@ -17,15 +17,11 @@
       {{errorMessage}}
     </div>
 
-    <!-- Info message for create mode -->
     <div class="alert alert-info" *ngIf="!editMode">
       <span class="material-icons align-middle me-1">info</span>
-      <span>
-        <ng-container i18n>{{getBucketClassLabel()}} buckets allow you to group items together for batch operations.</ng-container>
-      </span>
+      <span><ng-container i18n>{{getBucketClassLabel()}} buckets allow you to group items together for batch operations.</ng-container></span>
     </div>
 
-    <!-- Use the shared bucket form component -->
     <eg-bucket-form #bucketForm
       [bucketClass]="bucketClass"
       [editMode]="editMode"
@@ -33,24 +29,13 @@
       [showPublicOption]="showPublicOption"
       [bucketTypes]="bucketTypes"
       [disabled]="pending"
-      [hideFormActions]="true"
+      [hideFormActions]="false"
       (formSubmit)="onFormSubmit($event)"
-      (formCancel)="onFormCancel()"
-      (formValidityChange)="onFormValidityChange($event)">
+      (formCancel)="onFormCancel()">
     </eg-bucket-form>
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-secondary" 
-            (click)="close()" 
-            [disabled]="pending" 
-            i18n>Cancel</button>
-    <button type="button" class="btn btn-success" 
-            (click)="createOrUpdateBucket()"
-            [disabled]="!formValid || pending">
-      <span *ngIf="pending" class="spinner-border spinner-border-sm me-1" role="status"></span>
-      <span *ngIf="!editMode" i18n>Create Bucket</span>
-      <span *ngIf="editMode" i18n>Save Changes</span>
-    </button>
+    <button type="button" class="btn btn-outline-secondary" (click)="close()" [disabled]="pending" i18n>Cancel</button>
   </div>
 </ng-template>
