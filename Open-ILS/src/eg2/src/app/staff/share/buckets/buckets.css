@@ -16,30 +16,50 @@ textarea {
   min-height: 80px;
 }
 
-/* Material icons styling */
-.material-icons {
-  font-size: 1.1rem;
+/* Material icons styling - standardized across all bucket components */
+.bucket-icon,
+.bucket-component .material-icons {
+  font-size: 1rem;
   vertical-align: middle;
   margin-right: 0.25rem;
+  line-height: 1;
 }
 
 /* Button styling aligned with Evergreen guidelines */
-.btn {
+.bucket-btn,
+.bucket-component .btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  padding: 0.5rem 1rem;
+}
+
+/* Standardized button heights and alignment for consistency */
+.bucket-input-group .btn,
+.bucket-input-group .form-control,
+.bucket-toolbar .btn,
+.bucket-action-btn {
+  height: 38px;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0.375rem 0.75rem;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
 /* Action button styles */
-.action-button {
+.bucket-action-btn {
   min-width: 180px;
   justify-content: center;
 }
 
+/* Input groups with consistent sizing */
+.bucket-input-group {
+  align-items: stretch !important;
+}
+
 /* Loading indicators */
-.loading-text {
+.bucket-loading-text {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -58,19 +78,19 @@ textarea {
 }
 
 /* Tab styling */
-.custom-tabs {
+.bucket-tabs {
   border-bottom: 2px solid var(--border);
   margin-bottom: 1rem;
 }
 
-.nav-tabs .nav-link.active {
+.bucket-tabs .nav-link.active {
   color: var(--primary);
   border-bottom: 2px solid var(--primary);
   font-weight: 600;
 }
 
 /* Success message styling */
-.success-message {
+.bucket-success-message {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -78,9 +98,85 @@ textarea {
   font-weight: 500;
 }
 
+/* Status badges with consistent styling */
+.bucket-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.6em;
+  font-size: 0.75rem;
+  font-weight: normal;
+  line-height: 1;
+  height: 24px;
+  border-radius: 50rem;
+}
+
+.bucket-status-badge .material-icons {
+  font-size: 0.875rem !important;
+  margin-right: 0.25rem !important;
+}
+
+/* Toolbar-style layouts */
+.bucket-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Headers and descriptions */
+.bucket-header {
+  margin-bottom: 1rem;
+}
+
+.bucket-description {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--bs-body-color);
+}
+
+/* Link styling in data cells */
+.bucket-text-link {
+  display: inline;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+.bucket-text-link span {
+  color: var(--primary);
+  border-bottom: 1px dotted var(--primary);
+  cursor: pointer;
+}
+
+.bucket-text-link:hover span {
+  border-bottom: 1px solid var(--primary);
+}
+
+/* Quick add controls standardization */
+.bucket-quick-add {
+  width: auto;
+  min-width: 250px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bucket-quick-add-form {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* Modal styling for bucket dialogs */
+.bucket-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
 /* Responsive adjustments */
 @media (max-width: 767.98px) {
-  .action-button {
+  .bucket-action-btn {
     width: 100%;
     margin-top: 0.5rem;
   }
@@ -92,5 +188,10 @@ textarea {
   .bucket-form-actions .btn {
     width: 100%;
     margin-top: 0.5rem;
+  }
+  
+  .bucket-quick-add {
+    width: 100%;
+    max-width: none;
   }
 }

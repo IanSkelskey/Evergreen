@@ -1,57 +1,12 @@
-/* Quick add controls layout */
+/* Use shared bucket styles from buckets.css */
+
+/* Apply shared class in template and use this minimal override */
 .quick-add-controls {
-    width: auto;
-    min-width: 250px;
-    max-width: 350px;
-    display: flex;
-    flex-direction: column;
+  /* Any specific overrides needed beyond bucket-quick-add class */
 }
 
-.quick-add-form {
-    width: 100%;
-    margin-bottom: 8px;
-}
-
-/* Fix button spacing in quick add controls */
-.quick-add-controls .btn {
-    margin-bottom: 0;
-}
-
-@media (max-width: 767.98px) {
-    .quick-add-controls {
-        width: 100%;
-        max-width: none;
-    }
-}
-
-/* Unified button heights and alignment */
-.quick-add-form .btn,
-.quick-add-form .input-group .form-control {
-    height: 38px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-}
-
-/* Specific fixes for input group alignment */
-.quick-add-form .input-group {
-    align-items: stretch !important;
-}
-
-/* Match padding for consistent look */
-.quick-add-form .btn {
-    padding-top: 0.375rem !important;
-    padding-bottom: 0.375rem !important;
-    line-height: 1.5;
-    box-sizing: border-box;
-}
-
-.quick-add-form .input-group .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.material-icons {
-    font-size: 1rem;
-    margin-right: 0.25rem;
+/* Any specific styles that can't be covered by shared styles */
+.quick-add-stats {
+  display: flex;
+  flex-direction: column;
 }
