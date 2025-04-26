@@ -1,23 +1,29 @@
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
 
 <ng-template #dialogContent>
-  <div class="modal-header">
-    <h4 class="modal-title" *ngIf="!editMode">
-      <ng-container i18n>Create New {{getBucketClassLabel()}} Bucket</ng-container>
+  <div class="modal-header align-items-center">
+    <h4 class="modal-title d-flex align-items-center gap-2">
+      <span class="material-icons" aria-hidden="true">
+        {{ editMode ? 'edit' : 'create_new_folder' }}
+      </span>
+      <ng-container *ngIf="!editMode" i18n>
+        Create New {{getBucketClassLabel()}} Bucket
+      </ng-container>
+      <ng-container *ngIf="editMode" i18n>
+        Edit {{getBucketClassLabel()}} Bucket
+      </ng-container>
     </h4>
-    <h4 class="modal-title" *ngIf="editMode">
-      <ng-container i18n>Edit {{getBucketClassLabel()}} Bucket</ng-container>
-    </h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+    <span class="flex-grow-1"></span>
+    <button type="button" class="btn-close ms-2" aria-label="Close" (click)="close()"></button>
   </div>
 
   <div class="modal-body">
-    <div *ngIf="errorMessage" class="alert alert-danger">
+    <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center">
       <span class="material-icons align-middle me-1">error</span>
       {{errorMessage}}
     </div>
 
-    <div class="alert alert-info" *ngIf="!editMode">
+    <div class="alert alert-info d-flex align-items-center" *ngIf="!editMode">
       <span class="material-icons align-middle me-1">info</span>
       <span><ng-container i18n>{{getBucketClassLabel()}} buckets allow you to group items together for batch operations.</ng-container></span>
     </div>

@@ -58,31 +58,24 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
   }
 
   async onFormSubmit(formData: any) {
+    this.pending = true;
+    this.errorMessage = null;
     try {
-      this.pending = true;
-      this.errorMessage = null;
-      if (this.progressDialog) {
-        this.progressDialog.open();
-      }
+      if (this.progressDialog) this.progressDialog.open();
 
       let result;
       if (this.editMode && this.bucketId) {
-        // Ensure bucketId is added to the form data 
         if (typeof formData.id !== 'function') {
-          // If formData is a plain object and not an IDL object
           formData.id = this.bucketId;
         } else if (formData.id() !== this.bucketId) {
-          // If it's an IDL object but id doesn't match
           formData.id(this.bucketId);
         }
-        
         result = await this.bucketService.updateBucket(this.bucketClass, formData).toPromise();
       } else {
         const name = typeof formData.name === 'function' ? formData.name() : formData.name;
         const description = typeof formData.description === 'function' ? formData.description() : formData.description || '';
         const bucketType = typeof formData.btype === 'function' ? formData.btype() : formData.btype || 'staff_client';
         const isPublic = typeof formData.pub === 'function' ? formData.pub() === 't' : formData.pub === 't';
-
         result = await this.bucketService.createBucket(
           this.bucketClass, name, description, bucketType, isPublic
         ).toPromise();
@@ -97,8 +90,10 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     } catch (error) {
       if (this.progressDialog) this.progressDialog.close();
       this.pending = false;
-      this.errorMessage = error.message || 
-        $localize`Error ${this.editMode ? 'updating' : 'creating'} ${this.getBucketClassLabel()} bucket`;
+      // Prefer error.message, fallback to a generic message
+      this.errorMessage = (error && error.message) ?
+        error.message :
+        $localize`An error occurred while ${this.editMode ? 'updating' : 'creating'} the ${this.getBucketClassLabel()} bucket.`;
     }
   }
 
