@@ -67,6 +67,15 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
       let result;
       if (this.editMode && this.bucketId) {
+        // Ensure bucketId is added to the form data 
+        if (typeof formData.id !== 'function') {
+          // If formData is a plain object and not an IDL object
+          formData.id = this.bucketId;
+        } else if (formData.id() !== this.bucketId) {
+          // If it's an IDL object but id doesn't match
+          formData.id(this.bucketId);
+        }
+        
         result = await this.bucketService.updateBucket(this.bucketClass, formData).toPromise();
       } else {
         const name = typeof formData.name === 'function' ? formData.name() : formData.name;

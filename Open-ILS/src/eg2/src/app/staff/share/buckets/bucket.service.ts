@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, of, throwError, lastValueFrom } from 'rxjs';
-import { catchError, map, tap, toArray } from 'rxjs/operators';
+import { catchError, map, tap, toArray, switchMap } from 'rxjs/operators';
 
 import { NetService } from '@eg/core/net.service';
 import { IdlService, IdlObject } from '@eg/core/idl.service';
@@ -389,36 +389,63 @@ export class BucketService {
     bucketClass: 'biblio' | 'user' | 'callnumber' | 'copy',
     bucket: any
   ): Observable<any> {
-    // Format pub property to 't' or 'f' if it's a boolean
-    if (bucket.pub !== undefined) {
-      if (typeof bucket.pub === 'function') {
-        const pubValue = bucket.pub();
-        if (pubValue === true || pubValue === false) {
-          bucket.pub(pubValue ? CONSTANTS.PUBLIC_VALUES.TRUE : CONSTANTS.PUBLIC_VALUES.FALSE);
-        }
-      } else if (typeof bucket.pub === 'boolean') {
-        bucket.pub = bucket.pub ? CONSTANTS.PUBLIC_VALUES.TRUE : CONSTANTS.PUBLIC_VALUES.FALSE;
-      }
+    // Extract the ID
+    const bucketId = typeof bucket.id === 'function' ? bucket.id() : Number(bucket.id);
+    if (!bucketId || isNaN(bucketId)) {
+      return throwError(() => new Error('Invalid bucket ID'));
     }
     
-    return this.net.request(
-      'open-ils.actor',
-      'open-ils.actor.container.update',
-      this.auth.token(), bucketClass, bucket
-    ).pipe(
-      map(resp => {
-        const evt = this.evt.parse(resp);
-        if (evt) {
-          throw new Error(evt.toString());
+    // Get the bucket FM class
+    const bucketFmClass = this.getBucketFmClass(bucketClass);
+    
+    // First retrieve the bucket using pcrud
+    return this.pcrud.retrieve(bucketFmClass, bucketId).pipe(
+      map(existingBucket => {
+        if (!existingBucket) {
+          throw new Error('Bucket not found');
         }
-        return resp;
+        
+        // Update fields using IDL methods
+        if (bucket.name !== undefined) {
+          existingBucket.name(typeof bucket.name === 'function' ? bucket.name() : bucket.name);
+        }
+        
+        if (bucket.description !== undefined) {
+          existingBucket.description(typeof bucket.description === 'function' ? bucket.description() : bucket.description);
+        }
+        
+        if (bucket.pub !== undefined) {
+          const pubValue = typeof bucket.pub === 'function' ? bucket.pub() : bucket.pub;
+          existingBucket.pub(pubValue === true || pubValue === CONSTANTS.PUBLIC_VALUES.TRUE ? 
+                      CONSTANTS.PUBLIC_VALUES.TRUE : CONSTANTS.PUBLIC_VALUES.FALSE);
+        }
+        
+        // Include bucket type if available
+        if (bucket.btype !== undefined) {
+          existingBucket.btype(typeof bucket.btype === 'function' ? bucket.btype() : bucket.btype);
+        }
+        
+        // Mark the bucket as modified
+        existingBucket.ischanged(true);
+        
+        return existingBucket;
+      }),
+      switchMap(updatedBucket => {
+        // Now update with pcrud
+        return this.pcrud.update(updatedBucket).pipe(
+          map(() => ({ success: true, id: bucketId })),
+          catchError(err => {
+            console.error(`pcrud.update failed for ${bucketClass} bucket:`, err);
+            return throwError(() => new Error(`Failed to update bucket via pcrud: ${err.message || err}`));
+          })
+        );
       }),
       catchError(err => {
         console.error(`Error updating ${bucketClass} bucket:`, err);
         return throwError(() => new Error(`Failed to update bucket: ${err.message || err}`));
       }),
       tap(() => {
-        this.logBucket(bucketClass, bucket.id());
+        this.logBucket(bucketClass, bucketId);
         this.requestBucketsRefresh(bucketClass);
       })
     );
