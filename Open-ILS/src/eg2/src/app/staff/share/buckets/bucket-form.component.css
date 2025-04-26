@@ -28,24 +28,10 @@ textarea {
   font-size: 1.2rem;
 }
 
-.bucket-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-}
-
-/* Add focus styles for better accessibility */
-input:focus, 
-textarea:focus, 
-select:focus {
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
 /* Style for disabled inputs (component-specific) */
 input:disabled,
 textarea:disabled,
 select:disabled {
-  background-color: #e9ecef;
+  background-color: var(--bs-body-bg-highlight);
   cursor: not-allowed;
 }

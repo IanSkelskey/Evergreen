@@ -3,12 +3,12 @@
 /* General form and element styling */
 .required::after {
   content: " *";
-  color: #dc3545;
+  color: var(--danger);
 }
 
 .form-text {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: var(--bs-gray-600);
 }
 
 textarea {
@@ -23,13 +23,6 @@ textarea {
   margin-right: 0.25rem;
 }
 
-/* Alert styling */
-.alert {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
 /* Button styling aligned with Evergreen guidelines */
 .btn {
   display: inline-flex;
@@ -39,25 +32,10 @@ textarea {
   padding: 0.5rem 1rem;
 }
 
-/* Action button - blue per style guide */
+/* Action button styles */
 .action-button {
   min-width: 180px;
   justify-content: center;
-}
-
-/* Success button - green for "major positive" actions */
-.btn-success {
-  background-color: #198754; /* Bootstrap green */
-  border-color: #198754;
-}
-
-.btn-success:hover {
-  background-color: #157347;
-  border-color: #146c43;
-}
-
-.btn-success:focus {
-  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
 }
 
 /* Loading indicators */
@@ -65,12 +43,6 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.25rem;
 }
 
 /* Form containers and actions */
@@ -87,14 +59,13 @@ textarea {
 
 /* Tab styling */
 .custom-tabs {
-  /* Use a CSS variable for the border color, falling back to the original */
-  border-bottom: 2px solid var(--bs-border-color, #dee2e6); 
+  border-bottom: 2px solid var(--border);
   margin-bottom: 1rem;
 }
 
 .nav-tabs .nav-link.active {
-  color: #0d6efd; /* Bootstrap blue for "action" elements */
-  border-bottom: 2px solid #0d6efd;
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
   font-weight: 600;
 }
 
@@ -103,17 +74,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #198754;
+  color: var(--success);
   font-weight: 500;
-}
-
-/* Focus styles for accessibility */
-input:focus, 
-textarea:focus, 
-select:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-  border-color: #86b7fe;
-  z-index: 1;
 }
 
 /* Responsive adjustments */

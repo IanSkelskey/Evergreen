@@ -4,7 +4,7 @@
   flex-direction: column;
   min-height: auto !important;
   border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(var(--box-shadow), 0.15);
 }
 
 :host ::ng-deep .modal-dialog.modal-xl {
@@ -15,8 +15,8 @@
 }
 
 :host ::ng-deep .modal-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: var(--modal-header-bg);
+  border-bottom: 1px solid var(--border);
   padding: 1rem 1.25rem;
 }
 
@@ -25,13 +25,14 @@
   flex: 1 1 auto;
   overflow-y: auto;
   max-height: calc(100vh - 200px);
+  background-color: var(--modal-body-bg);
 }
 
 :host ::ng-deep .modal-footer {
   margin-top: 0;
   padding: 1rem 1.5rem;
-  border-top: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  border-top: 1px solid var(--border);
+  background-color: var(--bs-body-bg-alt);
 }
 
 /* Close button styling */
