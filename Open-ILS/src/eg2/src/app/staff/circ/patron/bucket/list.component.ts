@@ -21,6 +21,7 @@ import {PatronBucketService} from './bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
+import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 
 @Component({
     selector: 'eg-patron-bucket-list',
@@ -37,6 +38,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     noSelectedRows = true;
     oneSelectedRow = false;
     retrievingById = false; // Add spinner state
+    favoriteIds: number[] = [];
 
     @ViewChild('grid', { static: false }) grid: GridComponent;
     @ViewChild('newBucketDialog') private newBucketDialog: BucketDialogComponent;
@@ -64,10 +66,11 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private bucketState: PatronBucketStateService,
         private modal: NgbModal,
         private datePipe: DatePipe,
-        private flatData: GridFlatDataService
+        private flatData: GridFlatDataService,
+        private sharedBucketService: BucketService
     ) {}
 
-    ngOnInit() {
+    async ngOnInit() {
         // Initialize grid-related objects
         this.initCellTextGenerator();
         this.initDataSource();
@@ -121,6 +124,9 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             this.bucketState.updateCounts();
         });
 
+        // Load favorite bucket flags
+        await this.loadFavoriteBucketFlags();
+        
         // Initial grid load with a small delay to ensure everything is ready
         setTimeout(() => {
             if (this.grid) {
@@ -533,5 +539,79 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         if (!rows.length) return;
         console.log('Sample row data:', rows[0]);
         this.toast.info(`Row data logged to console`);
+    }
+
+    // Load favorite bucket flags
+    async loadFavoriteBucketFlags(): Promise<void> {
+        try {
+            await this.sharedBucketService.loadFavoriteBucketFlags('user');
+            this.favoriteIds = this.sharedBucketService.getFavoriteBucketIds('user');
+            console.debug('Loaded favorite bucket IDs:', this.favoriteIds);
+        } catch (error) {
+            console.error('Error loading favorite bucket flags:', error);
+        }
+    }
+    
+    // Check if a bucket is a favorite
+    isFavoriteBucket(bucketId: number): boolean {
+        return this.sharedBucketService.isFavoriteBucket('user', bucketId);
+    }
+
+    // Add a bucket to favorites
+    async favoriteBucket(rows: any[]): Promise<void> {
+        if (!rows.length) return;
+        
+        const results = [];
+        for (const row of rows) {
+            if (!this.isFavoriteBucket(row.id)) {
+                try {
+                    await this.sharedBucketService.addFavoriteBucket('user', row.id);
+                    results.push({ id: row.id, success: true });
+                } catch (error) {
+                    console.error(`Error adding favorite for bucket ${row.id}:`, error);
+                    results.push({ id: row.id, success: false, error });
+                }
+            }
+        }
+        
+        // Update the favoriteIds list
+        this.favoriteIds = this.sharedBucketService.getFavoriteBucketIds('user');
+        
+        // Show success message
+        const successCount = results.filter(r => r.success).length;
+        if (successCount > 0) {
+            this.toast.success($localize`${successCount} bucket(s) added to favorites`);
+            this.bucketState.updateCounts();
+            this.grid?.reload();
+        }
+    }
+
+    // Remove a bucket from favorites
+    async unFavoriteBucket(rows: any[]): Promise<void> {
+        if (!rows.length) return;
+        
+        const results = [];
+        for (const row of rows) {
+            if (this.isFavoriteBucket(row.id)) {
+                try {
+                    await this.sharedBucketService.removeFavoriteBucket('user', row.id);
+                    results.push({ id: row.id, success: true });
+                } catch (error) {
+                    console.error(`Error removing favorite for bucket ${row.id}:`, error);
+                    results.push({ id: row.id, success: false, error });
+                }
+            }
+        }
+        
+        // Update the favoriteIds list
+        this.favoriteIds = this.sharedBucketService.getFavoriteBucketIds('user');
+        
+        // Show success message
+        const successCount = results.filter(r => r.success).length;
+        if (successCount > 0) {
+            this.toast.success($localize`${successCount} bucket(s) removed from favorites`);
+            this.bucketState.updateCounts();
+            this.grid?.reload();
+        }
     }
 }

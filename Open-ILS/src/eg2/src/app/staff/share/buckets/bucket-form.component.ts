@@ -81,10 +81,6 @@ export class BucketFormComponent implements OnInit, OnChanges {
     if (!this.bucketForm) return; // Skip if form isn't initialized yet
     
     const isValid = this.bucketForm.valid;
-    console.log('Form emitting validity:', isValid, 
-                'Form touched:', this.bucketForm.touched,
-                'Form dirty:', this.bucketForm.dirty,
-                'Form status:', this.bucketForm.status);
     this.formValidityChange.emit(isValid);
   }
   

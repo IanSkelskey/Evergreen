@@ -4,7 +4,6 @@ import { DialogComponent } from '@eg/share/dialog/dialog.component';
 import { ProgressDialogComponent } from '@eg/share/dialog/progress.component';
 import { BucketService } from './bucket.service';
 import { ToastService } from '@eg/share/toast/toast.service';
-import { BucketFormComponent } from './bucket-form.component';
 
 @Component({
   selector: 'eg-bucket-dialog',

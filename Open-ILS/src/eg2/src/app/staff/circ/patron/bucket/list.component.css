@@ -141,3 +141,18 @@
         margin-right: 0;
     }
 }
+
+/* Favorite button styling */
+.btn.user-favorite {
+    padding: 0.1rem;
+    vertical-align: top;
+}
+
+.btn.user-favorite.text-warning {
+    -webkit-text-stroke: 1px var(--bs-warning);
+}
+
+.btn.user-favorite .material-icons {
+    font-size: 1.2rem;
+    margin-right: 0;
+}

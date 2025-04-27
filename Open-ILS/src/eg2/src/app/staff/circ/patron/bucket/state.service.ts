@@ -3,6 +3,7 @@ import {BehaviorSubject, lastValueFrom} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {Pager} from '@eg/share/util/pager';
+import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 
 export interface GridColumnSort {
     name: string;
@@ -45,7 +46,8 @@ export class PatronBucketStateService {
     
     constructor(
         private auth: AuthService,
-        private pcrud: PcrudService
+        private pcrud: PcrudService,
+        private bucketSvc: BucketService
     ) {
         this.userId = this.auth.user().id();
         this.initViews();
@@ -256,6 +258,101 @@ export class PatronBucketStateService {
                     } catch (error) {
                         console.error('Error in user bucketIdQuery:', error);
                         this.views.user.count = 0;
+                        return { bucketIds: [], count: 0 };
+                    }
+                }
+            },
+            favorites: {
+                label: $localize`Favorites`,
+                sort_key: 2,
+                count: null,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    try {
+                        const favoriteIds = this.bucketSvc.getFavoriteBucketIds('user');
+                        console.debug('Favorite bucket IDs:', favoriteIds);
+                        
+                        if (!favoriteIds.length) {
+                            return { bucketIds: [], count: 0 };
+                        }
+                        
+                        let options: any = {};
+                        if (pager && !justCount) {
+                            options.limit = pager.limit;
+                            options.offset = pager.offset;
+                        }
+                        if (sort && sort.length && !justCount) {
+                            options.order_by = {
+                                cub: sort.map(s => ({
+                                    field: s.name,
+                                    direction: s.dir.toUpperCase()
+                                }))
+                            };
+                        }
+                        
+                        const search = { id: favoriteIds };
+                        
+                        if (justCount) {
+                            try {
+                                // Count query using pcrud.search with atomic:true
+                                const allBuckets = await lastValueFrom(
+                                    this.pcrud.search('cub', 
+                                        search, 
+                                        {}, 
+                                        {atomic: true}
+                                    )
+                                );
+                                
+                                // Calculate proper count
+                                const finalCount = Array.isArray(allBuckets) ? allBuckets.length : 
+                                    (allBuckets !== null && allBuckets !== undefined) ? 1 : 0;
+                                
+                                console.debug('Favorites count calculation:', finalCount);
+                                this.views.favorites.count = finalCount;
+                                
+                                return { bucketIds: [], count: finalCount };
+                            } catch (error) {
+                                console.error('Error in favorites count query:', error);
+                                return { bucketIds: [], count: 0 };
+                            }
+                        } else {
+                            try {
+                                // Get all favorite buckets with owner info
+                                const allBuckets = await lastValueFrom(
+                                    this.pcrud.search('cub', 
+                                        search, 
+                                        {
+                                            ...options,
+                                            flesh: 1,
+                                            flesh_fields: {cub: ['owner']}
+                                        }, 
+                                        {atomic: true}
+                                    )
+                                );
+                                
+                                // Extract IDs from the records
+                                let ids = [];
+                                if (Array.isArray(allBuckets)) {
+                                    ids = allBuckets.map(bucket => bucket.id());
+                                } else if (allBuckets !== null && allBuckets !== undefined) {
+                                    if (typeof allBuckets === 'object' && typeof allBuckets.id === 'function') {
+                                        ids = [allBuckets.id()];
+                                    } else if (typeof allBuckets === 'number') {
+                                        ids = [allBuckets];
+                                    }
+                                }
+                                
+                                console.debug('Extracted favorite bucket IDs:', ids, 'count:', ids.length);
+                                this.views.favorites.count = ids.length;
+                                
+                                return { bucketIds: ids, count: ids.length };
+                            } catch (error) {
+                                console.error('Error fetching favorite buckets:', error);
+                                return { bucketIds: [], count: 0 };
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error in favorites bucketIdQuery:', error);
+                        this.views.favorites.count = 0;
                         return { bucketIds: [], count: 0 };
                     }
                 }
