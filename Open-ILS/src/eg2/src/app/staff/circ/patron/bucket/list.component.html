@@ -88,6 +88,7 @@
       ignoreFields="create_time,owner,owning_lib"
       [sortable]="true"
       [filterable]="true"
+      [emptyTemplate]="emptyGridTemplate"
   >
     <eg-grid-toolbar-action label="View Content" i18n-label
         [disabled]="noSelectedRows"
@@ -166,3 +167,9 @@
 <!-- Add the bucket share dialog template -->
 <eg-bucket-share-dialog #shareBucketDialog></eg-bucket-share-dialog>
 <eg-bucket-dialog #editBucketDialog></eg-bucket-dialog>
+
+<ng-template #emptyGridTemplate>
+  <div class="text-center text-muted py-4" i18n>
+    Nothing to display
+  </div>
+</ng-template>

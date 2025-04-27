@@ -148,24 +148,22 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             
             if (!currentView) {
                 console.warn('No current view defined');
-                return of({count: 0, items: []});
+                return EMPTY; // Changed from of([])
             }
             
             const viewDef = this.bucketState.getView(currentView);
             if (!viewDef) {
                 console.warn(`View definition not found for: ${currentView}`);
-                return of({count: 0, items: []});
+                return EMPTY; // Changed from of([])
             }
             
             return from(viewDef.bucketIdQuery(pager, sort, false)).pipe(
                 switchMap(result => {
-                    // Ensure we have valid IDs to search for
                     let ids = result.bucketIds;
                     if (!Array.isArray(ids) || ids.length === 0) {
-                        return of({count: result.count || 0, items: []});
+                        return EMPTY; // Changed from of([])
                     }
                     
-                    // Use flatData service instead of direct pcrud + transformation
                     return this.flatData.getRows(
                         this.grid.context,
                         {id: ids},
@@ -174,13 +172,13 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                     ).pipe(
                         catchError(err => {
                             console.error('Error retrieving patron buckets:', err);
-                            return of({count: 0, items: []});
+                            return EMPTY; // Changed from of([])
                         })
                     );
                 }),
                 catchError(error => {
                     console.error('Error in bucketIdQuery:', error);
-                    return of({count: 0, items: []});
+                    return EMPTY; // Changed from of([])
                 })
             );
         };
