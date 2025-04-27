@@ -4,26 +4,8 @@
 <ng-template #dialogContent>
   <div class="modal-header align-items-center">
     <h4 class="modal-title d-flex align-items-center gap-2">
-      <ng-container *ngIf="!dialogTitle; else customTitle">
-        <span *ngIf="itemIds.length === 1" i18n>
-          <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span>
-          Add Item #{{itemIds[0]}} to Bucket
-        </span>
-        <span *ngIf="itemIds.length > 1" i18n>
-          <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span>
-          Add {{itemIds.length}} Items to Bucket
-        </span>
-        <span *ngIf="itemIds.length === 0" i18n>
-          <span class="material-icons" aria-hidden="true">create_new_folder</span>
-          Add New Bucket
-        </span>
-      </ng-container>
-      <ng-template #customTitle>
-        <span class="d-flex align-items-center gap-2">
-          <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span>
-          {{dialogTitle}}
-        </span>
-      </ng-template>
+      <span class="material-icons" aria-hidden="true">{{dialogIcon}}</span>
+      <span>{{dialogTitle}}</span>
     </h4>
     <span class="flex-grow-1"></span>
     <button type="button" class="btn-close btn-close-white close-button ms-2"

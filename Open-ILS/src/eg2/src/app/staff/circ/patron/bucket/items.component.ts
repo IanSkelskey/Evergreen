@@ -348,41 +348,40 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     async moveAddToBucket(patrons: IdlObject[], remove = false): Promise<void> {
-        if (!patrons.length) return;
-        
+        // Accepts an array of selected patrons (from grid selection)
+        if (!patrons || !patrons.length) return;
+
         // Extract patron IDs directly from the patron objects
         const userIds = patrons.map(patron => patron.id()).filter(id => id !== null);
-        
+
         if (userIds.length === 0) {
             this.toast.danger($localize`Unable to add patrons - no valid IDs found`);
             return;
         }
-        
+
         console.debug('Adding users to bucket with IDs:', userIds);
-        
+
         try {
-            // Use the item transfer dialog component directly
             if (!this.itemTransferDialog) {
-                // If the ViewChild isn't available, use NgbModal to create it
                 const modalRef = this.modal.open(BucketItemTransferDialogComponent, {
                     size: 'lg'
                 });
-                
-                // Configure the dialog instance
+
                 const dialogInstance = modalRef.componentInstance as BucketItemTransferDialogComponent;
                 dialogInstance.bucketClass = 'user';
                 dialogInstance.bucketType = 'staff_client';
-                dialogInstance.itemIds = userIds;
-                dialogInstance.dialogTitle = patrons.length === 1 ?
-                    $localize`Add Patron to Bucket` :
-                    $localize`Add ${patrons.length} Patrons to Bucket`;
-                dialogInstance.dialogIcon = 'person';
-                
-                // Wait for dialog result
+                // Always assign a new array reference to trigger Angular change detection
+                dialogInstance.itemIds = [...userIds];
+                dialogInstance.operationType = remove ? 'move' : 'add';
+                // Force header update for correct plurality/count
+                dialogInstance.setDialogHeader();
+
                 const result = await modalRef.result;
-                
+
                 if (result && result.success && remove) {
-                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(patrons.map(p => p._bucket_item_id).filter(id => id));
+                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(
+                        patrons.map(p => p._bucket_item_id).filter(id => id)
+                    );
                     if (removeResult && removeResult.success) {
                         this.toast.success($localize`Patrons successfully moved to another bucket`);
                     } else {
@@ -394,20 +393,19 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                     this.toast.success($localize`Patrons copied to selected bucket`);
                 }
             } else {
-                // Configure the existing dialog instance
+                // Always assign a new array reference to trigger Angular change detection
                 this.itemTransferDialog.bucketClass = 'user';
                 this.itemTransferDialog.bucketType = 'staff_client';
-                this.itemTransferDialog.itemIds = userIds;
-                this.itemTransferDialog.dialogTitle = patrons.length === 1 ?
-                    $localize`Add Patron to Bucket` :
-                    $localize`Add ${patrons.length} Patrons to Bucket`;
-                this.itemTransferDialog.dialogIcon = 'person';
-                
-                // Open the dialog and wait for the result
+                this.itemTransferDialog.itemIds = [...userIds];
+                this.itemTransferDialog.operationType = remove ? 'move' : 'add';
+                this.itemTransferDialog.setDialogHeader();
+
                 const result = await lastValueFrom(this.itemTransferDialog.open({size: 'lg'}));
-                
+
                 if (result && result.success && remove) {
-                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(patrons.map(p => p._bucket_item_id).filter(id => id));
+                    const removeResult = await this.bucketService.removePatronsFromPatronBucket(
+                        patrons.map(p => p._bucket_item_id).filter(id => id)
+                    );
                     if (removeResult && removeResult.success) {
                         this.toast.success($localize`Patrons successfully moved to another bucket`);
                     } else {
@@ -419,8 +417,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                     this.toast.success($localize`Patrons copied to selected bucket`);
                 }
             }
-            
-            // Reload the grid to reflect any changes
+
             this.grid.reload();
         } catch (error) {
             // Improved error handling for dialog dismissals

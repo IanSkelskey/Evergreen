@@ -124,7 +124,8 @@ export class BasketActionsComponent {
             case 'bucket':
                 this.basket.getRecordIds().then(ids => {
                     this.addToBucketDialog.bucketClass = 'biblio';
-                    this.addToBucketDialog.itemIds = ids;
+                    this.addToBucketDialog.itemIds = [...ids]; // ensure new array reference
+                    this.addToBucketDialog.setDialogHeader(); // update header/count
                     this.addToBucketDialog.open({size: 'lg'});
                 });
                 break;

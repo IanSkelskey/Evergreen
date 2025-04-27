@@ -40,6 +40,12 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
     @Input() dialogTitle: string;
     @Input() dialogIcon: string = 'folder';
     
+    /** 
+     * Operation type: 'add' (default) or 'move'.
+     * Used to set dialog title and icon appropriately.
+     */
+    @Input() operationType: 'add' | 'move' = 'add';
+
     // Optional event listeners for specialized bucket handling
     @Output() addSucceeded = new EventEmitter<{bucketId: number}>();
     @Output() createSucceeded = new EventEmitter<{bucketId: number}>();
@@ -77,6 +83,9 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         this.onOpen$.subscribe(ok => {
             this.reset(); // Reset data on dialog open
             this.dialogInitialized = true;
+
+            // Set pretty dialog title and icon if not provided
+            this.setDialogHeader();
 
             // Remove setTimeout assignment to activeTabId here
             // Set initial tab based on whether existing buckets should be shown
@@ -121,6 +130,9 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         // Remove setTimeout assignment to activeTabId here
         // Instead, set it directly based on showExistingBuckets
         this.activeTabId = this.showExistingBuckets ? 1 : 2;
+
+        // Set pretty dialog title and icon if not provided
+        this.setDialogHeader();
     }
 
     addToSelected() {
@@ -247,6 +259,59 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         // Force change detection if switching to the form tab to ensure ViewChild updates
         if (tabId === 2) {
             setTimeout(() => this.cdr.detectChanges());
+        }
+    }
+
+    /**
+     * Set dialogTitle and dialogIcon based on bucketClass and operationType if not provided.
+     * Handles plurality and action.
+     */
+    setDialogHeader() {
+        // Only set if not already provided
+        if (!this.dialogTitle) {
+            let noun = '';
+            let nounPlural = '';
+            let icon = '';
+            switch (this.bucketClass) {
+                case 'biblio':
+                    noun = 'Record';
+                    nounPlural = 'Records';
+                    icon = 'menu_book';
+                    break;
+                case 'user':
+                    noun = 'Patron';
+                    nounPlural = 'Patrons';
+                    icon = 'person';
+                    break;
+                case 'callnumber':
+                    noun = 'Call Number';
+                    nounPlural = 'Call Numbers';
+                    icon = 'format_list_numbered';
+                    break;
+                case 'copy':
+                    noun = 'Item';
+                    nounPlural = 'Items';
+                    icon = 'inventory_2';
+                    break;
+                default:
+                    noun = 'Item';
+                    nounPlural = 'Items';
+                    icon = 'folder';
+            }
+            let verb = this.operationType === 'move' ? 'Move' : 'Add';
+            let count = this.itemIds?.length || 0;
+            let nounText = count === 1 ? noun : nounPlural;
+            this.dialogTitle = `${verb} ${count > 0 ? count + ' ' : ''}${nounText} to Bucket`;
+            this.dialogIcon = icon;
+        } else if (!this.dialogIcon) {
+            // If dialogTitle is set but not icon, set icon only
+            switch (this.bucketClass) {
+                case 'biblio': this.dialogIcon = 'menu_book'; break;
+                case 'user': this.dialogIcon = 'person'; break;
+                case 'callnumber': this.dialogIcon = 'format_list_numbered'; break;
+                case 'copy': this.dialogIcon = 'inventory_2'; break;
+                default: this.dialogIcon = 'folder';
+            }
         }
     }
 }
