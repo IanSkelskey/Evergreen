@@ -25,7 +25,7 @@ import {BucketFormComponent} from './bucket-form.component';
 })
 export class BucketItemTransferDialogComponent extends DialogComponent implements OnInit, OnDestroy, AfterViewInit {
 
-    activeTabId: number; // Initial value set in ngOnInit/reset
+    activeTabId: number = 1; // Default to 1 (existing bucket tab)
     selectedBucket: number;
     sharedBucketId: number;
     sharedBucketName: string;
@@ -77,10 +77,9 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         this.onOpen$.subscribe(ok => {
             this.reset(); // Reset data on dialog open
             this.dialogInitialized = true;
-            
+
+            // Remove setTimeout assignment to activeTabId here
             // Set initial tab based on whether existing buckets should be shown
-            this.activeTabId = this.showExistingBuckets ? 1 : 2; 
-            
             if (this.showExistingBuckets) {
                 // Use the bucket service to get the buckets
                 this.bucketService.retrieveUserBuckets(
@@ -117,10 +116,10 @@ export class BucketItemTransferDialogComponent extends DialogComponent implement
         }
 
         // Show existing buckets tab content if we have items to add
-        // This flag now controls content visibility within tab 1, not the tab itself
         this.showExistingBuckets = this.itemIds.length > 0;
-        
-        // Reset active tab based on showExistingBuckets
+
+        // Remove setTimeout assignment to activeTabId here
+        // Instead, set it directly based on showExistingBuckets
         this.activeTabId = this.showExistingBuckets ? 1 : 2;
     }
 
