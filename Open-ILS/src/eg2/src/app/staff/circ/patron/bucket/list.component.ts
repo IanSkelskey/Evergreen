@@ -22,6 +22,9 @@ import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
+import {BucketDialogService} from '@eg/staff/share/buckets/bucket-dialog.service';
+import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
 
 @Component({
     selector: 'eg-patron-bucket-list',
@@ -50,6 +53,8 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     @ViewChild('results') private results: DialogComponent;
     @ViewChild('transferDialog') private transferDialog: BucketTransferDialogComponent;
     @ViewChild('bucketIdInput', { static: false }) bucketIdInput: ElementRef;
+    @ViewChild('shareBucketDialog', { static: false }) shareBucketDialog: BucketShareDialogComponent;
+    @ViewChild('patronSearch', { static: false }) patronSearch: PatronSearchDialogComponent;
 
     private destroy$ = new Subject<void>();
 
@@ -67,9 +72,10 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private modal: NgbModal,
         private datePipe: DatePipe,
         private flatData: GridFlatDataService,
-        private sharedBucketService: BucketService
+        private sharedBucketService: BucketService,
+        private bucketDialogService: BucketDialogService // Add dialog service
     ) {}
-
+    
     async ngOnInit() {
         // Initialize grid-related objects
         this.initCellTextGenerator();
@@ -131,6 +137,13 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             if (this.grid) {
                 this.grid.reload();
+            }
+        }, 100);
+
+        // Register the patron search dialog with the bucket dialog service
+        setTimeout(() => {
+            if (this.patronSearch) {
+                this.bucketDialogService.setPatronSearchDialog(this.patronSearch);
             }
         }, 100);
     }
@@ -524,7 +537,37 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
     }
 
     openShareBucketDialog = async (rows: any[]) => {
-        this.toast.info($localize`Sharing patron buckets is not implemented yet. Coming soon!`);
+        if (!rows || rows.length === 0) {
+            this.toast.danger($localize`No buckets selected for sharing`);
+            return;
+        }
+
+        try {
+            this.shareBucketDialog.containerObjects = rows;
+            this.shareBucketDialog.bucketClass = 'user';
+            await this.shareBucketDialog.loadAouTree();
+            await this.shareBucketDialog.populateCheckedNodes();
+            await this.shareBucketDialog.loadAuGridViewPermGrid();
+            await this.shareBucketDialog.loadAuGridEditPermGrid();
+
+            const dialogRef$ = this.shareBucketDialog.open({size: 'lg'}).pipe(
+                takeUntil(this.destroy$),
+                catchError((error: unknown) => {
+                    console.debug('openShareBucketDialog error:', error);
+                    return EMPTY;
+                })
+            );
+            const result = await lastValueFrom(dialogRef$, { defaultValue: null });
+            if (result && result.success) {
+                this.toast.success($localize`Bucket sharing updated successfully`);
+                setTimeout(() => {
+                    this.bucketService.requestPatronBucketsRefresh();
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Error in share bucket dialog:', error);
+            this.toast.danger($localize`Error updating bucket sharing: ${error.message || error}`);
+        }
     }
 
     // Add this method to handle the View Content button click

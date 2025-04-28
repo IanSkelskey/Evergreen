@@ -164,8 +164,8 @@
   </a>
 </ng-template>
 
-<!-- Add the bucket share dialog template -->
-<eg-bucket-share-dialog #shareBucketDialog></eg-bucket-share-dialog>
+<!-- Add the bucket share dialog template with bucketClass="user" -->
+<eg-bucket-share-dialog #shareBucketDialog bucketClass="user"></eg-bucket-share-dialog>
 <eg-bucket-dialog #editBucketDialog></eg-bucket-dialog>
 
 <ng-template #emptyGridTemplate>
@@ -173,3 +173,6 @@
     Nothing to display
   </div>
 </ng-template>
+
+<!-- Add patron search dialog for sharing support -->
+<eg-patron-search-dialog #patronSearch></eg-patron-search-dialog>
