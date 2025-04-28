@@ -4,8 +4,6 @@ import {AdminPageModule} from '@eg/staff/share/admin-page/admin-page.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
 import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
-import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
-import {BucketUserShareComponent} from '@eg/staff/cat/bucket/bucket-user-share.component';
 import {TreeModule} from '@eg/share/tree/tree.module';
 import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
 import {RecordBucketComponent} from '@eg/staff/cat/bucket/record-bucket.component';
@@ -16,12 +14,11 @@ import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
+import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 
 @NgModule({
     declarations: [
         BucketTransferDialogComponent,
-        BucketShareDialogComponent,
-        BucketUserShareComponent,
         BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
@@ -36,12 +33,11 @@ import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
         FmRecordEditorModule,
         TreeModule,
         RecordBucketRoutingModule,
-        BucketDialogsModule
+        BucketDialogsModule,
+        BucketModule
     ],
     exports: [
         BucketTransferDialogComponent,
-        BucketShareDialogComponent,
-        BucketUserShareComponent,
         BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,

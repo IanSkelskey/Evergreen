@@ -89,13 +89,17 @@ textarea {
   font-weight: 600;
 }
 
-/* Success message styling */
+/* Success message styling - Improved for dark mode */
 .bucket-success-message {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--success);
   font-weight: 500;
+  color: var(--success-text-dark, var(--eg-green-600)); /* Use success-text-dark for dark mode */
+}
+
+.bucket-success-message .material-icons {
+  color: var(--eg-green-300);
 }
 
 /* Status badges with consistent styling */
@@ -165,13 +169,24 @@ textarea {
   margin-bottom: 0.5rem;
 }
 
-/* Modal styling for bucket dialogs */
+/* Modal styling for bucket dialogs - Improved for dark mode */
 .bucket-modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border);
+  background-color: var(--bs-body-bg-alt, #f8f9fa);
+  color: var(--bs-body-color);
+}
+
+/* Create a dark mode specific override */
+:root[data-bs-theme="dark"] .bucket-success-message {
+  color: var(--eg-green-200); /* Bright green that's visible on dark backgrounds */
+}
+
+:root[data-bs-theme="dark"] .bucket-success-message .material-icons {
+  color: var(--eg-green-300); /* Slightly brighter green for the icon */
 }
 
 /* Responsive adjustments */

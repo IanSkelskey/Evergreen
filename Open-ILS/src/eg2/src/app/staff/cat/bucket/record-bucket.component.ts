@@ -14,7 +14,7 @@ import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/g
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
 import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
-import {BucketShareDialogComponent} from '@eg/staff/cat/bucket/bucket-share-dialog.component';
+import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
@@ -22,6 +22,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
 import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
+import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
+import {BucketDialogService} from '@eg/staff/share/buckets/bucket-dialog.service';
 
 /**
  * Record bucket grid interface
@@ -65,6 +67,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     favoriteIds: number[] = [];
 
     @ViewChild('transferDialog', { static: true }) transferDialog: BucketTransferDialogComponent;
+    @ViewChild('patronSearch', { static: true }) patronSearch: PatronSearchDialogComponent;
     @ViewChild('shareBucketDialog', { static: true }) shareBucketDialog: BucketShareDialogComponent;
     @ViewChild('newBucketDialog', { static: true }) newBucketDialog: BucketDialogComponent;
     @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
@@ -92,11 +95,19 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private evt: EventService,
         private flatData: GridFlatDataService,
         private bucketService: RecordBucketService,
+        private bucketDialogService: BucketDialogService // Add service
     ) {}
 
     async ngOnInit() {
         this.initInProgress = true; console.warn('initInProgress = true');
         console.debug('RecordBucketComponent: this',this);
+
+        // Register the patron search dialog as early as possible
+        setTimeout(() => {
+            if (this.patronSearch) {
+                this.bucketDialogService.setPatronSearchDialog(this.patronSearch);
+            }
+        });
 
         this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
             console.debug('segments',segments);
@@ -538,7 +549,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
         console.debug('rows', rows);
         this.shareBucketDialog.containerObjects = rows;
-        this.shareBucketDialog.containerObjects = rows;
+        // Remove passing patronSearch directly
         this.shareBucketDialog.loadAouTree();
         this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();

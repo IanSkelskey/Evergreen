@@ -1,0 +1,109 @@
+/* Modal structure improvements */
+:host ::ng-deep .modal-content {
+  display: flex;
+  flex-direction: column;
+  min-height: auto !important;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+:host ::ng-deep .modal-dialog.modal-xl {
+  max-width: 1000px;
+  margin: 1.75rem auto;
+  width: calc(100% - 2rem);
+  min-width: 550px;
+}
+
+:host ::ng-deep .modal-header {
+  display: flex;
+  align-items: center;
+  background-color: var(--modal-header-bg, #f5f5f5);
+  border-bottom: 1px solid var(--border, #dee2e6);
+  padding: 1rem 1.25rem;
+}
+
+:host ::ng-deep .modal-header h4 {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .modal-header .material-icons {
+  font-size: 1.5rem;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+:host ::ng-deep .btn-close {
+  margin-left: auto;
+}
+
+:host ::ng-deep .modal-body {
+  padding: 1.25rem 1.5rem;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  background-color: var(--modal-body-bg);
+}
+
+/* Remove the modal-footer custom styles to use the shared bucket-modal-footer styles */
+
+/* Tab navigation styling */
+.nav-tabs {
+  border-bottom: 1px solid var(--border, #dee2e6);
+  margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: var(--bs-body-color);
+  padding: 0.5rem 1rem;
+  margin-bottom: -1px;
+  background: none;
+  transition: color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--primary, #0d6efd);
+  border-bottom: 2px solid var(--primary, #0d6efd);
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+  border-color: var(--bs-gray-300, #dee2e6);
+}
+
+/* Section headers styling */
+h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: var(--bs-body-color);
+}
+
+/* Tree container styling */
+.tree-container {
+  border: 1px solid var(--border, #dee2e6);
+  border-radius: 0.25rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Update state styles */
+.actions-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Footer status message styles for better dark mode support */
+.status-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--bs-body-color);
+}
