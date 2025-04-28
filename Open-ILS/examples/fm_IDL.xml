@@ -7617,6 +7617,17 @@ SELECT  usr,
 			</actions>
 		</permacrud>
 	</class>
+	<class id="cubs" controller="open-ils.cstore" oils_obj:fieldmapper="container::user_bucket_shares" oils_persist:tablename="container.user_bucket_shares" reporter:label="User Bucket Share Mapping">
+		<fields oils_persist:primary="id" oils_persist:sequence="container.user_bucket_shares_id_seq">
+			<field name="id" reporter:datatype="id"/>
+			<field name="bucket" reporter:datatype="link" oils_obj:required="true"/>
+			<field name="share_org" reporter:datatype="link" oils_obj:required="true"/>
+		</fields>
+		<links>
+			<link field="bucket" reltype="has_a" key="id" map="" class="cub"/>
+			<link field="share_org" reltype="has_a" key="id" map="" class="aou"/>
+		</links>
+	</class>
 	<class id="cubn" controller="open-ils.cstore" oils_obj:fieldmapper="container::user_bucket_note" oils_persist:tablename="container.user_bucket_note" reporter:label="User Bucket Note">
 		<fields oils_persist:primary="id" oils_persist:sequence="container.user_bucket_note_id_seq">
 			<field name="id" reporter:datatype="id"/>
