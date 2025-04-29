@@ -358,6 +358,14 @@ sub pcrud_count {
         $class = "container::biblio_record_entry_bucket_shares";
     } elsif ($hint eq 'cbrebi') {
         $class = "container::biblio_record_entry_bucket_item";
+    } elsif ($hint eq 'cub') {
+        $class = "container::user_bucket";
+    } elsif ($hint eq 'cubuf') {
+        $class = "container::user_bucket_usr_flag";
+    } elsif ($hint eq 'cubs') {
+        $class = "container::user_bucket_shares";
+    } elsif ($hint eq 'cubi') {
+        $class = "container::user_bucket_item";
     }
 
     return OpenILS::Event->new('BAD_PARAMS', note => "Invalid class hint: $hint")

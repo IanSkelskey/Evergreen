@@ -7599,20 +7599,26 @@ SELECT  usr,
 			<field name="name" reporter:datatype="text" oils_obj:required="true"/>
 			<field name="description" reporter:datatype="text"/>
 			<field name="owner" reporter:datatype="link" oils_obj:required="true"/>
-			<field name="pub" reporter:datatype="bool"/>
+			<field name="pub" reporter:datatype="bool" oils_obj:required="true"/>
 			<field name="create_time" reporter:datatype="timestamp"/>
 			<field name="owning_lib" reporter:datatype="org_unit"/>
+			<field name="share_maps" oils_persist:virtual="true" reporter:datatype="link"/>
 		</fields>
 		<links>
 			<link field="owning_lib" reltype="has_a" key="id" map="" class="aou"/>
 			<link field="owner" reltype="has_a" key="id" map="" class="au"/>
 			<link field="items" reltype="has_many" key="bucket" map="" class="cubi"/>
+			<link field="share_maps" reltype="has_many" key="bucket" map="" class="cubs"/>
 		</links>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>
 				<create permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET" context_field="owning_lib" owning_user="owner"/>
-				<retrieve permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET" context_field="owning_lib" owning_user="owner"/>
-				<update permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET" context_field="owning_lib" owning_user="owner"/>
+				<retrieve permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET VIEW_CONTAINER" context_field="owning_lib" owning_user="owner" permit_field="pub" permit_field_value="t">
+					<context link="share_maps" field="share_org"/>
+				</retrieve>
+				<update permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET UPDATE_CONTAINER" context_field="owning_lib" owning_user="owner">
+					<context link="share_maps" field="share_org"/>
+				</update>
 				<delete permission="CREATE_USER_BUCKET ADMIN_USER_BUCKET" context_field="owning_lib" owning_user="owner"/>
 			</actions>
 		</permacrud>
