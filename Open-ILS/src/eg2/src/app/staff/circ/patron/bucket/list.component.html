@@ -1,0 +1,178 @@
+<eg-title i18n-prefix prefix="Patron Buckets">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Buckets" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-confirm-dialog #deleteDialog
+    dialogTitle="Delete patron bucket?" i18n-dialogTitle
+    i18n-dialogBody
+    dialogBody="Delete the selected patron bucket(s)?">
+</eg-confirm-dialog>
+
+<eg-alert-dialog #retrieveByIdFail
+    dialogTitle="Error retrieving bucket" i18n-dialogTitle>
+</eg-alert-dialog>
+
+<eg-alert-dialog #deleteFail
+    dialogTitle="Error deleting bucket" i18n-dialogTitle
+    i18n-dialogBody
+    dialogBody="Error deleting one or more buckets">
+</eg-alert-dialog>
+
+<div class="container-fluid px-0">
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <!-- Left side with New Bucket button and tabs -->
+        <div class="bucket-controls d-flex flex-wrap align-items-center">
+          <button class="btn btn-primary me-3 mb-2" (click)="openNewBucketDialog()">
+            <span class="material-icons">add</span>
+            <span i18n>New Bucket</span>
+          </button>
+          
+          <!-- Tabs navigation, styled to display inline on larger screens -->
+          <ul class="nav nav-tabs mb-2">
+            <ng-container *ngFor="let viewKey of getViewKeys()">
+              <li class="nav-item">
+                <a class="nav-link" [class.active]="isCurrentView(viewKey)" (click)="switchTo(viewKey)">
+                  <span class="material-icons" *ngIf="viewKey === 'user'">folder</span>
+                  <span class="material-icons" *ngIf="viewKey === 'favorites'">star</span>
+                  {{getViews()[viewKey]?.label}}
+                  <span class="tab-count" *ngIf="getViews()[viewKey]?.count !== null && getViews()[viewKey]?.count !== undefined">
+                    ({{getViews()[viewKey]?.count}})
+                  </span>
+                  <span *ngIf="getViews()[viewKey]?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+                </a>
+              </li>
+            </ng-container>
+            
+            <!-- Shared Buckets tab -->
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="isCurrentView('shared')" (click)="switchTo('shared')">
+                <span class="material-icons">folder_shared</span>
+                <span i18n>Shared Buckets</span>
+                <span class="tab-count" *ngIf="getViews()['shared']?.count !== null && getViews()['shared']?.count !== undefined">
+                  ({{getViews()['shared']?.count}})
+                </span>
+                <span *ngIf="getViews()['shared']?.count === null && countInProgress" class="spinner-border spinner-border-sm ms-1" role="status"></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Right side with retrieve form -->
+        <form (ngSubmit)="retrieveBucketById()" class="retrieve-form mb-2">
+          <div class="input-group">
+            <input type="number" class="form-control" 
+              [(ngModel)]="bucketIdToRetrieve" placeholder="Bucket ID" i18n-placeholder
+              [disabled]="retrievingById" name="bucketId" #bucketIdInput min="0">
+            <button type="submit" class="btn btn-outline-primary" [disabled]="retrievingById" i18n>
+              <span *ngIf="retrievingById" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              Retrieve
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid section -->
+  <eg-grid #grid 
+      [dataSource]="dataSource"
+      [cellTextGenerator]="cellTextGenerator"
+      i18n-persistKey 
+      persistKey="circ.patron_buckets"
+      (rowSelectionChange)="gridSelectionChange($event)"
+      idlClass="cub"
+      ignoreFields="create_time,owner,owning_lib"
+      [sortable]="true"
+      [filterable]="true"
+      [emptyTemplate]="emptyGridTemplate"
+  >
+    <eg-grid-toolbar-action label="View Content" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="viewSelectedBuckets($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Edit Bucket" i18n-label
+        [disabled]="!oneSelectedRow"
+        (onClick)="openEditBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
+    <!-- Add favorites actions -->
+    <eg-grid-toolbar-action label="Add to Favorites" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="favoriteBucket($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Remove from Favorites" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="unFavoriteBucket($event)">
+    </eg-grid-toolbar-action>
+
+    <!-- Share action -->
+    <eg-grid-toolbar-action label="Share Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openShareBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action label="Delete Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openDeleteBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
+    <!-- Debug action (can be kept for development) -->
+    <eg-grid-toolbar-action label="Debug Selected Row" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="debugRowData($event)">
+    </eg-grid-toolbar-action>
+
+    <!-- Add favorite column at the beginning -->
+    <eg-grid-column name="favorite" i18n-label label="Favorite" [filterable]="false" 
+        [sortable]="false" [cellTemplate]="favoriteCellTemplate"></eg-grid-column>
+    
+    <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
+    <eg-grid-column path="name" i18n-label label="Name" visible="true" [cellTemplate]="nameTemplate"></eg-grid-column>
+    <eg-grid-column path="description" i18n-label label="Description" visible="true"></eg-grid-column>
+    <eg-grid-column path="btype" i18n-label label="Type" visible="true"></eg-grid-column>
+    <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
+    <eg-grid-column path="owning_lib.shortname" i18n-label label="Owning Library" visible="false"></eg-grid-column>
+    <eg-grid-column path="create_time" i18n-label label="Create Date" visible="true" datatype="timestamp"></eg-grid-column>
+    <eg-grid-column path="pub" i18n-label label="Public" visible="false"></eg-grid-column>
+  </eg-grid>
+
+<!-- Add favorite cell template -->
+<ng-template #favoriteCellTemplate let-row="row">
+  <button *ngIf="favoriteIds.includes(row?.id)" (click)="unFavoriteBucket([row])"
+    type="button" class="btn mat-icon-in-button text-warning user-favorite">
+    <span class="material-icons" title="Favorite" i18n-title aria-hidden="true">star</span>
+    <span class="visually-hidden" i18n="Bucket favorites column star icon alt text">Favorite</span>
+  </button>
+  <button *ngIf="!favoriteIds.includes(row?.id)" (click)="favoriteBucket([row])"
+    type="button" class="btn mat-icon-in-button text-muted user-favorite">
+    <span class="material-icons" title="Not favorite" i18n-title aria-hidden="true">star_outlined</span>
+    <span class="visually-hidden" i18n="Bucket favorites column star icon alt text">Not favorite</span>
+  </button>
+</ng-template>
+
+<ng-template #nameTemplate let-bucket="row">
+  <a [routerLink]="['/staff/circ/patron/bucket/content', bucket?.id]" 
+     class="bucket-name-link"
+     title="View Bucket Content">
+    {{bucket?.name}}
+  </a>
+</ng-template>
+
+<!-- Add the bucket share dialog template with bucketClass="user" -->
+<eg-bucket-share-dialog #shareBucketDialog bucketClass="user"></eg-bucket-share-dialog>
+<eg-bucket-dialog #editBucketDialog></eg-bucket-dialog>
+
+<ng-template #emptyGridTemplate>
+  <div class="text-center text-muted py-4" i18n>
+    Nothing to display
+  </div>
+</ng-template>
+
+<!-- Add patron search dialog for sharing support -->
+<eg-patron-search-dialog #patronSearch></eg-patron-search-dialog>

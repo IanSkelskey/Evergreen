@@ -10,7 +10,7 @@ import {AccessKeyService} from '@eg/share/accesskey/accesskey.service';
 import {AccessKeyInfoComponent} from '@eg/share/accesskey/accesskey-info.component';
 import {OpChangeComponent} from '@eg/staff/share/op-change/op-change.component';
 import {TitleComponent} from '@eg/share/title/title.component';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketModule} from './share/buckets/bucket.module';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 import {BibSummaryComponent} from '@eg/staff/share/bib-summary/bib-summary.component';
 import {BibStaffViewComponent} from '@eg/staff/share/bib-staff-view/bib-staff-view.component';
@@ -27,7 +27,7 @@ import {CourseService} from './share/course.service';
 import {FileExportService} from '@eg/share/util/file-export.service';
 import {OfflineService} from '@eg/staff/share/offline.service';
 import {ItemLocationSelectModule} from '@eg/share/item-location-select/item-location-select.module';
-import { ScriptService } from '@eg/share/util/script.service';
+import {ScriptService} from '@eg/share/util/script.service';
 
 /**
  * Imports the EG common modules and adds modules common to all staff UI's.
@@ -40,7 +40,6 @@ import { ScriptService } from '@eg/share/util/script.service';
         AccessKeyInfoComponent,
         TitleComponent,
         OpChangeComponent,
-        BucketDialogComponent,
         BibSummaryComponent,
         BibStaffViewComponent,
         EgHelpPopoverComponent,
@@ -57,7 +56,8 @@ import { ScriptService } from '@eg/share/util/script.service';
         CommonWidgetsModule,
         GridModule,
         CatalogCommonModule,
-        ItemLocationSelectModule
+        ItemLocationSelectModule,
+        BucketModule,
     ],
     exports: [
         EgCommonModule,
@@ -69,7 +69,6 @@ import { ScriptService } from '@eg/share/util/script.service';
         AccessKeyInfoComponent,
         TitleComponent,
         OpChangeComponent,
-        BucketDialogComponent,
         BibSummaryComponent,
         BibStaffViewComponent,
         EgHelpPopoverComponent,
@@ -80,6 +79,7 @@ import { ScriptService } from '@eg/share/util/script.service';
         DatesInOrderValidatorDirective,
         PatronBarcodeValidatorDirective,
         AddedContentComponent,
+        BucketModule
     ]
 })
 

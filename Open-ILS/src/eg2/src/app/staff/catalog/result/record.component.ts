@@ -10,11 +10,11 @@ import {CatalogSearchContext} from '@eg/share/catalog/search-context';
 import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {StaffCatalogService} from '../catalog.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 import {CourseService} from '@eg/staff/share/course.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ToastService} from '@eg/share/toast/toast.service';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {ResultFacetsComponent} from './facets.component';
 
 @Component({
@@ -23,9 +23,8 @@ import {ResultFacetsComponent} from './facets.component';
     styleUrls: ['record.component.css']
 })
 export class ResultRecordComponent implements OnInit, OnDestroy {
-
     @ViewChild('addRecordToBucketDialog', { static: true })
-        addToBucketDialog: BucketDialogComponent;
+        addToBucketDialog: BucketItemTransferDialogComponent;
 
     private destroy$ = new Subject<void>();
 
@@ -57,7 +56,7 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
         private staffCat: StaffCatalogService,
         private basket: BasketService,
         private course: CourseService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
         private auth: AuthService,
         private toast: ToastService,
     ) {}
@@ -187,9 +186,12 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
         console.debug('chooseBucket, invoked');
         try {
             this.recordIds = [bibId];
+            this.addToBucketDialog.bucketClass = 'biblio';
+            this.addToBucketDialog.itemIds = this.recordIds;
+            
             const dialogObservable = this.addToBucketDialog.open({size: 'lg'}).pipe(
                 catchError((error: unknown) => {
-                    console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                    console.debug('Error in dialog observable:', error);
                     return EMPTY;
                 }),
                 takeUntil(this.destroy$),
@@ -198,8 +200,9 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             console.debug('chooseBucket results:', results);
 
-            this.bucketService.requestBibBucketsRefresh();
-
+            if (results && results.success) {
+                this.bucketService.requestBibBucketsRefresh();
+            }
         } catch (error) {
             console.error('chooseBucket, error in dialog:', error);
         }

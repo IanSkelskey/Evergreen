@@ -1,49 +1,87 @@
 <eg-alert-dialog #fail></eg-alert-dialog>
 <eg-confirm-dialog #confirm></eg-confirm-dialog>
 
-<eg-patron-search-dialog #patronSearch>
-</eg-patron-search-dialog>
-
 <ng-template #dialogContent>
-  <div class="modal-header bg-info">
-    <h4 class="modal-title" i18n>Bucket Sharing</h4>
-    <button type="button" class="btn-close btn-close-white" 
-                          i18n-aria-label aria-label="Close dialog" 
-                                          (click)="close({})"></button>
+  <div class="modal-header align-items-center">
+    <h4 class="modal-title d-flex align-items-center gap-2">
+      <span class="material-icons" aria-hidden="true">share</span>
+      <span i18n>Bucket Sharing</span>
+    </h4>
+    <span class="flex-grow-1"></span>
+    <button type="button" class="btn-close" 
+            i18n-aria-label aria-label="Close dialog" 
+            (click)="close({})"></button>
   </div>
+  
   <div class="modal-body">
-    <ul ngbNav #bucketShareTabs="ngbNav" class="nav-tabs" [activeId]="activeTabId" [keyboard]="true" [roles]="false" role="tablist">
-      <li role="presentation" [ngbNavItem]="1">
-        <a role="tab" ngbNavLink i18n>Users with View Permissions</a>
+    <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+      <span class="material-icons me-2" aria-hidden="true">info</span>
+      <span i18n>Share buckets with specific users or libraries to allow collaborative workflows.</span>
+    </div>
+    
+    <ul ngbNav #bucketShareTabs="ngbNav" class="nav-tabs custom-tabs mb-4 bucket-tabs" 
+        [(activeId)]="activeTabId" [keyboard]="true">
+      
+      <li [ngbNavItem]="1">
+        <a ngbNavLink i18n>Users with View Permissions</a>
         <ng-template ngbNavContent>
-          <eg-bucket-user-share #userShareViewPerm
-            [trickery]="trickeryViewPermGrid"
-            [cellTextGenerator]="cellTextGeneratorViewPermGrid"
-            [dataSource]="dataSourceViewPermGrid"
-            [onRowActivate]="onRowActivateViewPermGrid"
-            [addUsers]="addUsersViewPermGrid"
-            [removeUsers]="removeUsersViewPermGrid">
-          </eg-bucket-user-share>
+          <div class="mb-3">
+            <p class="text-muted" i18n>Users with view permissions can see the bucket content but cannot modify it.</p>
+            <eg-bucket-user-share #userShareViewPerm
+              [trickery]="trickeryViewPermGrid"
+              [cellTextGenerator]="cellTextGeneratorViewPermGrid"
+              [dataSource]="dataSourceViewPermGrid"
+              [onRowActivate]="onRowActivateViewPermGrid"
+              [addUsers]="addUsersViewPermGrid"
+              [removeUsers]="removeUsersViewPermGrid">
+            </eg-bucket-user-share>
+          </div>
+          
+          <div class="actions-container">
+            <button type="button" class="btn btn-success bucket-btn bucket-action-btn" 
+                    [disabled]="shareUsersDisabledViewPermGrid"
+                    (click)="shareBucketsWithUsersViewPermGrid()">
+              <span class="material-icons bucket-icon" aria-hidden="true">update</span>
+              <span i18n>Update View Permissions</span>
+            </button>
+          </div>
         </ng-template>
       </li>
-      <li role="presentation" [ngbNavItem]="2">
-        <a role="tab" ngbNavLink i18n>Users with Edit Permissions</a>
+      
+      <li [ngbNavItem]="2">
+        <a ngbNavLink i18n>Users with Edit Permissions</a>
         <ng-template ngbNavContent>
-          <eg-bucket-user-share #userShareEditPerm
-            [trickery]="trickeryEditPermGrid"
-            [cellTextGenerator]="cellTextGenerator"
-            [dataSource]="dataSourceEditPermGrid"
-            [onRowActivate]="onRowActivateEditPermGrid"
-            [addUsers]="addUsersEditPermGrid"
-            [removeUsers]="removeUsersEditPermGrid">
-          </eg-bucket-user-share>
+          <div class="mb-3">
+            <p class="text-muted" i18n>Users with edit permissions can view and modify bucket content.</p>
+            <eg-bucket-user-share #userShareEditPerm
+              [trickery]="trickeryEditPermGrid"
+              [cellTextGenerator]="cellTextGeneratorEditPermGrid"
+              [dataSource]="dataSourceEditPermGrid"
+              [onRowActivate]="onRowActivateEditPermGrid"
+              [addUsers]="addUsersEditPermGrid"
+              [removeUsers]="removeUsersEditPermGrid">
+            </eg-bucket-user-share>
+          </div>
+          
+          <div class="actions-container">
+            <button type="button" class="btn btn-success bucket-btn bucket-action-btn" 
+                    [disabled]="shareUsersDisabledEditPermGrid"
+                    (click)="shareBucketsWithUsersEditPermGrid()">
+              <span class="material-icons bucket-icon" aria-hidden="true">update</span>
+              <span i18n>Update Edit Permissions</span>
+            </button>
+          </div>
         </ng-template>
       </li>
-      <li role="presentation" [ngbNavItem]="3">
-        <a role="tab" ngbNavLink i18n>Libraries</a>
+      
+      <li [ngbNavItem]="3">
+        <a ngbNavLink i18n>Libraries</a>
         <ng-template ngbNavContent>
+          <div class="mb-3">
             <h3 i18n>Libraries with View/Edit Permissions</h3>
-            <div class="border rounded p-1" >
+            <p class="text-muted" i18n>Share with all staff at selected libraries. Check libraries to enable sharing.</p>
+            
+            <div class="tree-container">
               <eg-tree
                 [showSelectAll]="true"
                 [tree]="shareTree"
@@ -51,16 +89,46 @@
                 (nodeClicked)="dialog_nodeClicked($event)">
               </eg-tree>
             </div>
+          </div>
+          
+          <div class="actions-container">
+            <button type="button" class="btn btn-success bucket-btn bucket-action-btn" 
+                    [disabled]="shareOrgsDisabled"
+                    (click)="shareBucketsWithOrgs()">
+              <span class="material-icons bucket-icon" aria-hidden="true">update</span>
+              <span i18n>Update Library Permissions</span>
+            </button>
+          </div>
         </ng-template>
       </li>
     </ul>
     <div [ngbNavOutlet]="bucketShareTabs"></div>
   </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-success" 
-                          [disabled]="!orgsTouched && !users_touchedViewPermGrid && !users_touchedEditPermGrid"
-                          (click)="shareBuckets()" i18n>Update Bucket Sharing</button>
-    <button type="button" class="btn btn-normal" 
-                          (click)="close({})" i18n>Cancel Update</button>
+  
+  <!-- Use bucket-modal-footer class for consistent styling -->
+  <div class="bucket-modal-footer">
+    <div class="d-flex justify-content-between w-100">
+      <div>
+        <!-- Use class with better dark mode styling -->
+        <div *ngIf="orgsTouched || users_touchedViewPermGrid || users_touchedEditPermGrid" 
+             class="bucket-success-message">
+          <span class="material-icons bucket-icon" aria-hidden="true">check_circle</span>
+          <span i18n>Changes are ready to be saved</span>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-success bucket-btn bucket-action-btn" 
+                [disabled]="!orgsTouched && !users_touchedViewPermGrid && !users_touchedEditPermGrid"
+                (click)="shareBuckets()">
+          <span class="material-icons bucket-icon" aria-hidden="true">save</span>
+          <span i18n>Update All Sharing Settings</span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary bucket-btn" 
+                (click)="close({})">
+          <span class="material-icons bucket-icon" aria-hidden="true">close</span>
+          <span i18n>Close</span>
+        </button>
+      </div>
+    </div>
   </div>
 </ng-template>

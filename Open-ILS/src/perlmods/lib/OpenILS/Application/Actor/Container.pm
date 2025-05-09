@@ -63,7 +63,7 @@ $htypes{'user'} = "au";
 $jtypes{'biblio'} = "cbreb";
 #$jtypes{'callnumber'} = "ccnb";
 #$jtypes{'copy'} = "ccb";
-#$jtypes{'user'} = "cub";
+$jtypes{'user'} = "cub";
 
 $table{'biblio'} = "biblio.record_entry";
 $table{'callnumber'} = "asset.call_number";
@@ -1781,7 +1781,7 @@ sub batch_edit {
             $count++;
             $meth = 'retrieve_' . $itypes{$class};
             my $field = 'target_'.$ttypes{$class};
-            my $obj = $$obj_cache{$item->$field} = $e->$meth($item->$field);
+            my $obj = $e->$meth($item->$field);
 
             for my $perm_field (keys %{$self->{base_perm}}) {
                 my $perm_def = $self->{base_perm}->{$perm_field};
@@ -1819,7 +1819,7 @@ sub batch_edit {
                                 } else {
                                     $pwhere = $obj->$pwhere;
                                 }
-                                $pwhat = [ split / /, $pwhat ];
+                                $pwhat = [ split/ /, $pwhat ];
                                 for my $p (@$pwhat) {
                                     $e->allowed($p, $pwhere) or do {
                                         $pwhere ||= "everywhere";
@@ -2134,7 +2134,7 @@ sub update_container_user_shares {
     my $admin_perm;
     my $object_type;
     if ($self->api_name =~ 'update_record_bucket_user_share_mapping') {
-        $retrieve_method = 'retrieve_container_biblio_record_entry_bucket';
+        $retrieve_method = 'search_container_biblio_record_entry_bucket';
         $admin_perm = 'ADMIN_CONTAINER_BIBLIO_RECORD_ENTRY_USER_SHARE';
         $object_type = 'cbreb';
     }

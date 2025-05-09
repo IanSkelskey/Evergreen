@@ -15,9 +15,10 @@ import {Pager} from '@eg/share/util/pager';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+// Add import for the new item transfer dialog
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
 import {HoldTransferViaBibsDialogComponent} from '@eg/staff/share/holds/transfer-via-bibs-dialog.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 
@@ -44,7 +45,9 @@ export class RecordBucketItemComponent implements OnInit {
     @ViewChild('confirmDialog') confirmDialog: ConfirmDialogComponent;
     @ViewChild('alertDialog') alertDialog: AlertDialogComponent;
     @ViewChild('promptDialog') promptDialog: PromptDialogComponent;
-    @ViewChild('addToBucketDialog') addToBucketDialog: BucketDialogComponent;
+    @ViewChild('addToBucketDialog') addToBucketDialog: BucketItemTransferDialogComponent;
+    // Add ViewChild for the new dialog
+    @ViewChild('itemTransferDialog') itemTransferDialog: BucketItemTransferDialogComponent;
     @ViewChild('holdTransferDialog') holdTransferDialog: HoldTransferViaBibsDialogComponent;
     @ViewChild('exportDialog') exportDialog: RecordBucketExportDialogComponent;
     @ViewChild('importDialog') importDialog: RecordBucketItemUploadDialogComponent;
@@ -210,21 +213,26 @@ export class RecordBucketItemComponent implements OnInit {
         }
     }
 
-    openAddToBucketDialog = async (rows: any[]): Promise<boolean> => {
+    openAddToBucketDialog = async (rows: any[]): Promise<boolean | null> => {
         if (!rows.length) { return false; }
+        
         this.addToBucketDialog.bucketClass = 'biblio';
-        this.addToBucketDialog.itemIds = rows.map( r => r['target_biblio_record_entry.id'] );
+        this.addToBucketDialog.itemIds = rows.map(r => r['target_biblio_record_entry.id']);
+        
         try {
             const dialogObservable = this.addToBucketDialog.open({size: 'lg'}).pipe(
                 catchError((error: unknown) => {
-                    console.error('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                    console.debug('Dialog dismissed or closed without selection');
                     return EMPTY;
                 })
             );
+            
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             console.debug('Add to bucket results:', results);
-            this.grid.reload(); // only needed if adding to the same bucket we're in :-)
-            return results !== null;
+            this.grid.reload();
+            
+            // Return null to indicate user dismissal, false for error, true for success
+            return results && results.success ? true : null;
         } catch (error) {
             console.error('Error in add to bucket dialog:', error);
             return false;
@@ -269,8 +277,16 @@ export class RecordBucketItemComponent implements OnInit {
     async moveToBucket(rows: any[]): Promise<void> {
         if (!rows.length) { return; }
         try {
+            // Use the new dialog for move-to-bucket as well
             const addResult = await this.openAddToBucketDialog(rows);
-            if (addResult) {
+            
+            // null means user dismissed the dialog (not an error condition)
+            if (addResult === null) {
+                console.debug('moveToBucket: operation cancelled by user');
+                return;
+            }
+            
+            if (addResult === true) {
                 console.debug('moveToBucket: add part accomplished');
                 const removeResult = await this.removeFromBucket(rows);
                 if (removeResult) {
@@ -282,7 +298,18 @@ export class RecordBucketItemComponent implements OnInit {
                 console.error('moveToBucket: failed to add to new bucket');
             }
         } catch(error) {
-            console.error('moveToBucket, error', error);
+            const isDismissal = 
+                error === 'dismiss' || 
+                error === 'backdrop click' || 
+                error === 'escape' ||
+                (error && error.name === 'EmptyError') ||
+                (typeof error === 'object' && error !== null && 'type' in error && error.type === 'dismiss');
+                
+            if (!isDismissal) {
+                console.error('moveToBucket, error', error);
+            } else {
+                console.debug('Dialog dismissed by user:', error);
+            }
         }
     }
 

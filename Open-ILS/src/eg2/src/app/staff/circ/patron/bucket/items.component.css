@@ -1,0 +1,43 @@
+/* Leveraging shared bucket styles */
+
+/* Specific styles for money values that can't be generalized */
+.money-value {
+  display: block;
+}
+
+.money-value.text-danger {
+  color: var(--bs-danger) !important;
+}
+
+.money-value.text-success {
+  color: var(--bs-success) !important;
+}
+
+a.text-danger.money-value {
+  color: var(--bs-danger) !important;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--bs-danger);
+}
+
+a.text-danger.money-value:hover {
+  text-decoration: none;
+  border-bottom: 1px solid var(--bs-danger);
+}
+
+/* Grid toolbar customizations - only keep component-specific styles */
+:host ::ng-deep eg-grid-toolbar-action button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+:host ::ng-deep eg-grid-toolbar-action .material-icons {
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
+  vertical-align: text-bottom;
+}
+
+/* Component-specific overrides only */
+.navigation-buttons {
+  margin-bottom: 1rem;
+}

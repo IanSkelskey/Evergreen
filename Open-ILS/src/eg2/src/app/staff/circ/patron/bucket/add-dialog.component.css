@@ -1,0 +1,25 @@
+/* Leveraging shared bucket styles */
+
+/* Keep only dialog-specific styling that can't be shared */
+
+:host ::ng-deep .modal-dialog.modal-xl {
+  max-width: 1200px; /* Make the dialog wider than standard xl */
+}
+
+:host ::ng-deep .modal-body {
+  padding-bottom: 1rem;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Status indicators specific styling */
+:host ::ng-deep .modal-footer .status-indicators {
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure the patron search fits properly within the modal */
+:host ::ng-deep eg-patron-search {
+  display: block;
+  width: 100%;
+}

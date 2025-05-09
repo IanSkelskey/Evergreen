@@ -22,8 +22,8 @@ import {MarkDamagedDialogComponent
 } from '@eg/staff/share/holdings/mark-damaged-dialog.component';
 import {CopyAlertsDialogComponent
 } from '@eg/staff/share/holdings/copy-alerts-dialog.component';
-import {BucketDialogComponent
-} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketItemTransferDialogComponent
+} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {BackdateDialogComponent} from '@eg/staff/share/circ/backdate-dialog.component';
@@ -87,7 +87,7 @@ export class CheckinComponent implements OnInit, AfterViewInit {
     @ViewChild('barcodeSelect') private barcodeSelect: BarcodeSelectComponent;
     @ViewChild('markDamagedDialog') private markDamagedDialog: MarkDamagedDialogComponent;
     @ViewChild('copyAlertsDialog') private copyAlertsDialog: CopyAlertsDialogComponent;
-    @ViewChild('bucketDialog') private bucketDialog: BucketDialogComponent;
+    @ViewChild('bucketDialog', { static: false }) private bucketDialog: BucketItemTransferDialogComponent;
     @ViewChild('itemNeverCircedStr') private itemNeverCircedStr: StringComponent;
     @ViewChild('backdateDialog') private backdateDialog: BackdateDialogComponent;
     @ViewChild('cancelTransitDialog') private cancelTransitDialog: CancelTransitDialogComponent;
@@ -322,6 +322,8 @@ export class CheckinComponent implements OnInit, AfterViewInit {
         if (copyIds.length > 0) {
             this.bucketDialog.bucketClass = 'copy';
             this.bucketDialog.itemIds = copyIds;
+            this.bucketDialog.dialogTitle = 'Add Items to Bucket';
+            this.bucketDialog.dialogIcon = 'inventory_2';
             this.bucketDialog.open({size: 'lg'});
         }
     }

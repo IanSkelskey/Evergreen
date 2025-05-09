@@ -1,0 +1,37 @@
+.bucket-id-form {
+  width: 100%;
+}
+
+.input-group {
+  flex-wrap: nowrap;
+}
+
+/* Component-specific button styles */
+.btn {
+  min-width: 220px;
+  height: 2.5rem;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for this component */
+@media (max-width: 767.98px) {
+  .input-group {
+    flex-direction: column;
+  }
+  
+  input.form-control {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .d-flex {
+    flex-direction: column;
+  }
+  
+  input.form-control.me-2 {
+    margin-right: 0 !important;
+    margin-bottom: 0.5rem;
+  }
+}
