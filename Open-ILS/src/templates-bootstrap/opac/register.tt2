@@ -95,7 +95,7 @@ END;
                 ) | html %]</h4>
         [% END %]
 
-        <form method='POST' class="needs-validation" novalidate>
+        <form method='POST' id="registration-form" class="needs-validation" novalidate data-org-unit="[% ctx.search_ou %]">
             <div class="form-group row">
                 <label class="control-label col-md-2" for='stgu.home_ou'>[% l('Home Library') %]</label>
                 <div class="col-md-6">
@@ -105,7 +105,7 @@ END;
                             can_have_users_only=1
                             valid_org_list=ctx.register.valid_orgs
                     %]
-                </div>    
+                </div>
                 <div class="col-md-4">
                     [% IF ctx.register.invalid.bad_home_ou %]
                     <span class='patron-reg-invalid'>
@@ -284,6 +284,7 @@ FOR field_def IN register_fields;
 </main>
 [%- END %]
 <script>
+
 (function() {
   'use strict';
   window.addEventListener('load', function() {
@@ -292,6 +293,7 @@ FOR field_def IN register_fields;
     // Loop over them and prevent submission
     var validation = Array.prototype.filter.call(forms, function(form) {
       form.addEventListener('submit', function(event) {
+        console.log('Bootstrap form validation');
         if (form.checkValidity() === false) {
           event.preventDefault();
           event.stopPropagation();
@@ -310,4 +312,10 @@ $(document).ready(function(){
     });
     $('.datepicker').datepicker("setDate", "");
 });
+
 </script>
+[% INCLUDE "opac/parts/recaptcha.tt2" 
+    action_name="register"
+    submit_action="submit"
+    target_element_id="registration-form" 
+%]
