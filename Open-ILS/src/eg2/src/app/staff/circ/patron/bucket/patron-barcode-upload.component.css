@@ -1,0 +1,370 @@
+/* Color variables for better theme support */
+:root {
+  --valid-color: #28a745;
+  --valid-border: #20c997;
+  --warning-color: #B45309;
+  --warning-border: #F59E0B;
+  --error-color: #dc3545;
+  --error-border: #f86c6b;
+}
+
+/* Fixed height containers to prevent layout jumps */
+.file-selection-row {
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+/* Make the file input container have fixed dimensions */
+.file-input-wrapper {
+  margin-bottom: 1rem;
+}
+
+/* Fix the clear button to ensure proper alignment */
+.clear-btn {
+  height: 38px;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-btn .material-icons {
+  font-size: 1rem;
+  margin-right: 0;
+}
+
+/* Style for the placeholder when no file is selected */
+.patron-preview-placeholder {
+  margin-bottom: 1rem;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin: 0 auto;
+}
+
+/* Status summary styling - updated with new badges and spacing */
+.status-summary {
+  padding: 1rem;
+  background-color: var(--bg-default);
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.status-badges {
+  gap: 0.75rem !important;
+}
+
+.status-badge-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-label {
+  font-weight: 500;
+  margin-right: 0.75rem;
+}
+
+/* Custom dark amber background for better contrast */
+.bg-warning-dark {
+  background-color: var(--warning-dark) !important;
+}
+
+.text-warning-dark {
+  color: var(--warning-dark) !important;
+}
+
+/* Badge text color specifically for the warning pill */
+.bg-warning-dark.text-white {
+  color: var(--warning-text-light) !important;
+}
+
+/* Badge styling and alignment improvements */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4em 0.6em;
+  font-size: 0.75rem;
+  font-weight: normal;
+  line-height: 1;
+  height: 24px; /* Fixed height for better alignment */
+}
+
+/* Pill badge with border */
+.pill-badge {
+  border-radius: 50rem;
+  padding-left: 0.6em;
+  padding-right: 0.6em;
+}
+
+/* Warning badge with yellow border */
+.bordered-warning {
+  box-shadow: 0 0 0 2px var(--warning-border);
+}
+
+/* Badge icon alignment - improved to center perfectly */
+.badge-icon {
+  font-size: 0.875rem !important;
+  margin-right: 0.25rem !important;
+  vertical-align: text-bottom; /* Better vertical alignment with text */
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Patron table styling */
+.patron-table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+}
+
+/* Table layout improvements */
+.table {
+  margin-bottom: 0;
+}
+
+/* Make the table header sticky */
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-default);
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--border-color);
+  box-shadow: 0 1px 0 var(--border-color);
+}
+
+.table th, .table td {
+  vertical-align: middle !important;
+  padding: 0.75rem 0.75rem;
+  text-align: left;
+}
+
+/* Row status styling - improved for accessibility and contrast */
+tr.row-valid {
+  background-color: var(--valid-bg-light) !important;
+  border-left: 3px solid var(--valid-border); /* Green left border for valid rows */
+}
+
+tr.row-duplicate {
+  background-color: var(--warning-bg-light) !important;
+  border-left: 3px solid var(--warning-border); /* Yellow left border for duplicate rows */
+}
+
+tr.row-invalid {
+  background-color: var(--error-bg-light) !important;
+  border-left: 3px solid var(--error-border); /* Red left border for invalid rows */
+}
+
+/* Improved hover states for rows */
+tr:hover {
+  background-color: var(--hover-light);
+}
+
+/* Selected state styling */
+tr.row-selected {
+  box-shadow: inset 0 0 0 1px var(--focus-outline);
+}
+
+/* Keyboard focus styling for improved accessibility */
+tr:focus {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -1px;
+}
+
+/* Column width control */
+.checkbox-col {
+  width: 40px;
+  text-align: center !important;
+}
+
+.status-col {
+  width: 48px;
+  text-align: center !important;
+}
+
+.barcode-col {
+  width: 120px;
+}
+
+.details-col {
+  min-width: 150px;
+}
+
+/* Status icon styling for better alignment and visibility */
+.status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-icon .material-icons {
+  font-size: 1.125rem;
+  vertical-align: middle;
+}
+
+/* Icon with outline for better visibility */
+.icon-with-outline {
+  filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* Specific icon styles for better distinction */
+.warning-icon {
+  font-size: 1.25rem;
+  filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.5));
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.5));
+}
+
+.status-text {
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Technical error button styling */
+.technical-error-btn {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.technical-error-btn:hover {
+  opacity: 1;
+}
+
+/* Technical error tooltip styling */
+.technical-error-tooltip {
+  font-family: monospace;
+  max-width: 300px;
+  white-space: pre-wrap;
+}
+
+/* Selection counter styling */
+.selection-counter {
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Name column truncation for small screens */
+@media (max-width: 576px) {
+  .patron-name {
+    display: block;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .details-col {
+    min-width: auto;
+  }
+  
+  /* Stack filter buttons on small screens */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Additional dialog display fixes */
+:host {
+  display: block;
+}
+
+:host ::ng-deep .modal {
+  display: block !important;
+}
+
+:host ::ng-deep .modal-dialog {
+  margin: 1.75rem auto;
+  max-width: 800px;
+}
+
+:host ::ng-deep .modal-content {
+  position: relative;
+  width: 100%;
+}
+
+/* Ensure the modal body can scroll if needed */
+:host ::ng-deep .modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Improve dialog visibility */
+:host ::ng-deep .modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Dark mode support - detect system preference with improved color contrast */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --warning-bg-light: rgba(255, 193, 7, 0.2);
+    --warning-border: #F59E0B; /* Keep same border in dark mode */
+    --error-bg-light: rgba(220, 53, 69, 0.2);
+    --valid-bg-light: rgba(40, 167, 69, 0.2);
+    --border-color: #495057;
+    --bg-default: #343a40;
+    --text-muted: #adb5bd;
+    --warning-dark: #F59E0B; /* Adjusted for dark mode - bright enough amber */
+    --warning-text-light: #000; /* Black text for warning badge in dark mode */
+    --focus-outline: #0d6efd;
+    --valid-border: #198754;
+    --error-border: #dc3545;
+    --warning-border: #F59E0B; /* Keep same border in dark mode */
+  }
+  
+  /* Improved dark mode icon visibility */
+  .icon-with-outline {
+    filter: drop-shadow(0px 0px 1px rgba(255, 255, 255, 0.5));
+  }
+  
+  /* Row hover in dark mode */
+  tr:hover {
+    background-color: var(--hover-dark);
+  }
+  
+  /* Extra specificity for dark mode */
+  .patron-table-container {
+    border-color: var(--border-color);
+  }
+  
+  .status-summary {
+    background-color: var(--bg-default);
+    border-color: var(--border-color);
+  }
+  
+  /* Boosted contrast for error text */
+  .text-danger {
+    color: #FF6B6B !important;
+  }
+}

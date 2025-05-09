@@ -1,0 +1,62 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Search & Add Patrons to Bucket</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+  </div>
+  
+  <div class="modal-body">
+    <!-- Show counter of how many patrons have been added in this session -->
+    <div class="alert alert-info d-flex align-items-center" *ngIf="addedPatronCount > 0">
+      <span class="material-icons me-2">info</span>
+      <div>
+        <strong i18n>Success!</strong>
+        <p class="mb-0" i18n>Added {{addedPatronCount}} patron(s) to bucket in this session</p>
+      </div>
+    </div>
+    
+    <p class="mb-2" i18n>Search for patrons to add to the bucket. You can select multiple patrons from search results.</p>
+    <div class="small text-muted mb-3" i18n>
+      <ul class="mb-0 ps-3">
+        <li>Double-click on a patron to immediately add them to the bucket</li>
+        <li>Or select multiple patrons using checkboxes and click "Add Selected" below</li>
+      </ul>
+    </div>
+    
+    <eg-patron-search #patronSearch
+      (patronsActivated)="patronsActivated($event)"
+      (selectionChange)="patronSelectionChange($event)">
+    </eg-patron-search>
+    
+    <!-- Selection badge moved to footer -->
+  </div>
+  
+  <div class="modal-footer">
+    <!-- Status indicators on the left -->
+    <div class="status-indicators me-auto">
+      <span class="text-muted small" *ngIf="addedPatronCount === 0" i18n>No patrons added yet</span>
+      <span class="badge bg-success" *ngIf="addedPatronCount > 0" i18n>{{addedPatronCount}} patron(s) added</span>
+      <span class="badge bg-primary ms-2" *ngIf="selectedPatronIds.length > 0" i18n>
+        {{selectedPatronIds.length}} patron(s) selected
+      </span>
+    </div>
+    
+    <!-- Action buttons on the right -->
+    <div>
+      <button type="button" class="btn btn-outline-primary me-2" 
+        [disabled]="selectedPatronIds.length === 0"
+        (click)="addSelectedPatronsToBucket(true)" i18n>
+        <span class="material-icons">playlist_add_check</span>
+        Add Selected & Continue
+      </button>
+      <button type="button" class="btn btn-success me-2" 
+        [disabled]="selectedPatronIds.length === 0"
+        (click)="addSelectedPatronsToBucket(false)" i18n>
+        <span class="material-icons">add_circle</span>
+        Add Selected & Close
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>Close</button>
+    </div>
+  </div>
+</ng-template>

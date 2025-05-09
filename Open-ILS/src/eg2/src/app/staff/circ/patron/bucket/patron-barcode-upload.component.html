@@ -1,0 +1,277 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Upload Patron Barcodes</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+  </div>
+  
+  <div class="modal-body">
+    <!-- File selection section -->
+    <div class="file-selection mb-4">
+      <h5 i18n>1. Select a barcode file</h5>
+      <p class="text-muted" i18n>
+        Select a text file (.txt, .csv) containing one patron barcode per line
+      </p>
+      
+      <div class="file-input-wrapper mb-3">
+        <!-- File selection row with fixed height to prevent jumping -->
+        <div class="d-flex align-items-center file-selection-row">
+          <div class="input-group flex-grow-1">
+            <input type="text" class="form-control" [value]="selectedFile?.name || ''" readonly
+                  placeholder="No file selected" i18n-placeholder>
+            <label class="input-group-text btn btn-outline-primary" for="barcodeFileInput" i18n>
+              Browse
+            </label>
+          </div>
+          <!-- Fixed clear button -->
+          <button *ngIf="selectedFile" 
+                  class="btn btn-outline-danger ms-2 clear-btn" 
+                  type="button"
+                  title="Clear selected file" i18n-title
+                  (click)="removeSelectedFile()">
+            <span class="d-flex align-items-center">
+              <span class="material-icons">clear</span>
+              <span class="ms-1 d-none d-sm-inline" i18n>Clear</span>
+            </span>
+          </button>
+        </div>
+        <input type="file" #barcodeFileInput id="barcodeFileInput" class="d-none" 
+              accept=".txt,.csv" (change)="onFileSelected($event)">
+      </div>
+      
+      <!-- Small note about how this works -->
+      <div class="text-muted small fst-italic" *ngIf="!selectedFile && !isLoading">
+        <span class="material-icons small">info</span>
+        <span i18n>Select a file to automatically preview patron information</span>
+      </div>
+    </div>
+    
+    <!-- Step 2 - Always show the heading -->
+    <h5 class="mb-3" i18n>2. Review patrons to add</h5>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="progress-container mb-3">
+      <div class="alert alert-info d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span>{{ loadingStep }}...</span>
+      </div>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+             role="progressbar"
+             [style.width.%]="(progressValue / progressMax) * 100"
+             [attr.aria-valuenow]="progressValue" 
+             [attr.aria-valuemin]="0" 
+             [attr.aria-valuemax]="progressMax">
+          {{ progressValue }} / {{ progressMax }}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Empty state - no file selected -->
+    <div *ngIf="!isLoading && !hasPreviewedPatrons" class="patron-preview-placeholder">
+      <div class="alert alert-secondary text-center">
+        <span class="material-icons d-block mb-2 placeholder-icon">upload_file</span>
+        <p class="mb-1" i18n>Select a barcode file above to preview patrons</p>
+        <p class="small mb-0 text-muted" i18n>Patron information will appear here after file processing</p>
+      </div>
+    </div>
+    
+    <!-- Preview section -->
+    <div *ngIf="hasPreviewedPatrons && !isLoading" class="patron-preview mb-4">
+      <!-- Status summary with pill badges -->
+      <div class="status-summary mb-3">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+          <div class="status-badge-wrapper">
+            <div class="d-flex align-items-center mb-2 mb-md-0">
+              <span class="status-label me-2" i18n>Results:</span>
+              <div class="status-badges d-flex flex-wrap gap-2">
+                <!-- Valid patrons badge -->
+                <span class="badge bg-success pill-badge" role="status" [attr.aria-label]="'Valid patrons: ' + stats.validBarcodes" i18n>
+                  <i class="material-icons badge-icon" aria-hidden="true">check_circle</i> Valid: {{ stats.validBarcodes }}
+                </span>
+                
+                <!-- Duplicates badge - Added bordered-warning class for yellow border -->
+                <span class="badge bg-warning-dark text-white pill-badge bordered-warning" role="status" [attr.aria-label]="'Duplicate patrons: ' + stats.duplicates" i18n>
+                  <i class="material-icons badge-icon" aria-hidden="true">warning</i> Duplicate: {{ stats.duplicates }}
+                </span>
+                
+                <!-- Invalid badge -->
+                <span class="badge bg-danger pill-badge" role="status" [attr.aria-label]="'Invalid barcodes: ' + stats.invalidBarcodes" i18n>
+                  <i class="material-icons badge-icon" aria-hidden="true">error_outline</i> Invalid: {{ stats.invalidBarcodes }}
+                </span>
+                
+                <!-- Info button with tooltip -->
+                <button class="btn btn-link btn-sm p-0 ms-1 text-info" 
+                        container="body"
+                        ngbTooltip="Valid: Ready to add to bucket. Duplicate: Already in bucket or appears multiple times. Invalid: Barcode not found or other error."
+                        i18n-ngbTooltip>
+                  <i class="material-icons">info</i><span class="visually-hidden" i18n>Status information</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Filter options (optional feature) -->
+          <div class="ms-auto" *ngIf="patrons.length > 5">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Filter patrons" i18n-aria-label>
+              <button type="button" class="btn btn-outline-secondary" [class.active]="patronFilter === 'all'" 
+                      (click)="filterPatrons('all')" i18n>All</button>
+              <button type="button" class="btn btn-outline-secondary" [class.active]="patronFilter === 'valid'" 
+                      (click)="filterPatrons('valid')" i18n>Valid</button>
+              <button type="button" class="btn btn-outline-secondary" [class.active]="patronFilter === 'duplicate'" 
+                      (click)="filterPatrons('duplicate')" i18n>Duplicates</button>
+              <button type="button" class="btn btn-outline-secondary" [class.active]="patronFilter === 'invalid'" 
+                      (click)="filterPatrons('invalid')" i18n>Invalid</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Toggle select all checkbox -->
+      <div class="d-flex align-items-center mb-2" *ngIf="getFilteredValidPatrons().length > 0">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="selectAllPatrons"
+                [checked]="areAllValidPatronsSelected()"
+                [indeterminate]="hasSelectedPatrons() && !areAllValidPatronsSelected()"
+                (change)="toggleSelectAllPatrons($event.target.checked)"
+                [disabled]="getFilteredValidPatrons().length === 0">
+          <label class="form-check-label" for="selectAllPatrons" i18n>
+            Select all valid patrons
+          </label>
+        </div>
+        <span class="ms-2 small selection-counter" *ngIf="hasSelectedPatrons()" i18n>
+          <strong>{{ getSelectedCount() }}</strong> {{ getSelectedCount() === 1 ? 'patron' : 'patrons' }} selected
+        </span>
+      </div>
+      
+      <!-- Patron list table -->
+      <div class="table-responsive patron-table-container">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th class="checkbox-col" *ngIf="getFilteredValidPatrons().length > 0">
+                <span class="visually-hidden" i18n>Select</span>
+              </th>
+              <th class="status-col text-center" i18n>Status</th>
+              <th class="barcode-col" i18n>Barcode</th>
+              <th class="name-col" i18n>Patron Name</th>
+              <th class="details-col" i18n>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let patron of getFilteredPatrons()"
+                [class.row-valid]="patron.id > 0 && !patron.isDuplicate && !patron.error"
+                [class.row-duplicate]="patron.isDuplicate"
+                [class.row-invalid]="patron.error && !patron.isDuplicate"
+                [class.row-selected]="patron.selected"
+                tabindex="0">
+              
+              <!-- Checkbox Column (for all rows) - now including disabled checkboxes for invalid/duplicate rows -->
+              <td class="checkbox-col" *ngIf="getFilteredValidPatrons().length > 0">
+                <div class="form-check" *ngIf="patron.id > 0 && !patron.isDuplicate && !patron.error">
+                  <input class="form-check-input" type="checkbox"
+                         [checked]="patron.selected"
+                         (change)="togglePatronSelection(patron)"
+                         [attr.aria-label]="'Select patron ' + patron.name">
+                </div>
+                <div class="form-check" *ngIf="patron.isDuplicate || (patron.error && patron.id > 0)">
+                  <input class="form-check-input" type="checkbox"
+                         disabled
+                         [attr.aria-label]="'Cannot select ' + patron.name">
+                </div>
+                <div class="form-check" *ngIf="!patron.id || patron.id === 0">
+                  <input class="form-check-input" type="checkbox"
+                         disabled
+                         [attr.aria-label]="'Invalid patron'">
+                </div>
+              </td>
+              
+              <!-- Status Icon Column -->
+              <td class="status-col">
+                <span *ngIf="patron.id > 0 && !patron.isDuplicate && !patron.error" 
+                      class="status-icon text-success" 
+                      aria-label="Ready to add" i18n-aria-label>
+                  <i class="material-icons icon-with-outline" aria-hidden="true">check_circle</i>
+                </span>
+                <span *ngIf="patron.isDuplicate" 
+                      class="status-icon text-warning-dark"
+                      aria-label="Duplicate patron" i18n-aria-label>
+                  <i class="material-icons icon-with-outline warning-icon" aria-hidden="true">warning</i>
+                </span>
+                <span *ngIf="patron.error && !patron.isDuplicate" 
+                      class="status-icon text-danger"
+                      aria-label="Invalid barcode" i18n-aria-label>
+                  <i class="material-icons icon-with-outline error-icon" aria-hidden="true">error</i>
+                </span>
+              </td>
+              
+              <td class="barcode-col">{{ patron.barcode }}</td>
+              
+              <!-- Name - truncate on small screens -->
+              <td class="name-col">
+                <span class="patron-name">{{ patron.name }}</span>
+              </td>
+              
+              <!-- Status Details Column -->
+              <td class="details-col">
+                <span *ngIf="patron.id > 0 && !patron.isDuplicate && !patron.error" 
+                      class="text-success status-text" i18n>
+                  Ready to add
+                </span>
+                
+                <span *ngIf="patron.isDuplicate" class="text-warning-dark status-text">
+                  <ng-container *ngIf="patron.error && patron.error.includes('Duplicate patron in this upload')" i18n>
+                    Appears multiple times in file
+                  </ng-container>
+                  <ng-container *ngIf="!patron.error || !patron.error.includes('Duplicate patron in this upload')" i18n>
+                    Already in bucket
+                  </ng-container>
+                </span>
+                
+                <span *ngIf="patron.error && !patron.isDuplicate" class="text-danger status-text">
+                  <!-- User-friendly error message -->
+                  <span i18n>{{ getFriendlyErrorMessage(patron.error) }}</span>
+                  
+                  <!-- Technical details in tooltip - improved icon -->
+                  <button *ngIf="patron.error" 
+                          class="btn btn-link btn-sm p-0 ms-1 technical-error-btn" 
+                          container="body"
+                          placement="left"
+                          [ngbTooltip]="patron.error"
+                          tooltipClass="technical-error-tooltip"
+                          i18n-ngbTooltip>
+                    <i class="material-icons">info</i>
+                    <span class="visually-hidden" i18n>Technical error details</span>
+                  </button>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- No results for filter message -->
+      <div *ngIf="getFilteredPatrons().length === 0 && hasPreviewedPatrons" class="alert alert-info mt-2" i18n>
+        No patrons match the current filter. Try changing the filter or uploading a different file.
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal-footer">
+    <div class="d-flex justify-content-between w-100">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="close()" i18n>Cancel</button>
+      </div>
+      <div>
+        <button class="btn btn-success" 
+                [disabled]="!hasPreviewedPatrons || getPatronsToAdd().length === 0 || isLoading" 
+                (click)="addPatronsToBucket()"
+                ngbTooltip="Only valid patrons will be added. Duplicates and invalid entries will be skipped."
+                i18n-ngbTooltip>
+          <span class="material-icons">person_add</span>
+          Add <strong>{{ getPatronsToAdd().length }}</strong> {{ getPatronsToAdd().length === 1 ? 'Patron' : 'Patrons' }}
+          <span class="small ms-1">(Ready to Add)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>
