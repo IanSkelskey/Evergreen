@@ -1,31 +1,29 @@
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {AdminPageModule} from '@eg/staff/share/admin-page/admin-page.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
-import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
-import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
-import {BucketUserShareComponent} from '@eg/staff/share/buckets/bucket-user-share.component';
+import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
 import {TreeModule} from '@eg/share/tree/tree.module';
-import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
-import {RecordBucketComponent} from '@eg/staff/share/buckets/record-bucket.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
-import {RecordBucketItemComponent} from '@eg/staff/share/buckets/record-bucket-item.component';
+import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
+import {RecordBucketComponent} from '@eg/staff/cat/bucket/record-bucket.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
+import {RecordBucketItemComponent} from '@eg/staff/cat/bucket/record-bucket-item.component';
 import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
+import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
+import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 
 @NgModule({
     declarations: [
         BucketTransferDialogComponent,
-        BucketShareDialogComponent,
-        BucketUserShareComponent,
         BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
-        RecordBucketItemComponent
+        RecordBucketItemComponent,
     ],
     imports: [
         StaffCommonModule,
@@ -34,19 +32,20 @@ import {HoldsModule} from '@eg/staff/share/holds/holds.module';
         HoldsModule,
         FmRecordEditorModule,
         TreeModule,
-        RecordBucketRoutingModule
+        RecordBucketRoutingModule,
+        BucketDialogsModule,
+        BucketModule
     ],
     exports: [
         BucketTransferDialogComponent,
-        BucketShareDialogComponent,
-        BucketUserShareComponent,
         BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
-        RecordBucketItemComponent
+        RecordBucketItemComponent,
     ],
     providers: [
+        RecordBucketService
     ]
 })
 

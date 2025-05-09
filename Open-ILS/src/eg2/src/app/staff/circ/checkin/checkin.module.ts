@@ -11,6 +11,7 @@ import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {BarcodesModule} from '@eg/staff/share/barcodes/barcodes.module';
 import {CheckinComponent} from './checkin.component';
 import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
+import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 
 @NgModule({
     declarations: [
@@ -27,7 +28,8 @@ import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
         BookingModule,
         PatronModule,
         BarcodesModule,
-        WorkLogModule
+        WorkLogModule,
+        BucketDialogsModule
     ],
     providers: [
     ]

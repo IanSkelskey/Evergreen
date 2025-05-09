@@ -1,6 +1,5 @@
 import {ChangeDetectorRef, Component, Input, OnInit, OnDestroy, ViewChild} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
-import {FormsModule} from '@angular/forms';
 import {toArray, from, Observable, of, Subject, Subscription, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY} from 'rxjs';
 import {map, mergeMap, switchMap, takeUntil, tap, take, catchError, finalize} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
@@ -9,21 +8,22 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
-// import {AdminPageComponent} from '@eg/staff/share/admin-page/admin-page.component';
-import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
+import {BucketTransferDialogComponent} from '@eg/staff/cat/bucket/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
+import {BucketActionSummaryDialogComponent} from '@eg/staff/cat/bucket/bucket-action-summary-dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
+import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
+import {BucketDialogService} from '@eg/staff/share/buckets/bucket-dialog.service';
 
 /**
  * Record bucket grid interface
@@ -67,6 +67,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     favoriteIds: number[] = [];
 
     @ViewChild('transferDialog', { static: true }) transferDialog: BucketTransferDialogComponent;
+    @ViewChild('patronSearch', { static: true }) patronSearch: PatronSearchDialogComponent;
     @ViewChild('shareBucketDialog', { static: true }) shareBucketDialog: BucketShareDialogComponent;
     @ViewChild('newBucketDialog', { static: true }) newBucketDialog: BucketDialogComponent;
     @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
@@ -93,12 +94,20 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private net: NetService,
         private evt: EventService,
         private flatData: GridFlatDataService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
+        private bucketDialogService: BucketDialogService // Add service
     ) {}
 
     async ngOnInit() {
         this.initInProgress = true; console.warn('initInProgress = true');
         console.debug('RecordBucketComponent: this',this);
+
+        // Register the patron search dialog as early as possible
+        setTimeout(() => {
+            if (this.patronSearch) {
+                this.bucketDialogService.setPatronSearchDialog(this.patronSearch);
+            }
+        });
 
         this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
             console.debug('segments',segments);
@@ -540,7 +549,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
         console.debug('rows', rows);
         this.shareBucketDialog.containerObjects = rows;
-        this.shareBucketDialog.containerObjects = rows;
+        // Remove passing patronSearch directly
         this.shareBucketDialog.loadAouTree();
         this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();
@@ -680,23 +689,30 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     };
 
     openNewBucketDialog = async (rows: any[]) => {
-        this.newBucketDialog.bucketClass = 'biblio';
-
         try {
-            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
-                catchError((error: unknown) => {
-                    console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
-                    return EMPTY;
-                }),
-                takeUntil(this.destroy$),
-            );
+            if (this.newBucketDialog) {
+                this.newBucketDialog.bucketClass = 'biblio';
+                this.newBucketDialog.editMode = false;
+                this.newBucketDialog.bucketId = null;
+                this.newBucketDialog.bucketData = null;
+                this.newBucketDialog.showPublicOption = true;
+                
+                const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                    catchError((error: unknown) => {
+                        console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                        return EMPTY;
+                    }),
+                    takeUntil(this.destroy$),
+                );
 
-            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
-            console.debug('New bucket results:', results);
+                const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+                console.debug('New bucket results:', results);
 
-            this.grid.reload();
-            this.updateCounts();
-
+                if (results && results.success) {
+                    this.grid.reload();
+                    this.updateCounts();
+                }
+            }
         } catch (error) {
             console.error('Error in new bucket dialog:', error);
         }
@@ -743,12 +759,47 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     openEditBucketDialog = async (rows: any[]) => {
         console.debug('edit bucket',rows);
         if (!rows.length) { return; }
-        const bucket = rows[0];
-        this.editDialog.mode = 'update';
-        this.editDialog.recordId = bucket.id;
-        this.editDialog.open()
-            // eslint-disable-next-line rxjs/no-nested-subscribe
-            .subscribe(ok => this.grid.reload());
+        
+        try {
+            const bucket = rows[0];
+            
+            if (!this.newBucketDialog) {
+                // Fall back to the fm-editor
+                this.editDialog.mode = 'update';
+                this.editDialog.recordId = bucket.id;
+                this.editDialog.open()
+                    .subscribe(ok => this.grid.reload());
+                return;
+            }
+            
+            this.newBucketDialog.bucketClass = 'biblio';
+            this.newBucketDialog.editMode = true;
+            this.newBucketDialog.bucketId = bucket.id;
+            this.newBucketDialog.bucketData = {
+                id: bucket.id,
+                name: bucket.name,
+                description: bucket.description,
+                btype: bucket.btype,
+                owner: bucket.owner,
+                pub: bucket.pub === 't' || bucket.pub === true
+            };
+            this.newBucketDialog.showPublicOption = true;
+            
+            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                catchError((error: unknown) => {
+                    console.debug('Error in dialog observable:', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
+
+            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+            if (results && results.success) {
+                this.grid.reload();
+            }
+        } catch (error) {
+            console.error('Error in edit bucket dialog:', error);
+        }
     };
 
     async uploadRecords(rows: any[]): Promise<void> {
