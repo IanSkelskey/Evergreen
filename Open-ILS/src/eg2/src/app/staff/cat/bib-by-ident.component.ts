@@ -1,8 +1,8 @@
-import {Component, OnInit, ViewChild, Input, AfterViewInit} from '@angular/core';
+import {Component, OnInit, AfterViewInit} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
+import {FormControl, FormGroup} from '@angular/forms';
 
 /* Component for retrieving bib records by ID, TCN */
 
@@ -15,6 +15,9 @@ export class BibByIdentComponent implements OnInit, AfterViewInit {
     identValue: string;
     notFound = false;
     multiRecordsFound = false;
+    bibIdentGroup: FormGroup;
+    searchInProgress = false;
+    queryError = false;
 
     constructor(
         private router: Router,
@@ -24,18 +27,25 @@ export class BibByIdentComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit() {
+        this.bibIdentGroup = new FormGroup({
+            bibIdentType: new FormControl(),
+            bibIdentValue: new FormControl()
+        });
+
         this.route.paramMap.subscribe((params: ParamMap) => {
             this.identType = params.get('identType') as 'id' | 'tcn';
         });
     }
 
     ngAfterViewInit() {
-        const node = document.getElementById('bib-ident-value');
+        const node = document.getElementById('bib-ident-type');
         setTimeout(() => node.focus());
     }
 
     search() {
         if (!this.identValue) { return; }
+        this.searchInProgress = true;
+        this.queryError = null;
 
         this.notFound = false;
         this.multiRecordsFound = false;
@@ -51,10 +61,20 @@ export class BibByIdentComponent implements OnInit, AfterViewInit {
         promise.then(id => {
             if (id === null) {
                 this.notFound = true;
+                this.searchInProgress = false;
             } else {
                 this.goToRecord(id);
             }
+        }).catch(err => {
+            this.queryError = true;
+            this.searchInProgress = false;
         });
+    }
+
+    resetQuery() {
+        this.notFound = false;
+        this.queryError = false;
+        this.searchInProgress = false;
     }
 
     getById(): Promise<number> {
