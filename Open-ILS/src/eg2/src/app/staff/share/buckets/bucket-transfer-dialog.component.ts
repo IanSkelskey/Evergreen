@@ -1,22 +1,17 @@
 import {Component, Input, Output, OnInit, OnDestroy, ViewChild, EventEmitter} from '@angular/core';
-import {FormGroup, FormControl, Validators} from '@angular/forms';
-// import {Router} from '@angular/router';
 import {Subscription, Observable, of} from 'rxjs';
-import {switchMap, single, startWith, tap} from 'rxjs/operators';
+import {tap} from 'rxjs/operators';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {AuthService} from '@eg/core/auth.service';
-// import {FormatService} from '@eg/core/format.service';
-import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
-// import {OrgService} from '@eg/core/org.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {PatronBarcodeValidator} from '@eg/share/validators/patron_barcode_validator.directive';
-import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {BucketActionSummaryDialogComponent} from './bucket-action-summary-dialog.component';
+import {BucketDialogService} from './bucket-dialog.service';
 
 @Component({
     selector: 'eg-bucket-transfer-dialog',
@@ -39,19 +34,16 @@ export class BucketTransferDialogComponent
 
     @ViewChild('fail', { static: true }) fail: AlertDialogComponent;
     @ViewChild('results', { static: true }) results: BucketActionSummaryDialogComponent;
-    @ViewChild('patronSearch') patronSearch: PatronSearchDialogComponent;
 
     constructor(
         private auth: AuthService,
-        // private format: FormatService,
         private net: NetService,
         private evt: EventService,
-        // private org: OrgService,
         private pcrud: PcrudService,
-        // private router: Router,
         private modal: NgbModal,
         private pbv: PatronBarcodeValidator,
-        private toast: ToastService
+        private toast: ToastService,
+        private bucketDialogService: BucketDialogService
     ) {
         super(modal);
         this.transferRequestCompleted = new EventEmitter<boolean>();
@@ -130,7 +122,13 @@ export class BucketTransferDialogComponent
     }
 
     searchPatrons() {
-        this.patronSearch.open({size: 'xl'}).toPromise().then(
+        const patronSearch = this.bucketDialogService.getPatronSearchDialog();
+        if (!patronSearch) {
+            console.error('Patron search dialog not available');
+            return;
+        }
+        
+        patronSearch.open({size: 'xl'}).toPromise().then(
             patrons => {
                 if (!patrons || patrons.length === 0) { return; }
                 const usr = patrons[0];

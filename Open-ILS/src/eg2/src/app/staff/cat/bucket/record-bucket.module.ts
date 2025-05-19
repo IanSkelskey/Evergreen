@@ -3,9 +3,7 @@ import {StaffCommonModule} from '@eg/staff/common.module';
 import {AdminPageModule} from '@eg/staff/share/admin-page/admin-page.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
-import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {TreeModule} from '@eg/share/tree/tree.module';
-import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
 import {RecordBucketComponent} from '@eg/staff/cat/bucket/record-bucket.component';
 import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
 import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
@@ -18,8 +16,6 @@ import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 
 @NgModule({
     declarations: [
-        BucketTransferDialogComponent,
-        BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
@@ -37,8 +33,6 @@ import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
         BucketModule
     ],
     exports: [
-        BucketTransferDialogComponent,
-        BucketActionSummaryDialogComponent,
         RecordBucketComponent,
         RecordBucketExportDialogComponent,
         RecordBucketItemUploadDialogComponent,
