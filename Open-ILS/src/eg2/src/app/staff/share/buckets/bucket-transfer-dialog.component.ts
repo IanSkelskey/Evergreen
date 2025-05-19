@@ -15,7 +15,8 @@ import {BucketDialogService} from './bucket-dialog.service';
 
 @Component({
     selector: 'eg-bucket-transfer-dialog',
-    templateUrl: './bucket-transfer-dialog.component.html'
+    templateUrl: './bucket-transfer-dialog.component.html',
+    styleUrls: ['./bucket-transfer-dialog.component.css', './buckets.css']
 })
 
 export class BucketTransferDialogComponent
@@ -26,9 +27,10 @@ export class BucketTransferDialogComponent
     @Input() patronId: number;
     destinationPatronId: number;
     @Input() containerType = 'biblio';
-    @Input() containerObjects: any[];
-    @Output() transferRequestCompleted: EventEmitter<boolean>;
+    @Input() containerObjects: any[] = [];
+    @Output() transferRequestCompleted: EventEmitter<boolean> = new EventEmitter<boolean>();
     containerTransferResultMap = {};
+    processing = false;
 
     patron$: Observable<{first_given_name: string, second_given_name: string, family_name: string}>;
 
@@ -46,20 +48,20 @@ export class BucketTransferDialogComponent
         private bucketDialogService: BucketDialogService
     ) {
         super(modal);
-        this.transferRequestCompleted = new EventEmitter<boolean>();
     }
 
     ngOnInit() {
-        console.debug('bucketTransferDialogComponent, this',this);
-
         if (this.patronId) {
             this.pcrud.search('au', {id: this.patronId}, {
                 flesh: 1,
                 flesh_fields: {'au': ['card']}
             }).subscribe((usr) => {
                 this.destinationPatronId = usr.id();
-                this.patron$ = of({first_given_name: usr.first_given_name(),
-                    second_given_name: usr.second_given_name(), family_name: usr.family_name()});
+                this.patron$ = of({
+                    first_given_name: usr.first_given_name(),
+                    second_given_name: usr.second_given_name(), 
+                    family_name: usr.family_name()
+                });
             });
         } else {
             this.patron$ = of({first_given_name: '', second_given_name: '', family_name: ''});
@@ -74,6 +76,7 @@ export class BucketTransferDialogComponent
 
     transferOwner$ = () => {
         this.containerTransferResultMap = {};
+        this.processing = true;
         
         // Safely extract IDs, ensuring we don't try to access id on undefined objects
         const bucketIds = this.containerObjects
@@ -90,6 +93,7 @@ export class BucketTransferDialogComponent
         ).pipe(
             tap({
                 next: (response) => {
+                    this.processing = false;
                     const evt = this.evt.parse(response);
                     if (evt) {
                         console.error(evt.toString());
@@ -104,34 +108,37 @@ export class BucketTransferDialogComponent
                             }
                             this.containerTransferResultMap[id] = pass_or_fail;
                         });
-                        console.debug(this.containerTransferResultMap);
-                        // Include success property in the result
-                        this.results.open(this.containerObjects, this.containerTransferResultMap).subscribe({ complete: () => {
-                            this.close({
-                                success: true, 
-                                results: this.containerTransferResultMap
-                            });
-                        }});
+
+                        // Show results dialog and close this dialog when results dialog is closed
+                        this.results.open(this.containerObjects, this.containerTransferResultMap).subscribe({ 
+                            complete: () => {
+                                this.close({
+                                    success: true, 
+                                    results: this.containerTransferResultMap
+                                });
+                            }
+                        });
                     }
                 },
                 error: (response: unknown) => {
+                    this.processing = false;
                     console.error(response);
                     this.fail.open();
                     this.transferRequestCompleted.emit(false);
                 },
                 complete: () => {
                     this.transferRequestCompleted.emit(true);
-                    // Include success property in the result
-                    this.close({
-                        success: true, 
-                        results: this.containerTransferResultMap
-                    });
                 }
             })
         );
     };
 
     transferBucketOwner() {
+        if (!this.destinationPatronId) {
+            this.toast.danger($localize`Please select a destination user first`);
+            return;
+        }
+        
         this.subscriptions.push(this.transferOwner$().subscribe());
     }
 
@@ -139,6 +146,7 @@ export class BucketTransferDialogComponent
         const patronSearch = this.bucketDialogService.getPatronSearchDialog();
         if (!patronSearch) {
             console.error('Patron search dialog not available');
+            this.toast.danger($localize`Patron search dialog not available`);
             return;
         }
         
@@ -147,8 +155,11 @@ export class BucketTransferDialogComponent
                 if (!patrons || patrons.length === 0) { return; }
                 const usr = patrons[0];
                 this.destinationPatronId = usr.id();
-                this.patron$ = of({first_given_name: usr.first_given_name(),
-                    second_given_name: usr.second_given_name(), family_name: usr.family_name()});
+                this.patron$ = of({
+                    first_given_name: usr.first_given_name(),
+                    second_given_name: usr.second_given_name(), 
+                    family_name: usr.family_name()
+                });
             }
         );
     }

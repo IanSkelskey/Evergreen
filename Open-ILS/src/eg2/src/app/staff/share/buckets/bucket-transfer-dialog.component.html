@@ -7,34 +7,79 @@
 </eg-bucket-action-summary-dialog>
 
 <ng-template #dialogContent>
-  <div class="modal-header">
-    <h3 class="modal-title" i18n>Confirm Bucket Transfer</h3>
-    <button type="button" class="btn-close btn-close-white"
-      i18n-aria-label aria-label="Close"
+  <div class="modal-header align-items-center">
+    <h4 class="modal-title d-flex align-items-center gap-2">
+      <span class="material-icons" aria-hidden="true">transfer_within_a_station</span>
+      <span i18n>Transfer Bucket Ownership</span>
+    </h4>
+    <span class="flex-grow-1"></span>
+    <button type="button" class="btn-close btn-close-white close-button ms-2"
+      i18n-aria-label aria-label="Close dialog" 
       (click)="dismiss('cross_click')"></button>
   </div>
   
-  <div class="p-3">
-    <p class="p-3">
-      <button type="button" class="btn btn-primary" (click)="searchPatrons()" i18n>Search for user</button>
-    </p>
-    <p *ngIf="containerObjects.length" class="alert" 
-      [ngClass]="{'alert-success': (patron$ | async)?.first_given_name || (patron$ | async)?.second_given_name || (patron$ | async)?.family_name}"
-      role="status" i18n>
-      {containerObjects.length, plural, 
-        =1 { 1 bucket selected for transfer to: } 
-        other { {{containerObjects.length}} buckets selected for transfer to: }
-      }
-      <b>
-        {{ (patron$ | async)?.first_given_name}}
-        {{ (patron$ | async)?.second_given_name}}
-        {{ (patron$ | async)?.family_name}}
-      </b>
-    </p>
+  <div class="modal-body">
+    <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+      <span class="material-icons me-2" aria-hidden="true">info</span>
+      <span i18n>
+        {containerObjects.length, plural, 
+          =1 {Transfer ownership of 1 bucket to another user.} 
+          other {Transfer ownership of {{containerObjects.length}} buckets to another user.}
+        }
+      </span>
+    </div>
+    
+    <div class="bucket-form-container">
+      <div class="mb-3">
+        <button type="button" class="btn btn-primary bucket-action-btn" (click)="searchPatrons()">
+          <span class="material-icons bucket-icon" aria-hidden="true">person_search</span>
+          <span i18n>Search for User</span>
+        </button>
+      </div>
+      
+      <div *ngIf="containerObjects.length" class="card mb-3">
+        <div class="card-header d-flex align-items-center">
+          <span class="material-icons me-2" aria-hidden="true">person</span>
+          <span i18n>Selected Destination User</span>
+        </div>
+        <div class="card-body">
+          <ng-container *ngIf="destinationPatronId; else noUserSelected">
+            <div class="d-flex align-items-center">
+              <span class="material-icons me-2 text-success" aria-hidden="true">check_circle</span>
+              <strong>
+                {{ (patron$ | async)?.first_given_name }}
+                {{ (patron$ | async)?.second_given_name }}
+                {{ (patron$ | async)?.family_name }}
+              </strong>
+            </div>
+          </ng-container>
+          <ng-template #noUserSelected>
+            <div class="d-flex align-items-center text-muted">
+              <span class="material-icons me-2" aria-hidden="true">person_off</span>
+              <em i18n>No destination user selected. Please search for a user.</em>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
   </div>
   
-  <div class="modal-footer">
-    <button type="button" (click)="close()" class="btn btn-normal me-2" i18n>Cancel</button>
-    <button type="button" (click)="transferBucketOwner()" [disabled]="!destinationPatronId" class="btn btn-info" i18n>Confirm transfer</button>
+  <div class="bucket-modal-footer">
+    <div class="d-flex justify-content-between w-100">
+      <div>
+        <!-- Status message area -->
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" (click)="close()" i18n>
+          <span class="material-icons bucket-icon" aria-hidden="true">close</span>
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success bucket-action-btn" 
+                [disabled]="!destinationPatronId" (click)="transferBucketOwner()">
+          <span class="material-icons bucket-icon" aria-hidden="true">swap_horiz</span>
+          <span i18n>Confirm Transfer</span>
+        </button>
+      </div>
+    </div>
   </div>
 </ng-template>

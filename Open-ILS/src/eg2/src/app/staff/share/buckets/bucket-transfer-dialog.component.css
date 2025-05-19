@@ -1,0 +1,36 @@
+/* Component-specific styles that extend shared bucket styles */
+
+/* Special styling for the card showing selected patron */
+.card-header {
+  font-weight: 500;
+  background-color: var(--bs-body-bg-alt);
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+/* Override for the action buttons to be at least 180px wide */
+.bucket-action-btn {
+  min-width: 180px;
+}
+
+/* Specific styling for the search button */
+.btn-primary .bucket-icon {
+  font-size: 1.1rem;
+}
+
+/* Status message styling */
+.text-muted {
+  color: var(--bs-gray-600) !important;
+}
+
+:root[data-bs-theme="dark"] .text-muted {
+  color: var(--bs-gray-500) !important;
+}
+
+/* Improve focus visibility for accessibility */
+button:focus, button:focus-visible {
+  outline: 0.25rem solid rgba(var(--primary-focus-outline-rgb), 0.75);
+  outline-offset: 0;
+}
