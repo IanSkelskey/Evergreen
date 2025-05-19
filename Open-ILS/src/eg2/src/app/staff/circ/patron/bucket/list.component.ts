@@ -94,16 +94,30 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             }
         });
 
-        // Handle URL path for switching views
+        // Handle URL path for switching views with improved mapping
         this.route.url.pipe(
             takeUntil(this.destroy$)
         ).subscribe(segments => {
-            const path = segments[0]?.path;
-            const views = this.bucketState.getViews();
-            if (path && views[path]) {
-                this.bucketState.setCurrentView(path);
-                this.grid?.reload();
+            if (segments.length === 0) {
+                // Default to user view if no path segment
+                this.bucketState.setCurrentView('user');
+                return;
             }
+            
+            const path = segments[0]?.path;
+            // Map URL paths to view names
+            const viewMapping = {
+                'user': 'user',
+                'all': 'all',
+                'favorites': 'favorites',
+                'recent': 'recent',
+                'shared-with-others': 'shared_with_others',
+                'shared-with-me': 'shared_with_user'
+            };
+            
+            const viewName = viewMapping[path] || 'user';
+            this.bucketState.setCurrentView(viewName);
+            this.grid?.reload();
         });
 
         // Subscribe to state changes
@@ -130,8 +144,12 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             this.bucketState.updateCounts();
         });
 
-        // Load favorite bucket flags
-        await this.loadFavoriteBucketFlags();
+        // Load recent bucket and favorite bucket data
+        await Promise.all([
+            this.loadFavoriteBucketFlags(),
+            // Just use the synchronous method since it delegates to the shared bucket service
+            Promise.resolve(this.bucketService.recentPatronBucketIds())
+        ]);
         
         // Initial grid load with a small delay to ensure everything is ready
         setTimeout(() => {
@@ -221,10 +239,25 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         return this.bucketState.getViews();
     }
 
+    // Update switchTo to handle URL navigation
     switchTo(view: string) {
+        // Map view names to URL paths
+        const urlMapping = {
+            'user': 'user',
+            'all': 'all',
+            'favorites': 'favorites',
+            'recent': 'recent',
+            'shared_with_others': 'shared-with-others',
+            'shared_with_user': 'shared-with-me'
+        };
+        
+        const urlPath = urlMapping[view] || 'user';
+        
+        // Update state and navigate
         this.bucketState.setCurrentView(view);
+        this.router.navigate([urlPath], { relativeTo: this.route.parent });
     }
-
+    
     gridSelectionChange(selected: any[]) {
         this.noSelectedRows = selected.length === 0;
         this.oneSelectedRow = selected.length === 1;

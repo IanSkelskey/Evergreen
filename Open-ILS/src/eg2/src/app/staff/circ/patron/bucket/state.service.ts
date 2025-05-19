@@ -113,13 +113,16 @@ export class PatronBucketStateService {
     async updateCounts(): Promise<void> {
         this.setCountInProgress(true);
         
-        // Create a list of views to update, including normal views and 'shared' explicitly
+        // Create a list of views to update, including normal views and invisible ones
         const viewsToUpdate = [...this.getViewKeys()];
         
-        // Make sure 'shared' is included even if it has a null label
-        if (!viewsToUpdate.includes('shared') && this.views['shared']) {
-            viewsToUpdate.push('shared');
-        }
+        // Make sure 'shared_with_others', 'shared_with_user', etc. are included even if they have null labels
+        const specialViews = ['shared_with_others', 'shared_with_user', 'retrieved_by_id'];
+        specialViews.forEach(view => {
+            if (!viewsToUpdate.includes(view) && this.views[view]) {
+                viewsToUpdate.push(view);
+            }
+        });
         
         const promises = viewsToUpdate.map(viewKey => {
             return this.views[viewKey].bucketIdQuery(null, null, true)
@@ -139,6 +142,94 @@ export class PatronBucketStateService {
     // Initialize view definitions
     private initViews(): void {
         this.views = {
+            all: {
+                label: $localize`Visible to me`,
+                sort_key: 10,
+                count: null,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    try {
+                        console.debug('All buckets query - justCount:', justCount);
+                        
+                        let options: any = {};
+                        if (pager && !justCount) {
+                            options.limit = pager.limit;
+                            options.offset = pager.offset;
+                        }
+                        if (sort && sort.length && !justCount) {
+                            options.order_by = {
+                                cub: sort.map(s => ({
+                                    field: s.name,
+                                    direction: s.dir.toUpperCase()
+                                }))
+                            };
+                        }
+                        
+                        // No filters - we want all visible buckets
+                        const search: any = { 
+                            id: { '!=' : null }
+                        };
+                        
+                        if (justCount) {
+                            try {
+                                // Count all visible buckets
+                                const result = await lastValueFrom(
+                                    this.pcrud.search('cub', 
+                                        search, 
+                                        {}, 
+                                        {atomic: true}
+                                    )
+                                );
+                                
+                                // Calculate proper count
+                                const finalCount = Array.isArray(result) ? result.length : 
+                                    (result !== null && result !== undefined) ? 1 : 0;
+                                
+                                console.debug('All buckets count calculation:', finalCount);
+                                this.views.all.count = finalCount;
+                                
+                                return { bucketIds: [], count: finalCount };
+                            } catch (error) {
+                                console.error('Error in all buckets count query:', error);
+                                return { bucketIds: [], count: 0 };
+                            }
+                        } else {
+                            // Get all buckets with owner info
+                            const allBuckets = await lastValueFrom(
+                                this.pcrud.search('cub', 
+                                    search, 
+                                    {
+                                        ...options,
+                                        flesh: 1,
+                                        flesh_fields: {cub: ['owner']}
+                                    }, 
+                                    {atomic: true}
+                                )
+                            );
+                            
+                            // Extract IDs from the records
+                            let ids = [];
+                            if (Array.isArray(allBuckets)) {
+                                ids = allBuckets.map(bucket => bucket.id());
+                            } else if (allBuckets !== null && allBuckets !== undefined) {
+                                if (typeof allBuckets === 'object' && typeof allBuckets.id === 'function') {
+                                    ids = [allBuckets.id()];
+                                } else if (typeof allBuckets === 'number') {
+                                    ids = [allBuckets];
+                                }
+                            }
+                            
+                            console.debug('Extracted all bucket IDs:', ids, 'count:', ids.length);
+                            this.views.all.count = ids.length;
+                            
+                            return { bucketIds: ids, count: ids.length };
+                        }
+                    } catch (error) {
+                        console.error('Error in all buckets bucketIdQuery:', error);
+                        this.views.all.count = 0;
+                        return { bucketIds: [], count: 0 };
+                    }
+                }
+            },
             user: {
                 label: $localize`My Buckets`,
                 sort_key: 1,
@@ -357,13 +448,20 @@ export class PatronBucketStateService {
                     }
                 }
             },
-            shared: {
-                label: null, // The label is provided directly in the HTML
-                sort_key: 2,
+            recent: {
+                label: $localize`Recent`,
+                sort_key: 3,
                 count: null,
                 bucketIdQuery: async (pager, sort, justCount) => {
                     try {
-                        console.debug('Shared bucket query - justCount:', justCount);
+                        console.debug('Recent buckets query - justCount:', justCount);
+                        
+                        // Get recent bucket IDs from bucket service
+                        const recentBucketIds = this.bucketSvc.getRecentBuckets('user');
+                        
+                        if (!recentBucketIds.length) {
+                            return { bucketIds: [], count: 0 };
+                        }
                         
                         let options: any = {};
                         if (pager && !justCount) {
@@ -379,17 +477,12 @@ export class PatronBucketStateService {
                             };
                         }
                         
-                        // Search for public buckets
-                        const search: any = { 
-                            pub: 't'  // 't' represents TRUE in the database
-                        };
-                        
-                        console.debug('Shared bucket search criteria:', search, 'options:', options);
+                        const search = { id: recentBucketIds };
                         
                         if (justCount) {
                             try {
-                                // Get all shared buckets for counting
-                                const allBuckets = await lastValueFrom(
+                                // Count recent buckets
+                                const result = await lastValueFrom(
                                     this.pcrud.search('cub', 
                                         search, 
                                         {}, 
@@ -398,33 +491,31 @@ export class PatronBucketStateService {
                                 );
                                 
                                 // Calculate proper count
-                                const finalCount = Array.isArray(allBuckets) ? allBuckets.length : 
-                                    (allBuckets !== null && allBuckets !== undefined) ? 1 : 0;
+                                const finalCount = Array.isArray(result) ? result.length : 
+                                    (result !== null && result !== undefined) ? 1 : 0;
                                 
-                                console.debug('Shared buckets count calculation:', finalCount);
-                                this.views.shared.count = finalCount;
+                                console.debug('Recent buckets count calculation:', finalCount);
+                                this.views.recent.count = finalCount;
                                 
                                 return { bucketIds: [], count: finalCount };
                             } catch (error) {
-                                console.error('Error in shared buckets count query:', error);
+                                console.error('Error in recent buckets count query:', error);
                                 return { bucketIds: [], count: 0 };
                             }
                         } else {
                             try {
-                                // Get all shared buckets with owner info
+                                // Get all recent buckets with owner info
                                 const allBuckets = await lastValueFrom(
                                     this.pcrud.search('cub', 
                                         search, 
                                         {
                                             ...options,
                                             flesh: 1,
-                                            flesh_fields: {cub: ['owner', 'owning_lib']}
+                                            flesh_fields: {cub: ['owner']}
                                         }, 
                                         {atomic: true}
                                     )
                                 );
-                                
-                                console.debug('All shared buckets (full data):', allBuckets);
                                 
                                 // Extract IDs from the records
                                 let ids = [];
@@ -438,18 +529,180 @@ export class PatronBucketStateService {
                                     }
                                 }
                                 
-                                console.debug('Extracted shared bucket IDs:', ids, 'count:', ids.length);
-                                this.views.shared.count = ids.length;
+                                console.debug('Extracted recent bucket IDs:', ids, 'count:', ids.length);
+                                this.views.recent.count = ids.length;
                                 
                                 return { bucketIds: ids, count: ids.length };
                             } catch (error) {
-                                console.error('Error fetching shared buckets:', error);
+                                console.error('Error fetching recent buckets:', error);
                                 return { bucketIds: [], count: 0 };
                             }
                         }
                     } catch (error) {
-                        console.error('Error in shared bucketIdQuery:', error);
-                        this.views.shared.count = 0;
+                        console.error('Error in recent bucketIdQuery:', error);
+                        this.views.recent.count = 0;
+                        return { bucketIds: [], count: 0 };
+                    }
+                }
+            },
+            shared_with_others: {
+                label: $localize`Shared with others`,
+                sort_key: 4,
+                count: null,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    try {
+                        console.debug('Shared with others query - justCount:', justCount);
+                        
+                        let options: any = {};
+                        if (pager && !justCount) {
+                            options.limit = pager.limit;
+                            options.offset = pager.offset;
+                        }
+                        if (sort && sort.length && !justCount) {
+                            options.order_by = {
+                                cub: sort.map(s => ({
+                                    field: s.name,
+                                    direction: s.dir.toUpperCase()
+                                }))
+                            };
+                        }
+                        
+                        const currentUserId = this.auth.user().id();
+                        
+                        // Query for patron buckets shared by the current user
+                        const result = await lastValueFrom(
+                            justCount 
+                                ? this.pcrud.search('cub',
+                                    {
+                                        owner: currentUserId,
+                                        pub: 't'
+                                    },
+                                    {},
+                                    {atomic: true})
+                                : this.pcrud.search('cub',
+                                    {
+                                        owner: currentUserId,
+                                        pub: 't'
+                                    },
+                                    {
+                                        ...options,
+                                        flesh: 1,
+                                        flesh_fields: {cub: ['owner']}
+                                    },
+                                    {atomic: true})
+                        );
+                        
+                        if (justCount) {
+                            // Calculate count
+                            const finalCount = Array.isArray(result) ? result.length : 
+                                (result !== null && result !== undefined) ? 1 : 0;
+                            
+                            console.debug('Shared with others count:', finalCount);
+                            this.views.shared_with_others.count = finalCount;
+                            
+                            return { bucketIds: [], count: finalCount };
+                        } else {
+                            // Extract IDs
+                            let ids = [];
+                            if (Array.isArray(result)) {
+                                ids = result.map(bucket => bucket.id());
+                            } else if (result !== null && result !== undefined) {
+                                if (typeof result === 'object' && typeof result.id === 'function') {
+                                    ids = [result.id()];
+                                } else if (typeof result === 'number') {
+                                    ids = [result];
+                                }
+                            }
+                            
+                            console.debug('Shared with others bucket IDs:', ids, 'count:', ids.length);
+                            this.views.shared_with_others.count = ids.length;
+                            
+                            return { bucketIds: ids, count: ids.length };
+                        }
+                    } catch (error) {
+                        console.error('Error in shared_with_others query:', error);
+                        this.views.shared_with_others.count = 0;
+                        return { bucketIds: [], count: 0 };
+                    }
+                }
+            },
+            shared_with_user: {
+                label: $localize`Shared with me`,
+                sort_key: 5,
+                count: null,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    try {
+                        console.debug('Shared with me query - justCount:', justCount);
+                        
+                        let options: any = {};
+                        if (pager && !justCount) {
+                            options.limit = pager.limit;
+                            options.offset = pager.offset;
+                        }
+                        if (sort && sort.length && !justCount) {
+                            options.order_by = {
+                                cub: sort.map(s => ({
+                                    field: s.name,
+                                    direction: s.dir.toUpperCase()
+                                }))
+                            };
+                        }
+                        
+                        const currentUserId = this.auth.user().id();
+                        
+                        // Query for patron buckets shared with the current user (but not owned by them)
+                        const result = await lastValueFrom(
+                            justCount 
+                                ? this.pcrud.search('cub',
+                                    {
+                                        owner: {'!=': currentUserId},
+                                        pub: 't'
+                                    },
+                                    {},
+                                    {atomic: true})
+                                : this.pcrud.search('cub',
+                                    {
+                                        owner: {'!=': currentUserId},
+                                        pub: 't'
+                                    },
+                                    {
+                                        ...options,
+                                        flesh: 1,
+                                        flesh_fields: {cub: ['owner']}
+                                    },
+                                    {atomic: true})
+                        );
+                        
+                        if (justCount) {
+                            // Calculate count
+                            const finalCount = Array.isArray(result) ? result.length : 
+                                (result !== null && result !== undefined) ? 1 : 0;
+                            
+                            console.debug('Shared with me count:', finalCount);
+                            this.views.shared_with_user.count = finalCount;
+                            
+                            return { bucketIds: [], count: finalCount };
+                        } else {
+                            // Extract IDs
+                            let ids = [];
+                            if (Array.isArray(result)) {
+                                ids = result.map(bucket => bucket.id());
+                            } else if (result !== null && result !== undefined) {
+                                if (typeof result === 'object' && typeof result.id === 'function') {
+                                    ids = [result.id()];
+                                } else if (typeof result === 'number') {
+                                    ids = [result];
+                                }
+                            }
+                            
+                            console.debug('Shared with me bucket IDs:', ids, 'count:', ids.length);
+                            this.views.shared_with_user.count = ids.length;
+                            
+                            return { bucketIds: ids, count: ids.length };
+                        }
+                    } catch (error) {
+                        console.error('Error in shared_with_user query:', error);
+                        this.views.shared_with_user.count = 0;
                         return { bucketIds: [], count: 0 };
                     }
                 }
