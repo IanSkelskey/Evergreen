@@ -74,13 +74,19 @@ export class BucketTransferDialogComponent
 
     transferOwner$ = () => {
         this.containerTransferResultMap = {};
+        
+        // Safely extract IDs, ensuring we don't try to access id on undefined objects
+        const bucketIds = this.containerObjects
+            .filter(o => o && o.id !== undefined)
+            .map(o => typeof o.id === 'function' ? o.id() : o.id);
+        
         return this.net.request(
             'open-ils.actor',
             'open-ils.actor.containers.transfer',
             this.auth.token(),
             this.destinationPatronId,
             this.containerType,
-            this.containerObjects.map( o => o.id )
+            bucketIds
         ).pipe(
             tap({
                 next: (response) => {
@@ -99,8 +105,12 @@ export class BucketTransferDialogComponent
                             this.containerTransferResultMap[id] = pass_or_fail;
                         });
                         console.debug(this.containerTransferResultMap);
+                        // Include success property in the result
                         this.results.open(this.containerObjects, this.containerTransferResultMap).subscribe({ complete: () => {
-                            this.close(this.containerTransferResultMap);
+                            this.close({
+                                success: true, 
+                                results: this.containerTransferResultMap
+                            });
                         }});
                     }
                 },
@@ -111,7 +121,11 @@ export class BucketTransferDialogComponent
                 },
                 complete: () => {
                     this.transferRequestCompleted.emit(true);
-                    this.close(this.containerTransferResultMap);
+                    // Include success property in the result
+                    this.close({
+                        success: true, 
+                        results: this.containerTransferResultMap
+                    });
                 }
             })
         );

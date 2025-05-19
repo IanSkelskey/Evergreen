@@ -523,7 +523,22 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         if (!rows.length) return;
         
         this.transferDialog.containerType = 'user';
-        this.transferDialog.containerObjects = rows.map(row => row.bucket);
+        
+        // Ensure we provide objects with direct id properties
+        // This handles different row structure formats safely
+        this.transferDialog.containerObjects = rows.map(row => {
+            // If row already has an id property, use it directly
+            if (row.id !== undefined) {
+                return { id: row.id, name: row.name || '' };
+            }
+            // Otherwise try to extract from bucket property if it exists
+            else if (row.bucket) {
+                const bucketId = typeof row.bucket.id === 'function' ? row.bucket.id() : row.bucket.id;
+                return { id: bucketId, name: row.name || row.bucket.name || '' };
+            }
+            // Fallback case
+            return null;
+        }).filter(obj => obj !== null && obj.id !== undefined);
         
         try {
             const results = await lastValueFrom(this.transferDialog.open());

@@ -77,6 +77,9 @@
     </div>
   </div>
 
+  <!-- Add the transfer dialog component -->
+  <eg-bucket-transfer-dialog #transferDialog containerType="user"></eg-bucket-transfer-dialog>
+
   <!-- Grid section -->
   <eg-grid #grid 
       [dataSource]="dataSource"
@@ -109,6 +112,12 @@
     <eg-grid-toolbar-action label="Remove from Favorites" i18n-label
         [disabled]="noSelectedRows"
         (onClick)="unFavoriteBucket($event)">
+    </eg-grid-toolbar-action>
+    
+    <!-- Add Transfer Ownership action -->
+    <eg-grid-toolbar-action label="Transfer Bucket Ownership" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openTransferDialog($event)">
     </eg-grid-toolbar-action>
 
     <!-- Share action -->
