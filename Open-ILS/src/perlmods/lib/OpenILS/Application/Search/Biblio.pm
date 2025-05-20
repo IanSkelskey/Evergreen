@@ -2952,10 +2952,12 @@ sub rec_hold_parts {
             id => {
                 in => {
                     select => {'acpm' => ['part']},
-                    from => {acpm => {acp => {join => {acn => {join => 'bre'}}}}},
+                    from => {acpm => {acp => {join => {acn => {join => 'bre'}, 'ccs', {},'acpl'}}}},
                     where => {
-                        '+acp' => {'deleted' => 'f'},
-                        '+bre' => {id => $rec}
+                        '+acp' => {'deleted' => 'f', 'holdable', 't'},
+                        '+bre' => {id => $rec},
+                        '+ccs' => {holdable => 't'},
+                        '+acpl' => {holdable => 't'}
                     },
                     distinct => 1,
                 }
