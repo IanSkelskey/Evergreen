@@ -8,7 +8,7 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {RecordBucketService} from '@eg/staff/cat/bucket/record/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';

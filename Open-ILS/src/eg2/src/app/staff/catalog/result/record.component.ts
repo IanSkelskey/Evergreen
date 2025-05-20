@@ -10,7 +10,7 @@ import {CatalogSearchContext} from '@eg/share/catalog/search-context';
 import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {StaffCatalogService} from '../catalog.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
-import {RecordBucketService} from '@eg/staff/cat/bucket/record/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
 import {CourseService} from '@eg/staff/share/course.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ToastService} from '@eg/share/toast/toast.service';

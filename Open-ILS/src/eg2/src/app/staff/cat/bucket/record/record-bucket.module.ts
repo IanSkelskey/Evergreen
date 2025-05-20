@@ -11,7 +11,7 @@ import {RecordBucketItemComponent} from '@eg/staff/cat/bucket/record/record-buck
 import {RecordBucketRoutingModule} from './record-bucket-routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
-import {RecordBucketService} from '@eg/staff/cat/bucket/record/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
 import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 
 @NgModule({
