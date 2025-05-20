@@ -17,8 +17,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 // Add import for the new item transfer dialog
 import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record-bucket-item-upload-dialog.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record/record-bucket-item-upload-dialog.component';
 import {HoldTransferViaBibsDialogComponent} from '@eg/staff/share/holds/transfer-via-bibs-dialog.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 
