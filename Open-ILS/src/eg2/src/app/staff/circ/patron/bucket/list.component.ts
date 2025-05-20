@@ -277,8 +277,14 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         this.bucketService.retrieveBucketById(this.bucketIdToRetrieve)
             .then(bucket => {
                 this.retrievingById = false;
-                // Authorization check is already done in the service method
-                this.jumpToBucketContent(this.bucketIdToRetrieve);
+                // Log this bucket in recent buckets
+                this.bucketService.logPatronBucket(this.bucketIdToRetrieve);
+                // Navigate directly to bucket content page with correct path
+                this.router.navigate(['/staff/circ/patron/bucket/content', this.bucketIdToRetrieve])
+                    .catch(err => {
+                        console.error('Navigation error:', err);
+                        this.toast.danger($localize`Error navigating to bucket: ${err.message || err}`);
+                    });
             })
             .catch(error => {
                 this.retrievingById = false;

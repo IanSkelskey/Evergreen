@@ -720,11 +720,20 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
     retrieveBucketById() {
         if (!this.bucketIdToRetrieve) { return; }
-        if (this.jumpToContentsOnRetrieveById) {
-            this.jumpToBucketContent(this.bucketIdToRetrieve);
-        } else {
-            this.switchTo('retrieved_by_id');
-        }
+        
+        // Show loading state
+        const bucketId = this.bucketIdToRetrieve;
+        console.debug('Retrieving bucket by ID:', bucketId);
+        
+        // Test the bucket exists first
+        this.testReferencedBucket(bucketId, (response) => {
+            // If we get here, the bucket exists
+            console.debug('Bucket found, navigating to content');
+            // Log this bucket as recently used
+            this.bucketService.logRecordBucket(bucketId);
+            // Navigate directly to the bucket content page
+            this.router.navigate(['content', bucketId], { relativeTo: this.route.parent });
+        });
     }
 
     testReferencedBucket(bucketId: number, /* old-school */ callback: Function) {
