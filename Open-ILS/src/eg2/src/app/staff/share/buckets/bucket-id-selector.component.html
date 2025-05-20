@@ -1,0 +1,54 @@
+<ng-container [ngSwitch]="inputLayout">
+  <!-- Horizontal layout (form with input-group) -->
+  <ng-container *ngSwitchCase="'horizontal'">
+    <form (ngSubmit)="submitId()" class="bucket-id-form">
+      <div class="input-group">
+        <input type="number" class="form-control" 
+               [(ngModel)]="bucketId" 
+               (ngModelChange)="onIdChange($event)"
+               [placeholder]="placeholder" 
+               [disabled]="disabled || processing" 
+               name="bucketId" 
+               #bucketIdInput
+               min="0"
+               [attr.aria-label]="labelText">
+        <button type="submit" [class]="'btn ' + buttonClass" [disabled]="disabled || processing || bucketId === null || bucketId === undefined || bucketId < 0">
+          <span *ngIf="processing" class="spinner-border spinner-border-sm" role="status"></span>
+          <span class="d-flex align-items-center justify-content-center">
+            <span *ngIf="buttonIcon" class="material-icons" aria-hidden="true">{{buttonIcon}}</span>
+            {{buttonLabel}}
+          </span>
+        </button>
+      </div>
+      <small *ngIf="helpText" class="form-text text-muted mt-1">{{helpText}}</small>
+    </form>
+  </ng-container>
+  
+  <!-- Vertical layout (form-group with label) -->
+  <ng-container *ngSwitchCase="'vertical'">
+    <div class="mb-3">
+      <label *ngIf="showLabel" [for]="'bucket-id-' + labelText" class="form-label">{{labelText}}</label>
+      <div class="d-flex">
+        <input type="number" class="form-control me-2" 
+               [(ngModel)]="bucketId" 
+               (ngModelChange)="onIdChange($event)"
+               [placeholder]="placeholder" 
+               [disabled]="disabled || processing" 
+               [id]="'bucket-id-' + labelText"
+               name="bucketId" 
+               #bucketIdInput
+               min="0">
+        <button type="button" [class]="'btn ' + buttonClass" 
+                [disabled]="disabled || processing || bucketId === null || bucketId === undefined || bucketId < 0"
+                (click)="submitId()">
+          <span *ngIf="processing" class="spinner-border spinner-border-sm" role="status"></span>
+          <span class="d-flex align-items-center justify-content-center">
+            <span *ngIf="buttonIcon" class="material-icons" aria-hidden="true">{{buttonIcon}}</span>
+            {{buttonLabel}}
+          </span>
+        </button>
+      </div>
+      <small *ngIf="helpText" class="form-text text-muted mt-1">{{helpText}}</small>
+    </div>
+  </ng-container>
+</ng-container>

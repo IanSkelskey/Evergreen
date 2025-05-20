@@ -51,6 +51,10 @@ const routes: Routes = [{
     path: 'bcsearch/:barcode',
     component: BcSearchComponent
 }, {
+    path: 'bucket',
+    loadChildren: () =>
+        import('./bucket/bucket.module').then(m => m.PatronBucketModule)
+}, {
     path: ':id',
     redirectTo: ':id/checkout'
 }, {

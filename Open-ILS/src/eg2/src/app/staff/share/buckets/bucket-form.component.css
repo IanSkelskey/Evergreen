@@ -1,0 +1,37 @@
+.required::after {
+  content: " *";
+  color: red;
+}
+
+.material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.form-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alert .material-icons {
+  font-size: 1.2rem;
+}
+
+/* Style for disabled inputs (component-specific) */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--bs-body-bg-highlight);
+  cursor: not-allowed;
+}
