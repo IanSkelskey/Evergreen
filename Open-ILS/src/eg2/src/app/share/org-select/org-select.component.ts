@@ -1,9 +1,7 @@
 /** TODO PORT ME TO <eg-combobox> */
-import {Component, OnInit, Input, Output, ViewChild, EventEmitter, ElementRef, AfterViewInit} from '@angular/core';
-import {Observable, Subject} from 'rxjs';
-import {map, mapTo, debounceTime, distinctUntilChanged, merge, filter} from 'rxjs/operators';
+import {Component, OnInit, Input, Output, ViewChild, EventEmitter, AfterViewInit} from '@angular/core';
+import {Observable, Subject, map, mapTo, debounceTime, distinctUntilChanged, mergeWith as merge, filter} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
-import {StoreService} from '@eg/core/store.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {OrgService} from '@eg/core/org.service';
 import {IdlObject} from '@eg/core/idl.service';
@@ -176,6 +174,7 @@ export class OrgSelectComponent implements OnInit, AfterViewInit {
 
     // Emitted when the org unit value is changed via the selector.
     // Does not fire on initialOrg
+    // eslint-disable-next-line @angular-eslint/no-output-on-prefix
     @Output() onChange = new EventEmitter<IdlObject>();
 
     // Emitted once when the component is done fetching settings
@@ -202,11 +201,9 @@ export class OrgSelectComponent implements OnInit, AfterViewInit {
 
     constructor(
       private auth: AuthService,
-      private store: StoreService,
       private serverStore: ServerStoreService,
       private org: OrgService,
       private perm: PermService,
-      private elm: ElementRef,
     ) {
         this.orgClassCallback = (orgId: number): string => '';
         this.orgSelectGroup = new FormGroup({
@@ -277,7 +274,7 @@ export class OrgSelectComponent implements OnInit, AfterViewInit {
 
     ngAfterViewInit(): void {
         document.querySelectorAll('ngb-typeahead-window button[disabled]').forEach(b => b.setAttribute('tabindex', '-1'));
-        this.controller = this.instance['_elementRef'].nativeElement as HTMLInputElement;
+        this.controller = this.instance['_nativeElement'] as HTMLInputElement;
         this.controller.addEventListener('keydown', this.onKeydown.bind(this));
     }
 

@@ -1,6 +1,5 @@
 import {Component, Input, Output, OnInit, OnDestroy, ViewChild, EventEmitter} from '@angular/core';
-import {Subscription, Observable, of} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import {Subscription, Observable, of, tap} from 'rxjs';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
