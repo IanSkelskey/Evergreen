@@ -65,8 +65,8 @@ This document outlines the necessary steps to unify the bucket functionality acr
 ## 4. Enhance Authorization and Security
 
 ### 4.1. Move Unauthorized Component
-- [ ] Move `app/staff/circ/patron/bucket/unauthorized.component.ts` to `app/staff/share/buckets/`
-- [ ] Make it generic to work with all bucket types
+- [x] Move `app/staff/circ/patron/bucket/unauthorized.component.ts` to `app/staff/share/buckets/`
+- [x] Make it generic to work with all bucket types
 - [ ] Update to use consistent share logic across bucket types
 
 ### 4.2. Update Security Checks

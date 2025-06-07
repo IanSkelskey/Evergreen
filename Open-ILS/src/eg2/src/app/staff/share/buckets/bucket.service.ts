@@ -10,8 +10,8 @@ import { OrgService } from '@eg/core/org.service';
 import { StoreService } from '@eg/core/store.service';
 import { PcrudService } from '@eg/core/pcrud.service';
 
-const BUCKET_CLASSES = ['biblio', 'user', 'callnumber', 'copy'] as const;
-type BucketClass = typeof BUCKET_CLASSES[number];
+export const BUCKET_CLASSES = ['biblio', 'user', 'callnumber', 'copy'] as const;
+export type BucketClass = typeof BUCKET_CLASSES[number];
 
 const CONSTANTS = {
   STORAGE_KEYS: {

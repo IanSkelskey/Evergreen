@@ -1,14 +1,16 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { interval, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { BucketClass } from './bucket.service';
 
 @Component({
-    selector: 'eg-patron-bucket-unauthorized',
-    templateUrl: 'unauthorized.component.html',
-    styleUrls: ['unauthorized.component.css']
+    selector: 'eg-bucket-unauthorized',
+    templateUrl: 'bucket-unauthorized.component.html',
+    styleUrls: ['bucket-unauthorized.component.css']
 })
-export class PatronBucketUnauthorizedComponent implements OnInit, OnDestroy {
+export class BucketUnauthorizedComponent implements OnInit, OnDestroy {
+    @Input() bucketClass: BucketClass = 'user';
     secondsToRedirect = 5;
     errorMessage: string;
     private destroy$ = new Subject<void>();
@@ -18,7 +20,7 @@ export class PatronBucketUnauthorizedComponent implements OnInit, OnDestroy {
     ngOnInit() {
         // Get any state passed from the router
         const state = history.state;
-        this.errorMessage = state?.message || $localize`You don't have permission to access this patron bucket.`;
+        this.errorMessage = state?.message || $localize`You don't have permission to access this bucket.`;
         
         // Start countdown timer
         interval(1000)
@@ -37,6 +39,13 @@ export class PatronBucketUnauthorizedComponent implements OnInit, OnDestroy {
     }
     
     navigateToBuckets() {
-        this.router.navigate(['/staff/circ/patron/bucket']);
+        const routeMap: Record<BucketClass, string> = {
+            biblio: '/staff/catalog/bucket/record',
+            user: '/staff/circ/patron/bucket',
+            callnumber: '/staff/cat/bucket/callnumber',
+            copy: '/staff/cat/bucket/copy'
+        };
+
+        this.router.navigate([routeMap[this.bucketClass]]);
     }
 }

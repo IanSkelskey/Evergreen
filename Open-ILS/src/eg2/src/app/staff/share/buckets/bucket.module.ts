@@ -13,13 +13,15 @@ import { BucketUserShareComponent } from './bucket-user-share.component';
 import { BucketDialogService } from './bucket-dialog.service';
 import { BucketTransferDialogComponent } from './bucket-transfer-dialog.component';
 import { BucketActionSummaryDialogComponent } from './bucket-action-summary-dialog.component';
+import { BucketUnauthorizedComponent } from './bucket-unauthorized.component';
 
 @NgModule({
     declarations: [
         BucketShareDialogComponent,
         BucketUserShareComponent,
         BucketTransferDialogComponent,
-        BucketActionSummaryDialogComponent
+        BucketActionSummaryDialogComponent,
+        BucketUnauthorizedComponent
     ],
     imports: [
         CommonModule,
@@ -37,7 +39,8 @@ import { BucketActionSummaryDialogComponent } from './bucket-action-summary-dial
         BucketShareDialogComponent,
         BucketUserShareComponent,
         BucketTransferDialogComponent,
-        BucketActionSummaryDialogComponent
+        BucketActionSummaryDialogComponent,
+        BucketUnauthorizedComponent
     ],
     providers: [
         BucketService,

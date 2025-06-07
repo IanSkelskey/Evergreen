@@ -2,7 +2,7 @@ import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {PatronBucketComponent} from './list.component';
 import {PatronBucketItemComponent} from './items.component';
-import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
+import {BucketUnauthorizedComponent} from '@eg/staff/share/buckets/bucket-unauthorized.component';
 
 const routes: Routes = [
     {
@@ -39,7 +39,7 @@ const routes: Routes = [
     },
     {
         path: 'unauthorized/:id',
-        component: PatronBucketUnauthorizedComponent
+        component: BucketUnauthorizedComponent
     }
 ];
 
