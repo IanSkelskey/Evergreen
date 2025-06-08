@@ -17,7 +17,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
 import {OrgService} from '@eg/core/org.service';
@@ -28,8 +28,8 @@ import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.
 
 @Component({
     selector: 'eg-patron-bucket-list',
-    templateUrl: 'list.component.html',
-    styleUrls: ['./list.component.css']
+    templateUrl: 'patron-bucket.component.html',
+    styleUrls: ['./patron-bucket.component.css']
 })
 
 export class PatronBucketComponent implements OnInit, OnDestroy {

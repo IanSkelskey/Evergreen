@@ -4,7 +4,7 @@ import {IdlObject} from '@eg/core/idl.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {PatronSearchComponent} from '@eg/staff/share/patron/search.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 @Component({

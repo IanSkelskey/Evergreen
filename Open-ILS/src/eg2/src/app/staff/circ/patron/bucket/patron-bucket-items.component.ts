@@ -16,7 +16,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
 import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
@@ -27,8 +27,8 @@ import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
     selector: 'eg-patron-bucket-item',
-    templateUrl: 'items.component.html',
-    styleUrls: ['items.component.css']
+    templateUrl: 'patron-bucket-items.component.html',
+    styleUrls: ['patron-bucket-items.component.css']
 })
 export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewInit {
     bucketId: number;

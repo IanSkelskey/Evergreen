@@ -7,7 +7,7 @@ import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 interface PatronPreview {

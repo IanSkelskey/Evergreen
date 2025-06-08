@@ -8,7 +8,7 @@ import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({

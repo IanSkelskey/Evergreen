@@ -2,11 +2,11 @@ import {NgModule, CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
-import {PatronBucketComponent} from './list.component';
-import {PatronBucketItemComponent} from './items.component';
+import {PatronBucketComponent} from './patron-bucket.component';
+import {PatronBucketItemComponent} from './patron-bucket-items.component';
 import {PatronBucketAddDialogComponent} from './add-dialog.component';
 import {PatronBucketUnauthorizedComponent} from './unauthorized.component';
-import {PatronBucketService} from './bucket.service';
+import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {PatronBucketRoutingModule} from './routing.module';
 import {PatronBucketQuickAddComponent} from './quick-add.component';
