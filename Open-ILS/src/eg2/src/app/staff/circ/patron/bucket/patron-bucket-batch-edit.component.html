@@ -18,7 +18,8 @@
         <label for="edit-name" class="form-label required" i18n>Name for edit set</label>
         <input type="text" class="form-control" id="edit-name" 
           formControlName="editName" placeholder="Name for this edit set" i18n-placeholder>
-        <div class="invalid-feedback" *ngIf="editForm.get('editName').invalid && editForm.get('editName').touched" i18n>
+        <div *ngIf="editForm.get('editName').invalid && editForm.get('editName').touched" 
+            class="text-danger small mt-1" i18n>
           Please provide a name for this edit set
         </div>
       </div>
@@ -60,7 +61,8 @@
                 <button ngbDropdownItem 
                         *ngFor="let grp of profiles" 
                         (click)="editForm.get('profile').setValue(grp)"
-                        [style.paddingLeft]="getDepthPadding(grp)">
+                        [style.paddingLeft]="getDepthPadding(grp)"
+                        [disabled]="grp?.cannot_use">
                   {{ grp.name() }}
                 </button>
               </div>
@@ -107,7 +109,7 @@
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <label for="edit-barred" class="form-label" i18n>Barred Flag</label>
-            <select class="form-control" id="edit-barred" formControlName="barred">
+            <select class="form-select" id="edit-barred" formControlName="barred">
               <option value="" i18n>Unchanged</option>
               <option value="t" i18n>True (Barred)</option>
               <option value="f" i18n>False (Not Barred)</option>
@@ -119,7 +121,7 @@
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <label for="edit-active" class="form-label" i18n>Active Flag</label>
-            <select class="form-control" id="edit-active" formControlName="active">
+            <select class="form-select" id="edit-active" formControlName="active">
               <option value="" i18n>Unchanged</option>
               <option value="t" i18n>True (Active)</option>
               <option value="f" i18n>False (Inactive)</option>
@@ -131,7 +133,7 @@
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <label for="edit-juvenile" class="form-label" i18n>Juvenile Flag</label>
-            <select class="form-control" id="edit-juvenile" formControlName="juvenile">
+            <select class="form-select" id="edit-juvenile" formControlName="juvenile">
               <option value="" i18n>Unchanged</option>
               <option value="t" i18n>True (Juvenile)</option>
               <option value="f" i18n>False (Not Juvenile)</option>
@@ -156,6 +158,12 @@
         </div>
       </div>
       
+      <!-- Permission warning -->
+      <div *ngIf="!hasUpdatePerm" class="alert alert-warning mt-3" i18n>
+        <span class="material-icons me-2">warning</span>
+        You do not have the UPDATE_USER permission required to modify patron records.
+      </div>
+      
       <!-- Processing status -->
       <div *ngIf="isProcessing" class="progress-container mt-4">
         <p class="mb-2"><strong i18n>Processing:</strong> {{progressStage}}</p>
@@ -169,6 +177,9 @@
             {{ progressValue }} / {{ progressMax }}
           </div>
         </div>
+        <div *ngIf="progressError" class="alert alert-danger mt-2">
+          {{progressError}}
+        </div>
       </div>
     </form>
   </div>
@@ -179,7 +190,7 @@
             [disabled]="isProcessing" i18n>Cancel</button>
     <button type="button" class="btn btn-success" 
             (click)="batchEdit()" 
-            [disabled]="!editForm.valid || !hasModifiedFields() || isProcessing" i18n>
+            [disabled]="!editForm.valid || !hasModifiedFields() || isProcessing || !hasUpdatePerm" i18n>
       <span class="material-icons" *ngIf="!isProcessing">edit</span>
       <span class="spinner-border spinner-border-sm" role="status" *ngIf="isProcessing"></span>
       Apply Changes

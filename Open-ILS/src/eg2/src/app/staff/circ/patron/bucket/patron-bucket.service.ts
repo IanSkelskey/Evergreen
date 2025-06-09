@@ -361,6 +361,9 @@ export class PatronBucketService {
       // Ensure bucket exists and user has permission to edit it
       await this.checkBucketAccess(bucketId, true);
       
+      let lastError = null;
+      let lastProgress = null;
+      
       // Call the API to perform the batch edit
       return await lastValueFrom(
         this.net.request(
@@ -373,6 +376,8 @@ export class PatronBucketService {
         ).pipe(
           // Handle progress updates
           tap(progress => {
+            lastProgress = progress;
+            
             if (progressCallback && typeof progressCallback === 'function') {
               // Add a more user-friendly label based on the stage
               if (progress.stage) {
@@ -415,6 +420,10 @@ export class PatronBucketService {
                 progress.count = 1;
               }
               
+              if (progress.error) {
+                lastError = progress.error;
+              }
+              
               progressCallback(progress);
             }
           }),
@@ -443,6 +452,18 @@ export class PatronBucketService {
           })
         )
       );
+      
+      // Check if we ended with an error state
+      if (lastError && (!lastProgress || lastProgress.stage !== 'COMPLETE')) {
+        return {
+          success: false,
+          error: lastError
+        };
+      }
+      
+      return {
+        success: true
+      };
     } catch (error) {
       console.error('Error in batchEditPatrons:', error);
       throw error;

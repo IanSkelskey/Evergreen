@@ -13,6 +13,7 @@ import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {PatronBucketService} from './patron-bucket.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
+import {PermService} from '@eg/core/perm.service';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 /**
@@ -56,6 +57,11 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
   progressValue = 0;
   progressMax = 100;
   progressStage = '';
+  progressError = '';
+
+  // Permission flags
+  hasUpdatePerm = false;
+  hasBatchUpdatePerm = false;
   
   constructor(
     private modal: NgbModal,
@@ -66,7 +72,8 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
     private pcrud: PcrudService,
     private evt: EventService,
     private toast: ToastService,
-    private bucketService: PatronBucketService
+    private bucketService: PatronBucketService,
+    private perm: PermService
   ) {
     super(modal);
   }
@@ -74,6 +81,22 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
   ngOnInit(): void {
     this.createForm();
     this.loadLookupData();
+    this.checkPermissions();
+  }
+
+  /**
+   * Check if the user has permissions needed for editing
+   */
+  checkPermissions(): void {
+    // Check for UPDATE_USER permission
+    this.perm.hasWorkPermAt(['UPDATE_USER']).then(result => {
+      this.hasUpdatePerm = !!result;
+    });
+    
+    // Check for container batch update permission
+    this.perm.hasWorkPermAt(['UPDATE_PATRON_BUCKET_USER_BATCH_UPDATE']).then(result => {
+      this.hasBatchUpdatePerm = !!result;
+    });
   }
 
   /**
@@ -211,6 +234,11 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
       return;
     }
     
+    if (!this.hasUpdatePerm) {
+      this.toast.danger($localize`You do not have permission to update patrons.`);
+      return;
+    }
+    
     const formValues = this.editForm.value;
     
     // Prepare the edit parameters
@@ -256,6 +284,7 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
     this.progressValue = 0;
     this.progressMax = 100;
     this.progressStage = $localize`Preparing to update patrons`;
+    this.progressError = '';
     
     try {
       // Open the progress dialog
@@ -272,6 +301,10 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
           this.progressValue = progress.count || 0;
           this.progressMax = progress.max || 100;
           this.progressStage = progress.label || $localize`Processing`;
+          
+          if (progress.error) {
+            this.progressError = progress.error;
+          }
         }
       );
       
@@ -318,6 +351,7 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
     
     this.modifiedFields.clear();
     this.isProcessing = false;
+    this.progressError = '';
     
     // Apply dialog options with defaults
     const dialogOptions = {
