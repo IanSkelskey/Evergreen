@@ -203,27 +203,42 @@ export class PatronBucketBatchEditComponent extends DialogComponent implements O
    * Reset a field to null/empty
    */
   unsetField(field: string): void {
-    this.editForm.get(field)?.setValue(null);
-    if (field === 'barred' || field === 'active' || field === 'juvenile') {
-      this.editForm.get(field)?.setValue('');
+    // Special handling for org selector
+    if (field === 'homeOu') {
+      // First update the form control
+      this.editForm.get(field).setValue(null);
+      // Need to also set the component model property to ensure UI updates
+      this.homeOu = null;
+    } else {
+      this.editForm.get(field)?.setValue(null);
+      if (field === 'barred' || field === 'active' || field === 'juvenile') {
+        this.editForm.get(field)?.setValue('');
+      }
     }
   }
   
   /**
-   * Check if an org unit can have users
+   * Get list of org units that cannot have users
    */
-  disableHomeOrg(orgId: number): boolean {
-    if (!orgId) return false;
-    
-    const org = this.org.get(orgId);
-    if (!org) return false;
-    
-    try {
-      return org.ou_type().can_have_users() === 'f';
-    } catch (e) {
-      return false;
+  get disableHomeOrg(): number[] {
+    // Create and cache a list of org units that cannot have users
+    if (!this._disabledHomeOrgs) {
+      this._disabledHomeOrgs = [];
+      // Find all orgs that can't have users
+      this.org.list().forEach(org => {
+        try {
+          if (org.ou_type().can_have_users() === 'f') {
+            this._disabledHomeOrgs.push(org.id());
+          }
+        } catch (e) {
+          // Skip any orgs with errors
+        }
+      });
     }
+    return this._disabledHomeOrgs;
   }
+
+  private _disabledHomeOrgs: number[] = null;
   
   /**
    * Run the batch edit operation

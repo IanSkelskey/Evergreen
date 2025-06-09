@@ -31,13 +31,15 @@
         <div class="col-md-4 mb-3">
           <div class="form-group">
             <label class="form-label" i18n>Home Library</label>
-            <eg-org-selector
+            <eg-org-select
                 [initialOrgId]="homeOu?.id()"
-                (orgChange)="editForm.get('homeOu').setValue($event)"
+                (onChange)="editForm.get('homeOu').setValue($event); homeOu = $event"
                 [limitPerms]="['UPDATE_USER']"
-                nodefault
-                disableTest="disableHomeOrg">
-            </eg-org-selector>
+                [applyDefault]="false"
+                [disableOrgs]="disableHomeOrg"
+                [applyOrgId]="homeOu?.id() || null"
+                [placeholder]="'Select Home Library'">
+            </eg-org-select>
             <button class="btn btn-sm btn-outline-secondary mt-2" 
                     (click)="unsetField('homeOu')" 
                     [disabled]="!editForm.get('homeOu').value" i18n>
