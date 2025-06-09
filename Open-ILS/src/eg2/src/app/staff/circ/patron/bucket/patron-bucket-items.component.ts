@@ -467,9 +467,12 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     openBarcodeUploadDialog() {
         try {
             if (!this.uploadBarcodeDialog) {
-                // If the ViewChild reference doesn't exist yet, create it with the modal service
+                console.warn('Upload dialog component reference not found, creating programmatically');
+                // Fallback to creating the dialog programmatically
                 const modalRef = this.modal.open(PatronBarcodeUploadComponent, {
-                    size: 'lg'
+                    size: 'lg',
+                    backdrop: 'static', // Prevent closing on backdrop click
+                    keyboard: true      // Allow ESC to close
                 });
                 const dialog = modalRef.componentInstance as PatronBarcodeUploadComponent;
                 dialog.bucketId = this.bucketId;
@@ -477,22 +480,39 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
                 modalRef.result.then(result => {
                     if (result && result.success) {
                         console.debug('Upload dialog returned success:', result);
-                        // Refresh the grid to show newly added patrons
                         this.refreshGridData();
                     }
-                }, () => {
-                    console.debug('Upload dialog dismissed');
-                    // Dialog dismissed, no action needed
+                }, reason => {
+                    console.debug('Upload dialog dismissed:', reason);
                 });
             } else {
-                // Use the existing reference, similar to how addPatronDialog is used
+                console.debug('Using existing upload dialog reference');
+                // Set bucketId before opening
                 this.uploadBarcodeDialog.bucketId = this.bucketId;
-                this.uploadBarcodeDialog.open({size: 'lg'}).subscribe(result => {
-                    if (result && result.success) {
-                        console.debug('Upload dialog returned success:', result);
-                        this.refreshGridData();
-                    }
-                });
+                
+                // Open the dialog with improved error handling
+                try {
+                    this.uploadBarcodeDialog.open({
+                        size: 'lg',
+                        backdrop: 'static',
+                        keyboard: true
+                    }).subscribe({
+                        next: (result) => {
+                            if (result && result.success) {
+                                console.debug('Upload dialog returned success:', result);
+                                this.refreshGridData();
+                            }
+                        },
+                        error: (err) => {
+                            console.error('Error from upload dialog:', err);
+                        }
+                    });
+                } catch (innerError) {
+                    console.error('Error opening dialog through reference:', innerError);
+                    // Fallback to programmatic approach
+                    this.uploadBarcodeDialog = null;
+                    this.openBarcodeUploadDialog();
+                }
             }
         } catch (error) {
             console.error('Error opening patron barcode upload dialog:', error);

@@ -90,12 +90,21 @@ export class PatronBarcodeUploadComponent extends DialogComponent implements OnI
     this.resetPatronList();
 
     const dialogOptions = {
-      ...options,
-      size: 'lg',
-      windowClass: 'patron-barcode-upload-dialog'
+        ...options,
+        size: options?.size || 'lg',
+        windowClass: 'patron-barcode-upload-dialog',
+        backdrop: options?.backdrop || 'static',
+        keyboard: options?.keyboard || true
     };
 
-    return super.open(dialogOptions);
+    console.debug('Opening patron barcode upload dialog with options:', dialogOptions);
+    
+    try {
+        return super.open(dialogOptions);
+    } catch (error) {
+        console.error('Error opening barcode upload dialog:', error);
+        throw error;
+    }
   }
 
   onFileSelected(event: any): void {
