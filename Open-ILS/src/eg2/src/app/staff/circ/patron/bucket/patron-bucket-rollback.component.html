@@ -56,7 +56,7 @@
     <button type="button" class="btn btn-outline-secondary" 
             (click)="close()" 
             [disabled]="isProcessing" i18n>Cancel</button>
-    <button type="button" class="btn btn-warning" 
+    <button type="button" class="btn btn-primary" 
             (click)="applyRollback()" 
             [disabled]="!rollbackForm.valid || isProcessing || revertableFieldsetGroups.length === 0" i18n>
       <span class="material-icons" *ngIf="!isProcessing">restore</span>
