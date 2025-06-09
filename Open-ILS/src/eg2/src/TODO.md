@@ -51,11 +51,11 @@ This document outlines the necessary steps to unify the bucket functionality acr
 - [x] Update template to use consistent styling with record buckets
 
 ### 3.2. Update Grid Columns
-- [ ] Add share-related columns to patron bucket list:
-  - [ ] "# of org shares" - Number of organizations bucket is shared with
-  - [ ] "# of user view shares" - Number of users with view permissions
-  - [ ] "# of user edit shares" - Number of users with edit permissions
-- [ ] Ensure consistent column ordering between record and patron buckets
+- [x] Add share-related columns to patron bucket list:
+  - [x] "# of org shares" - Number of organizations bucket is shared with
+  - [x] "# of user view shares" - Number of users with view permissions
+  - [x] "# of user edit shares" - Number of users with edit permissions
+- [x] Ensure consistent column ordering between record and patron buckets
 
 ### 3.3. Integrate Item Transfer Dialog
 - [x] Update patron bucket items component to use shared BucketItemTransferDialogComponent
