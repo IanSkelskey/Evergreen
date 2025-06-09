@@ -1,0 +1,54 @@
+<div class="modal-header">
+  <h4 class="modal-title" i18n>View Batch Changes</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+</div>
+
+<div class="modal-body">
+  <div *ngIf="isLoading" class="text-center p-3">
+    <div class="spinner-border text-primary" role="status">
+      <span class="sr-only" i18n>Loading...</span>
+    </div>
+    <div class="mt-2" i18n>Loading changesets...</div>
+  </div>
+  
+  <div *ngIf="!isLoading">
+    <div *ngIf="fieldsetGroups.length === 0" class="alert alert-info" i18n>
+      No batch changes found for this bucket.
+    </div>
+    
+    <div *ngIf="fieldsetGroups.length > 0" class="bucket-changesets">
+      <!-- Card View for All Screen Sizes -->
+      <div class="changeset-cards">
+        <div class="changeset-card" *ngFor="let group of fieldsetGroups">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 text-break">{{group.name()}}</h5>
+            <button class="btn btn-sm btn-danger delete-button" 
+                    (click)="deleteChangeset(group)" 
+                    i18n-title title="Delete changeset"
+                    aria-label="Delete changeset">
+              <span class="material-icons">delete</span>
+              <span class="d-none d-md-inline-block ms-1" i18n>Delete</span>
+            </button>
+          </div>
+          <div class="card-body py-2">
+            <div class="row mb-1">
+              <div class="col-4 col-sm-3 col-md-2 text-muted" i18n>Completed:</div>
+              <div class="col-8 col-sm-9 col-md-10">{{formatDate(group.complete_time())}}</div>
+            </div>
+            <div class="row">
+              <div class="col-4 col-sm-3 col-md-2 text-muted" i18n>Rolled back:</div>
+              <div class="col-8 col-sm-9 col-md-10">
+                <span *ngIf="group.rollback_time()">{{formatDate(group.rollback_time())}}</span>
+                <span *ngIf="!group.rollback_time()" class="text-muted fst-italic" i18n>Not rolled back</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary" (click)="close()" i18n>Close</button>
+</div>

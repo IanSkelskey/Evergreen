@@ -24,6 +24,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
+import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
@@ -572,9 +573,29 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     viewChangeset() {
-        this.alertDialog.dialogTitle = $localize`Not Implemented`;
-        this.alertDialog.dialogBody = $localize`View Changesets functionality is not implemented yet.`;
-        this.alertDialog.open();
+        try {
+            const modalRef = this.modal.open(PatronBucketChangesetsComponent, {
+                size: 'lg',
+                backdrop: 'static'
+            });
+            
+            const dialog = modalRef.componentInstance as PatronBucketChangesetsComponent;
+            dialog.bucketId = this.bucketId;
+            
+            modalRef.result.then(
+                () => {
+                    // Dialog closed normally
+                    console.debug('Changesets dialog closed');
+                }, 
+                () => {
+                    // Dialog dismissed
+                    console.debug('Changesets dialog dismissed');
+                }
+            );
+        } catch (error) {
+            console.error('Error opening changesets dialog:', error);
+            this.toast.danger($localize`Error opening changesets dialog: ${error.message || error}`);
+        }
     }
 
     applyRollback() {

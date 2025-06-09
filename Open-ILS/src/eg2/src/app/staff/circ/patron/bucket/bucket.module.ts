@@ -22,6 +22,7 @@ import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
 import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
+import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
 
 @NgModule({
     declarations: [
@@ -31,7 +32,8 @@ import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.compone
         PatronBucketUnauthorizedComponent,
         PatronBucketQuickAddComponent,
         PatronBarcodeUploadComponent,
-        PatronBucketBatchEditComponent
+        PatronBucketBatchEditComponent,
+        PatronBucketChangesetsComponent
     ],
     imports: [
         PatronBucketRoutingModule,
