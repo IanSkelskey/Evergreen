@@ -136,7 +136,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         });
 
         // Listen for bucket refresh requests
-        this.bucketService.patronBucketsRefreshRequested$.pipe(
+        this.bucketService.patronBucketsRefresh$.pipe(
             takeUntil(this.destroy$)
         ).subscribe(() => {
             // Only reload grid for the current view, but always update counts for all tabs

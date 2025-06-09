@@ -23,6 +23,7 @@ import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-tr
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Pager} from '@eg/share/util/pager';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
+import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
@@ -47,6 +48,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     @ViewChild('addPatronDialog') private addPatronDialog: PatronBucketAddDialogComponent;
     @ViewChild('uploadBarcodeDialog') private uploadBarcodeDialog: PatronBarcodeUploadComponent;
     @ViewChild('itemTransferDialog') private itemTransferDialog: BucketItemTransferDialogComponent;
+    @ViewChild('batchEditDialog') private batchEditDialog: PatronBucketBatchEditComponent;
     
     private destroy$ = new Subject<void>();
     isLoading = true;
@@ -521,9 +523,46 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     updateAllPatrons() {
-        this.alertDialog.dialogTitle = $localize`Not Implemented`;
-        this.alertDialog.dialogBody = $localize`Update All Patrons functionality is not implemented yet.`;
-        this.alertDialog.open();
+        try {
+            if (!this.batchEditDialog) {
+                console.debug('Creating batch edit dialog programmatically');
+                // Create dialog programmatically if not available via ViewChild
+                const modalRef = this.modal.open(PatronBucketBatchEditComponent, {
+                    size: 'lg',
+                    backdrop: 'static'
+                });
+                
+                const dialog = modalRef.componentInstance as PatronBucketBatchEditComponent;
+                dialog.bucketId = this.bucketId;
+                
+                modalRef.result.then(result => {
+                    if (result && result.success) {
+                        console.debug('Batch edit completed successfully');
+                        this.refreshGridData();
+                    }
+                }, () => {
+                    // Dialog dismissed
+                    console.debug('Batch edit dialog dismissed');
+                });
+            } else {
+                console.debug('Using existing batch edit dialog reference');
+                this.batchEditDialog.bucketId = this.bucketId;
+                this.batchEditDialog.open({size: 'lg'}).subscribe({
+                    next: (result) => {
+                        if (result && result.success) {
+                            console.debug('Batch edit completed successfully');
+                            this.refreshGridData();
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error from batch edit dialog:', err);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error opening batch edit dialog:', error);
+            this.toast.danger($localize`Error opening batch edit dialog: ${error.message || error}`);
+        }
     }
 
     modifyStatcats() {

@@ -1,8 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Subject, lastValueFrom, Observable } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { PcrudService } from '@eg/core/pcrud.service';
+import { NetService } from '@eg/core/net.service';
+import { AuthService } from '@eg/core/auth.service';
 import { IdlObject } from '@eg/core/idl.service';
 import { BucketService } from '@eg/staff/share/buckets/bucket.service';
+import { ɵ$localize as $localize } from '@angular/localize';
 
 /**
  * Service for managing patron buckets (collections of patrons)
@@ -13,16 +18,23 @@ import { BucketService } from '@eg/staff/share/buckets/bucket.service';
 })
 export class PatronBucketService {
   /**
+   * Subject for notifying when patron buckets should be refreshed
+   */
+  private patronBucketsRefreshRequested = new Subject<void>();
+
+  /**
+   * Observable for patron bucket refresh notifications
+   */
+  public patronBucketsRefresh$ = this.patronBucketsRefreshRequested.asObservable();
+
+  /**
    * Maximum number of recent buckets to track in local storage
    */
-  maxRecentPatronBuckets = 10;
-    
-  private patronBucketsRefreshRequested = new Subject<void>();
-  patronBucketsRefreshRequested$ = this.patronBucketsRefreshRequested.asObservable();
-    
   constructor(
     private pcrud: PcrudService,
-    private bucketService: BucketService
+    private bucketService: BucketService,
+    private net: NetService,
+    private auth: AuthService
   ) {}
   
   /**
@@ -314,5 +326,126 @@ export class PatronBucketService {
   getPatronBucketStats(bucketIds: number[]): Observable<any> {
     // Delegate to the shared bucket service
     return this.bucketService.getBucketStats('user', bucketIds);
+  }
+
+  /**
+   * Batch edit patrons in a bucket
+   * @param bucketId The ID of the bucket containing patrons to edit
+   * @param editParams Parameters for the edit operation
+   * @param progressCallback Optional callback for progress updates
+   * @returns Result object with success/error information
+   */
+  async batchEditPatrons(
+    bucketId: number,
+    editParams: any,
+    progressCallback?: (progress: any) => void
+  ): Promise<any> {
+    try {
+      // Validate inputs
+      if (!bucketId) {
+        throw new Error('Bucket ID is required');
+      }
+      
+      if (!editParams || !editParams.name) {
+        throw new Error('Edit name is required');
+      }
+      
+      // Check if there's anything to edit
+      const editableParams = {...editParams};
+      delete editableParams.name; // Remove name from check
+      
+      if (Object.keys(editableParams).length === 0) {
+        throw new Error('No edit parameters specified');
+      }
+      
+      // Ensure bucket exists and user has permission to edit it
+      await this.checkBucketAccess(bucketId, true);
+      
+      // Call the API to perform the batch edit
+      return await lastValueFrom(
+        this.net.request(
+          'open-ils.actor',
+          'open-ils.actor.container.user.batch_edit',
+          this.auth.token(),
+          bucketId,
+          editParams.name,
+          editParams
+        ).pipe(
+          // Handle progress updates
+          tap(progress => {
+            if (progressCallback && typeof progressCallback === 'function') {
+              // Add a more user-friendly label based on the stage
+              if (progress.stage) {
+                switch (progress.stage) {
+                  case 'CONTAINER_BATCH_UPDATE_PERM_CHECK':
+                    progress.label = $localize`Checking permissions`;
+                    break;
+                  case 'CONTAINER_PERM_CHECK':
+                    progress.label = $localize`Verifying bucket access`;
+                    break;
+                  case 'ITEM_PERM_CHECK':
+                    progress.label = $localize`Checking item permissions`;
+                    break;
+                  case 'FIELDSET_GROUP_CREATE':
+                    progress.label = $localize`Creating edit group`;
+                    break;
+                  case 'FIELDSET_CREATE':
+                    progress.label = $localize`Preparing edit fields`;
+                    break;
+                  case 'FIELDSET_EDITS_CREATE':
+                    progress.label = $localize`Creating edit changes`;
+                    break;
+                  case 'CONSTRUCT_QUERY':
+                    progress.label = $localize`Building update query`;
+                    break;
+                  case 'APPLY_EDITS':
+                    progress.label = $localize`Applying changes`;
+                    break;
+                  case 'COMPLETE':
+                    progress.label = $localize`Complete`;
+                    break;
+                  default:
+                    progress.label = progress.stage;
+                }
+              }
+              
+              // Ensure progress has count and max for progress bar
+              if (!progress.max) {
+                progress.max = 1;
+                progress.count = 1;
+              }
+              
+              progressCallback(progress);
+            }
+          }),
+          // Collect the final result
+          map(progress => {
+            if (progress.stage === 'COMPLETE') {
+              return { success: true };
+            }
+            
+            if (progress.error) {
+              return { 
+                success: false, 
+                error: progress.error 
+              };
+            }
+            
+            return null;
+          }),
+          // Only return the final result
+          catchError(error => {
+            console.error('Batch edit error:', error);
+            return of({ 
+              success: false, 
+              error: error.message || error 
+            });
+          })
+        )
+      );
+    } catch (error) {
+      console.error('Error in batchEditPatrons:', error);
+      throw error;
+    }
   }
 }

@@ -21,6 +21,7 @@ import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {NgbDropdownModule, NgbTooltipModule} from '@ng-bootstrap/ng-bootstrap';
 import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
+import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 
 @NgModule({
     declarations: [
@@ -29,7 +30,8 @@ import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module
         PatronBucketAddDialogComponent,
         PatronBucketUnauthorizedComponent,
         PatronBucketQuickAddComponent,
-        PatronBarcodeUploadComponent
+        PatronBarcodeUploadComponent,
+        PatronBucketBatchEditComponent
     ],
     imports: [
         PatronBucketRoutingModule,
