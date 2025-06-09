@@ -6,6 +6,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService,IdlObject} from '@eg/core/idl.service';
+import { BucketService } from '@eg/staff/share/buckets/bucket.service';
 
 @Injectable()
 export class RecordBucketService {
@@ -21,6 +22,7 @@ export class RecordBucketService {
         private auth: AuthService,
         private pcrud: PcrudService,
         private idl: IdlService,
+        private bucketService: BucketService
     ) {}
 
     requestBibBucketsRefresh() {
@@ -91,6 +93,14 @@ export class RecordBucketService {
         return lastValueFrom(requestObs);
     }
 
+    getRecordBucketCountStats(bucketIds: number[]): Observable<any> {
+        if (bucketIds.length === 0) {
+            return of({});
+        }
+
+        return this.bucketService.getBucketStats('biblio', bucketIds);
+    }
+
     async retrieveRecordBuckets(bucketIds: number[]): Promise<any[]> {
         if (bucketIds.length === 0) {
             return [];
@@ -98,7 +108,7 @@ export class RecordBucketService {
 
         const [buckets, countStats] = await Promise.all([
             this.loadRecordBuckets(bucketIds),
-            lastValueFrom(this.getRecordBucketCountStats(bucketIds))
+            lastValueFrom(this.bucketService.getBucketStats('biblio', bucketIds))
         ]);
 
         interface CountStat {
@@ -133,21 +143,6 @@ export class RecordBucketService {
                 {flesh: 1, flesh_fields: { cbreb: ['owner','owning_lib'] }},
                 {atomic: true}
             )
-        );
-    }
-
-    getRecordBucketCountStats(bucketIds: number[]): Observable<any> {
-        const validBucketIds = bucketIds.filter(id => id !== -1);
-
-        if (validBucketIds.length === 0) {
-            return of({});
-        }
-
-        return this.net.request(
-            'open-ils.actor',
-            'open-ils.actor.container.biblio_record_entry.count_stats.authoritative',
-            this.auth.token(),
-            validBucketIds
         );
     }
 

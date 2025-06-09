@@ -382,12 +382,22 @@ export class BucketService {
   }
 
   getBucketStats(bucketClass: BucketClass, bucketIds: number[]): Observable<any> {
+    let class_function = '';
+    if(bucketClass === 'biblio') {
+      class_function = 'biblio_record_entry';
+    } else if (bucketClass === 'user') {
+      class_function = 'user';
+    } else if (bucketClass === 'callnumber') {
+      class_function = 'callnumber';
+    } else if (bucketClass === 'copy') {
+      class_function = 'copy';
+    }
     if (!bucketIds.length) return of({});
     const validBucketIds = bucketIds.filter(id => id && !isNaN(Number(id)) && id !== -1);
     if (!validBucketIds.length) return of({});
     return this.net.request(
       'open-ils.actor',
-      `open-ils.actor.container.${bucketClass}.count_stats.authoritative`,
+      `open-ils.actor.container.${class_function}.count_stats.authoritative`,
       this.auth.token(),
       validBucketIds
     ).pipe(catchError(() => of({})));
