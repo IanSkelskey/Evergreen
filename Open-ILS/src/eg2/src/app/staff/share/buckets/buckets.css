@@ -180,6 +180,15 @@ textarea {
   color: var(--bs-body-color);
 }
 
+/* Ensure consistent icon sizing in bucket dialog headers */
+.modal-title .material-icons.bucket-icon {
+  font-size: 24px !important; /* Standard Material Icons size */
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Create a dark mode specific override */
 :root[data-bs-theme="dark"] .bucket-success-message {
   color: var(--eg-green-200); /* Bright green that's visible on dark backgrounds */

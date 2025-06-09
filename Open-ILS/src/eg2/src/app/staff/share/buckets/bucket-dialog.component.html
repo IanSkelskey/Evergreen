@@ -2,16 +2,12 @@
 
 <ng-template #dialogContent>
   <div class="modal-header align-items-center">
-    <h4 class="modal-title d-flex align-items-center gap-2">
-      <span class="material-icons" aria-hidden="true">
+    <h4 class="modal-title d-flex align-items-center">
+      <span class="material-icons me-2" aria-hidden="true">
         {{ editMode ? 'edit' : 'create_new_folder' }}
       </span>
-      <ng-container *ngIf="!editMode" i18n>
-        Create New {{getBucketClassLabel()}} Bucket
-      </ng-container>
-      <ng-container *ngIf="editMode" i18n>
-        Edit {{getBucketClassLabel()}} Bucket
-      </ng-container>
+      <span *ngIf="!editMode" i18n>Create New {{getBucketClassLabel()}} Bucket</span>
+      <span *ngIf="editMode" i18n>Edit {{getBucketClassLabel()}} Bucket</span>
     </h4>
     <span class="flex-grow-1"></span>
     <button type="button" class="btn-close ms-2" aria-label="Close" (click)="close()"></button>

@@ -99,30 +99,30 @@
           <div ngbDropdown class="mb-2 me-3">
             <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" 
               id="bulkActionsDropdown" ngbDropdownToggle>
-              <span class="material-icons">build</span>
+              <span class="material-icons me-1">build</span>
               <span i18n>Bulk Actions</span>
             </button>
             <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
-              <button ngbDropdownItem (click)="updateAllPatrons()" i18n>
-                <span class="material-icons">group</span>
-                Update All Patrons
+              <button ngbDropdownItem (click)="updateAllPatrons()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">group</span>
+                <span>Update All Patrons</span>
               </button>
-              <button ngbDropdownItem (click)="modifyStatcats()" i18n>
-                <span class="material-icons">category</span>
-                Modify Statistical Categories
+              <button ngbDropdownItem (click)="modifyStatcats()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">category</span>
+                <span>Modify Statistical Categories</span>
               </button>
-              <button ngbDropdownItem (click)="viewChangeset()" i18n>
-                <span class="material-icons">history</span>
-                View Changesets
+              <button ngbDropdownItem (click)="viewChangeset()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">history</span>
+                <span>View Changesets</span>
               </button>
-              <button ngbDropdownItem (click)="applyRollback()" i18n>
-                <span class="material-icons">restore</span>
-                Apply Rollback
+              <button ngbDropdownItem (click)="applyRollback()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">restore</span>
+                <span>Apply Rollback</span>
               </button>
               <div class="dropdown-divider"></div>
-              <button ngbDropdownItem class="text-danger" (click)="deleteAllPatrons()" i18n>
-                <span class="material-icons">delete_forever</span>
-                Delete All Patrons
+              <button ngbDropdownItem class="text-danger d-flex align-items-center" (click)="deleteAllPatrons()" i18n>
+                <span class="material-icons me-2">delete_forever</span>
+                <span>Delete All Patrons</span>
               </button>
             </div>
           </div>

@@ -2,7 +2,10 @@
 
 <ng-template #dialogContent>
   <div class="modal-header">
-    <h4 class="modal-title" i18n>Batch Edit Patrons in Bucket</h4>
+    <h4 class="modal-title d-flex align-items-center">
+      <span class="material-icons bucket-icon me-2" aria-hidden="true">edit_note</span>
+      <span i18n>Batch Edit Patrons in Bucket</span>
+    </h4>
     <button type="button" class="btn-close" aria-label="Close" (click)="close()" [disabled]="isProcessing"></button>
   </div>
   
