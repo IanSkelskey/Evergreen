@@ -24,6 +24,7 @@ import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
 import {PatronBucketRollbackComponent} from './patron-bucket-rollback.component';
+import {PatronBucketDeleteAllComponent} from './patron-bucket-delete-all.component';
 
 @NgModule({
     declarations: [
@@ -35,7 +36,8 @@ import {PatronBucketRollbackComponent} from './patron-bucket-rollback.component'
         PatronBarcodeUploadComponent,
         PatronBucketBatchEditComponent,
         PatronBucketChangesetsComponent,
-        PatronBucketRollbackComponent
+        PatronBucketRollbackComponent,
+        PatronBucketDeleteAllComponent
     ],
     imports: [
         PatronBucketRoutingModule,

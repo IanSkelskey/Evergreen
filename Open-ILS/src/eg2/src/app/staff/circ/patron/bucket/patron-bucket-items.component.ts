@@ -26,6 +26,7 @@ import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
 import {PatronBucketRollbackComponent} from './patron-bucket-rollback.component';
+import {PatronBucketDeleteAllComponent} from './patron-bucket-delete-all.component';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
@@ -52,6 +53,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     @ViewChild('itemTransferDialog') private itemTransferDialog: BucketItemTransferDialogComponent;
     @ViewChild('batchEditDialog') private batchEditDialog: PatronBucketBatchEditComponent;
     @ViewChild('rollbackDialog') private rollbackDialog: PatronBucketRollbackComponent;
+    @ViewChild('deleteAllDialog') private deleteAllDialog: PatronBucketDeleteAllComponent;
     
     private destroy$ = new Subject<void>();
     isLoading = true;
@@ -644,9 +646,46 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     deleteAllPatrons() {
-        this.alertDialog.dialogTitle = $localize`Not Implemented`;
-        this.alertDialog.dialogBody = $localize`Delete All Patrons functionality is not implemented yet.`;
-        this.alertDialog.open();
+        try {
+            if (!this.deleteAllDialog) {
+                console.debug('Creating delete all dialog programmatically');
+                // Create dialog programmatically if not available via ViewChild
+                const modalRef = this.modal.open(PatronBucketDeleteAllComponent, {
+                    size: 'lg',
+                    backdrop: 'static'
+                });
+                
+                const dialog = modalRef.componentInstance as PatronBucketDeleteAllComponent;
+                dialog.bucketId = this.bucketId;
+                
+                modalRef.result.then(result => {
+                    if (result && result.success) {
+                        console.debug('Delete operation completed successfully');
+                        this.refreshGridData();
+                    }
+                }, () => {
+                    // Dialog dismissed
+                    console.debug('Delete dialog dismissed');
+                });
+            } else {
+                console.debug('Using existing delete dialog reference');
+                this.deleteAllDialog.bucketId = this.bucketId;
+                this.deleteAllDialog.open({size: 'lg'}).subscribe({
+                    next: (result) => {
+                        if (result && result.success) {
+                            console.debug('Delete operation completed successfully');
+                            this.refreshGridData();
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error from delete dialog:', err);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error opening delete dialog:', error);
+            this.toast.danger($localize`Error opening delete dialog: ${error.message || error}`);
+        }
     }
 
     openBarcodesPasteDialog() {
