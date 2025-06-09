@@ -73,7 +73,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private datePipe: DatePipe,
         private flatData: GridFlatDataService,
         private sharedBucketService: BucketService,
-        private bucketDialogService: BucketDialogService // Add dialog service
+        private bucketDialogService: BucketDialogService
     ) {}
     
     async ngOnInit() {
@@ -195,15 +195,40 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
                         return EMPTY; // Changed from of([])
                     }
                     
-                    return this.flatData.getRows(
-                        this.grid.context,
-                        {id: ids},
-                        pager,
-                        sort
-                    ).pipe(
+                    // Fetch bucket stats first
+                    return this.sharedBucketService.getBucketStats('user', ids).pipe(
+                        switchMap(countStats => {
+                            return this.flatData.getRows(
+                                this.grid.context,
+                                {id: ids},
+                                pager,
+                                sort
+                            ).pipe(
+                                map(row => {
+                                    // Enhance row data with share stats
+                                    return {
+                                        ...row,
+                                        item_count: countStats[row.id]?.item_count || 0,
+                                        org_share_count: countStats[row.id]?.org_share_count || 0,
+                                        usr_view_share_count: countStats[row.id]?.usr_view_share_count || 0,
+                                        usr_edit_share_count: countStats[row.id]?.usr_update_share_count || 0,
+                                        favorite: this.sharedBucketService.isFavoriteBucket('user', row.id)
+                                    };
+                            }),
+                            catchError(err => {
+                                console.error('Error retrieving patron buckets:', err);
+                                return EMPTY; // Changed from of([])
+                            })
+                            );
+                        }),
                         catchError(err => {
-                            console.error('Error retrieving patron buckets:', err);
-                            return EMPTY; // Changed from of([])
+                            console.error('Error retrieving bucket stats:', err);
+                            return this.flatData.getRows(
+                                this.grid.context,
+                                {id: ids},
+                                pager,
+                                sort
+                            );
                         })
                     );
                 }),
@@ -223,7 +248,12 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
             btype: (row: any) => row.btype != null ? String(row.btype) : '',
             owner_usrname: (row: any) => row.owner_usrname != null ? String(row.owner_usrname) : '',
             create_time: (row: any) =>
-                row.create_time ? this.datePipe.transform(row.create_time, 'medium') || '' : ''
+                row.create_time ? this.datePipe.transform(row.create_time, 'medium') || '' : '',
+            // Add generators for share stats columns
+            item_count: (row: any) => row.item_count != null ? String(row.item_count) : '0',
+            org_share_count: (row: any) => row.org_share_count != null ? String(row.org_share_count) : '0',
+            usr_view_share_count: (row: any) => row.usr_view_share_count != null ? String(row.usr_view_share_count) : '0',
+            usr_edit_share_count: (row: any) => row.usr_edit_share_count != null ? String(row.usr_edit_share_count) : '0'
         };
     }
 

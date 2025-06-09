@@ -136,6 +136,17 @@
     <eg-grid-column path="id" [index]="true" i18n-label label="ID" visible="true"></eg-grid-column>
     <eg-grid-column path="name" i18n-label label="Name" visible="true" [cellTemplate]="nameTemplate"></eg-grid-column>
     <eg-grid-column path="description" i18n-label label="Description" visible="true"></eg-grid-column>
+    
+    <!-- Add share stats columns -->
+    <eg-grid-column path="item_count" i18n-label label="# of Patrons" visible="true" 
+        [sortable]="false"></eg-grid-column>
+    <eg-grid-column path="org_share_count" i18n-label label="# of Org Shares" visible="false" 
+        [sortable]="false"></eg-grid-column>
+    <eg-grid-column path="usr_view_share_count" i18n-label label="# of User View Shares" visible="false" 
+        [sortable]="false"></eg-grid-column>
+    <eg-grid-column path="usr_edit_share_count" i18n-label label="# of User Edit Shares" visible="false" 
+        [sortable]="false"></eg-grid-column>
+    
     <eg-grid-column path="btype" i18n-label label="Type" visible="true"></eg-grid-column>
     <eg-grid-column path="owner.usrname" i18n-label label="Owner" visible="true"></eg-grid-column>
     <eg-grid-column path="owning_lib.shortname" i18n-label label="Owning Library" visible="false"></eg-grid-column>

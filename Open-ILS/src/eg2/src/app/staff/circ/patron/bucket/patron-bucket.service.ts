@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject, lastValueFrom } from 'rxjs';
+import { Subject, lastValueFrom, Observable } from 'rxjs';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { IdlObject } from '@eg/core/idl.service';
 import { BucketService } from '@eg/staff/share/buckets/bucket.service';
@@ -304,5 +304,15 @@ export class PatronBucketService {
       console.error('Error checking if patron is in bucket:', error);
       return [];
     }
+  }
+
+  /**
+   * Get statistics for patron buckets
+   * @param bucketIds Array of bucket IDs to get stats for
+   * @returns Observable with bucket statistics
+   */
+  getPatronBucketStats(bucketIds: number[]): Observable<any> {
+    // Delegate to the shared bucket service
+    return this.bucketService.getBucketStats('user', bucketIds);
   }
 }
