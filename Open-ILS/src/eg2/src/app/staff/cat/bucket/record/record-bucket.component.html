@@ -204,12 +204,12 @@
   </eg-grid>
 
   <ng-template #favoriteCellTemplate let-row="row">
-    <button *ngIf="favoriteIds.includes(row?.id)" (click)="unFavoriteBucket([row])"
+    <button *ngIf="row?.favorite" (click)="unFavoriteBucket([row])"
       type="button" class="btn mat-icon-in-button text-warning user-favorite">
       <span class="material-icons" title="Favorite" i18n-title aria-hidden="true">star</span>
       <span class="visually-hidden" i18n="Bucket favorites column star icon alt text">Favorite</span>
     </button>
-    <button *ngIf="!favoriteIds.includes(row?.id)" (click)="favoriteBucket([row])"
+    <button *ngIf="!row?.favorite" (click)="favoriteBucket([row])"
       type="button" class="btn mat-icon-in-button text-muted user-favorite">
       <span class="material-icons" title="Not favorite" i18n-title aria-hidden="true">star_outlined</span>
       <span class="visually-hidden" i18n="Bucket favorites column star icon alt text">Not favorite</span>

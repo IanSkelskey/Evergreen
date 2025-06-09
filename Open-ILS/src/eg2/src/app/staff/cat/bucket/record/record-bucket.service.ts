@@ -27,6 +27,8 @@ export class RecordBucketService {
 
     requestBibBucketsRefresh() {
         this.bibBucketsRefreshRequested.next();
+        // Also notify the shared bucket service for better integration
+        this.bucketService.requestBucketsRefresh('biblio');
     }
 
     async retrieveRecordBucketItems(bucketId: number, limit = 100): Promise<any[]> {
@@ -148,6 +150,9 @@ export class RecordBucketService {
 
     async logRecordBucket(bucketId: number) {
         console.debug('logRecordBucket', bucketId);
+        // Use the shared bucket service for consistency
+        this.bucketService.logBucket('biblio', bucketId);
+        
         const recordBucketLog: number[] =
             this.store.getLocalItem('eg.record_bucket_log') || [];
 
@@ -197,6 +202,8 @@ export class RecordBucketService {
             try {
                 const createdFlag = await lastValueFrom(this.pcrud.create(flag));
                 this.favoriteRecordBucketFlags[bucketId] = createdFlag;
+                // Request refresh after adding favorite
+                this.requestBibBucketsRefresh();
             } catch (error) {
                 console.error(`Error adding favorite for bucket ${bucketId}:`, error);
                 throw error;
@@ -212,6 +219,8 @@ export class RecordBucketService {
             try {
                 await lastValueFrom(this.pcrud.remove(this.favoriteRecordBucketFlags[bucketId]));
                 delete this.favoriteRecordBucketFlags[bucketId];
+                // Request refresh after removing favorite
+                this.requestBibBucketsRefresh();
             } catch (error) {
                 console.error(`Error removing favorite for bucket ${bucketId}:`, error);
                 throw error;

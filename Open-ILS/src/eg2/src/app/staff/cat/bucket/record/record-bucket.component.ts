@@ -9,6 +9,7 @@ import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
+import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
@@ -95,7 +96,8 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private evt: EventService,
         private flatData: GridFlatDataService,
         private bucketService: RecordBucketService,
-        private bucketDialogService: BucketDialogService // Add service
+        private bucketDialogService: BucketDialogService,
+        private sharedBucketService: BucketService // Add the shared BucketService
     ) {}
 
     async ngOnInit() {
@@ -107,6 +109,24 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             if (this.patronSearch) {
                 this.bucketDialogService.setPatronSearchDialog(this.patronSearch);
             }
+        });
+
+        // Subscribe to bucket refresh notifications from the service
+        this.bucketService.bibBucketsRefreshRequested$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(() => {
+            console.debug('Received bucket refresh request');
+            this.grid.reload();
+            this.updateCounts();
+        });
+
+        // Also subscribe to the shared bucket service's refresh event
+        this.sharedBucketService.bucketRefresh$['biblio'].pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(() => {
+            console.debug('Received shared bucket refresh request');
+            this.grid.reload();
+            this.updateCounts();
         });
 
         this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
@@ -709,6 +729,9 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                 console.debug('New bucket results:', results);
 
                 if (results && results.success) {
+                    // Use the bucket service to trigger a refresh
+                    this.bucketService.requestBibBucketsRefresh();
+                    // Also immediately update the display
                     this.grid.reload();
                     this.updateCounts();
                 }
@@ -777,7 +800,14 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                 this.editDialog.mode = 'update';
                 this.editDialog.recordId = bucket.id;
                 this.editDialog.open()
-                    .subscribe(ok => this.grid.reload());
+                    .subscribe(ok => {
+                        if (ok) {
+                            // Update the grid and counts
+                            this.bucketService.requestBibBucketsRefresh();
+                            this.grid.reload();
+                            this.updateCounts();
+                        }
+                    });
                 return;
             }
             
@@ -804,7 +834,10 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
             const results = await lastValueFrom(dialogObservable, { defaultValue: null });
             if (results && results.success) {
+                // Update the grid and counts
+                this.bucketService.requestBibBucketsRefresh();
                 this.grid.reload();
+                this.updateCounts();
             }
         } catch (error) {
             console.error('Error in edit bucket dialog:', error);
@@ -891,6 +924,9 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Track which rows need to be updated in the UI
+        const updatedRows = [];
+
         for (const row of rows) {
             if (!this.bucketService.isFavoriteRecordBucket(row.id)) {
                 console.debug('row is not a favorite', row);
@@ -898,6 +934,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     /* eslint-disable no-await-in-loop */
                     await this.bucketService.addFavoriteRecordBucketFlag(row.id, this.auth.user().id());
                     row.favorite = true;
+                    updatedRows.push(row.id);
                     console.debug('row is now a favorite', row);
                 } catch (error) {
                     console.error(`Error adding favorite for bucket ${row.id}:`, error);
@@ -907,10 +944,14 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             }
         }
 
-        setTimeout(() => {
+        if (updatedRows.length > 0) {
+            // Update the favorite IDs list right away
+            this.favoriteIds = this.bucketService.getFavoriteRecordBucketIds();
+            
+            // Force a reload of the grid to reflect changes immediately
             this.grid.reload();
             this.updateCounts();
-        }, 1000);
+        }
     };
 
     unFavoriteBucket = async (rows: any[]) => {
@@ -920,6 +961,9 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Track which rows need to be updated in the UI
+        const updatedRows = [];
+
         for (const row of rows) {
             if (this.bucketService.isFavoriteRecordBucket(row.id)) {
                 console.debug('row is a favorite', row);
@@ -927,6 +971,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     /* eslint-disable no-await-in-loop */
                     await this.bucketService.removeFavoriteRecordBucketFlag(row.id);
                     row.favorite = false;
+                    updatedRows.push(row.id);
                     console.debug('row is no longer a favorite', row);
                 } catch (error) {
                     console.error(`Error removing favorite for bucket ${row.id}:`, error);
@@ -936,10 +981,14 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             }
         }
 
-        setTimeout(() => {
+        if (updatedRows.length > 0) {
+            // Update the favorite IDs list right away
+            this.favoriteIds = this.bucketService.getFavoriteRecordBucketIds();
+            
+            // Force a reload of the grid to reflect changes immediately
             this.grid.reload();
             this.updateCounts();
-        }, 1000);
+        }
     };
 
     ngOnDestroy() {
