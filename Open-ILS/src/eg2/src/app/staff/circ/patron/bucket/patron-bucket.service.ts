@@ -469,4 +469,128 @@ export class PatronBucketService {
       throw error;
     }
   }
+  
+  /**
+   * Apply a rollback to a patron bucket edit
+   * @param bucketId The ID of the bucket containing patrons
+   * @param fieldsetGroupId The ID of the fieldset group to roll back
+   * @param progressCallback Optional callback for progress updates
+   * @returns Result object with success/error information
+   */
+  async applyRollbackToPatronBucket(
+    bucketId: number,
+    fieldsetGroupId: number,
+    progressCallback?: (progress: any) => void
+  ): Promise<any> {
+    try {
+      // Validate inputs
+      if (!bucketId) {
+        throw new Error('Bucket ID is required');
+      }
+      
+      if (!fieldsetGroupId) {
+        throw new Error('Fieldset group ID is required');
+      }
+      
+      // Ensure bucket exists and user has permission to edit it
+      await this.checkBucketAccess(bucketId, true);
+      
+      let lastError = null;
+      let lastProgress = null;
+      
+      // Call the API to perform the rollback
+      return await lastValueFrom(
+        this.net.request(
+          'open-ils.actor',
+          'open-ils.actor.container.user.apply_rollback',
+          this.auth.token(),
+          bucketId,
+          fieldsetGroupId
+        ).pipe(
+          // Handle progress updates
+          tap(progress => {
+            lastProgress = progress;
+            
+            if (progressCallback && typeof progressCallback === 'function') {
+              // Add a more user-friendly label based on the stage
+              if (progress.stage) {
+                switch (progress.stage) {
+                  case 'CONTAINER_BATCH_UPDATE_PERM_CHECK':
+                    progress.label = $localize`Checking permissions`;
+                    break;
+                  case 'CONTAINER_PERM_CHECK':
+                    progress.label = $localize`Verifying bucket access`;
+                    break;
+                  case 'ITEM_PERM_CHECK':
+                    progress.label = $localize`Checking item permissions`;
+                    break;
+                  case 'ROLLBACK_PREPARE':
+                    progress.label = $localize`Preparing rollback`;
+                    break;
+                  case 'ROLLBACK_APPLY':
+                    progress.label = $localize`Applying rollback changes`;
+                    break;
+                  case 'COMPLETE':
+                    progress.label = $localize`Complete`;
+                    break;
+                  default:
+                    progress.label = progress.stage;
+                }
+              }
+              
+              // Ensure progress has count and max for progress bar
+              if (!progress.max) {
+                progress.max = 1;
+                progress.count = 1;
+              }
+              
+              if (progress.error) {
+                lastError = progress.error;
+              }
+              
+              progressCallback(progress);
+            }
+          }),
+          // Collect the final result
+          map(progress => {
+            if (progress.stage === 'COMPLETE') {
+              return { success: true };
+            }
+            
+            if (progress.error) {
+              return { 
+                success: false, 
+                error: progress.error 
+              };
+            }
+            
+            return null;
+          }),
+          // Only return the final result
+          catchError(error => {
+            console.error('Rollback error:', error);
+            return of({ 
+              success: false, 
+              error: error.message || error 
+            });
+          })
+        )
+      );
+      
+      // Check if we ended with an error state
+      if (lastError && (!lastProgress || lastProgress.stage !== 'COMPLETE')) {
+        return {
+          success: false,
+          error: lastError
+        };
+      }
+      
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error('Error in applyRollbackToPatronBucket:', error);
+      throw error;
+    }
+  }
 }

@@ -23,6 +23,7 @@ import {BucketModule} from '@eg/staff/share/buckets/bucket.module';
 import {BucketDialogsModule} from '@eg/staff/share/buckets/bucket-dialogs.module';
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
+import {PatronBucketRollbackComponent} from './patron-bucket-rollback.component';
 
 @NgModule({
     declarations: [
@@ -33,7 +34,8 @@ import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.compon
         PatronBucketQuickAddComponent,
         PatronBarcodeUploadComponent,
         PatronBucketBatchEditComponent,
-        PatronBucketChangesetsComponent
+        PatronBucketChangesetsComponent,
+        PatronBucketRollbackComponent
     ],
     imports: [
         PatronBucketRoutingModule,

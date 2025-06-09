@@ -25,6 +25,7 @@ import {Pager} from '@eg/share/util/pager';
 import {PatronBarcodeUploadComponent} from './patron-barcode-upload.component';
 import {PatronBucketBatchEditComponent} from './patron-bucket-batch-edit.component';
 import {PatronBucketChangesetsComponent} from './patron-bucket-changesets.component';
+import {PatronBucketRollbackComponent} from './patron-bucket-rollback.component';
 import {ɵ$localize as $localize} from '@angular/localize';
 
 @Component({
@@ -50,6 +51,7 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     @ViewChild('uploadBarcodeDialog') private uploadBarcodeDialog: PatronBarcodeUploadComponent;
     @ViewChild('itemTransferDialog') private itemTransferDialog: BucketItemTransferDialogComponent;
     @ViewChild('batchEditDialog') private batchEditDialog: PatronBucketBatchEditComponent;
+    @ViewChild('rollbackDialog') private rollbackDialog: PatronBucketRollbackComponent;
     
     private destroy$ = new Subject<void>();
     isLoading = true;
@@ -599,9 +601,46 @@ export class PatronBucketItemComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     applyRollback() {
-        this.alertDialog.dialogTitle = $localize`Not Implemented`;
-        this.alertDialog.dialogBody = $localize`Apply Rollback functionality is not implemented yet.`;
-        this.alertDialog.open();
+        try {
+            if (!this.rollbackDialog) {
+                console.debug('Creating rollback dialog programmatically');
+                // Create dialog programmatically if not available via ViewChild
+                const modalRef = this.modal.open(PatronBucketRollbackComponent, {
+                    size: 'lg',
+                    backdrop: 'static'
+                });
+                
+                const dialog = modalRef.componentInstance as PatronBucketRollbackComponent;
+                dialog.bucketId = this.bucketId;
+                
+                modalRef.result.then(result => {
+                    if (result && result.success) {
+                        console.debug('Rollback completed successfully');
+                        this.refreshGridData();
+                    }
+                }, () => {
+                    // Dialog dismissed
+                    console.debug('Rollback dialog dismissed');
+                });
+            } else {
+                console.debug('Using existing rollback dialog reference');
+                this.rollbackDialog.bucketId = this.bucketId;
+                this.rollbackDialog.open({size: 'lg'}).subscribe({
+                    next: (result) => {
+                        if (result && result.success) {
+                            console.debug('Rollback completed successfully');
+                            this.refreshGridData();
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error from rollback dialog:', err);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error opening rollback dialog:', error);
+            this.toast.danger($localize`Error opening rollback dialog: ${error.message || error}`);
+        }
     }
 
     deleteAllPatrons() {

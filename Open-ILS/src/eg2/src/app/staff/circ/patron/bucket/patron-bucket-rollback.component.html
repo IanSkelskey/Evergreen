@@ -1,0 +1,67 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Roll Back Batch Edit</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()" [disabled]="isProcessing"></button>
+  </div>
+  
+  <div class="modal-body">
+    <form [formGroup]="rollbackForm">
+      <div class="alert alert-info" role="alert" i18n>
+        <span class="material-icons me-2">info</span>
+        Select an edit to roll back. This will undo all changes made by that specific batch edit operation.
+      </div>
+      
+      <!-- Rollback selection dropdown -->
+      <div class="form-group mb-3">
+        <label for="revert-group" class="form-label required" i18n>Select edit to roll back</label>
+        <select class="form-select" id="revert-group" formControlName="revertGroup">
+          <option value="" i18n>--- Select edit to roll back ---</option>
+          <option *ngFor="let group of revertableFieldsetGroups" [ngValue]="group">
+            {{group.name()}} ({{group.create_time() | date:'medium'}})
+          </option>
+        </select>
+        <div *ngIf="rollbackForm.get('revertGroup').invalid && rollbackForm.get('revertGroup').touched" 
+            class="text-danger small mt-1" i18n>
+          Please select an edit to roll back
+        </div>
+      </div>
+      
+      <!-- Message when no rollbacks are available -->
+      <div *ngIf="revertableFieldsetGroups.length === 0" class="alert alert-warning" i18n>
+        <span class="material-icons me-2">warning</span>
+        No edits available to roll back for this bucket.
+      </div>
+      
+      <!-- Processing status -->
+      <div *ngIf="isProcessing" class="progress-container mt-4">
+        <p class="mb-2"><strong i18n>Processing:</strong> {{progressStage}}</p>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" 
+               role="progressbar"
+               [style.width.%]="(progressValue / progressMax) * 100"
+               [attr.aria-valuenow]="progressValue" 
+               [attr.aria-valuemin]="0" 
+               [attr.aria-valuemax]="progressMax">
+            {{ progressValue }} / {{ progressMax }}
+          </div>
+        </div>
+        <div *ngIf="progressError" class="alert alert-danger mt-2">
+          {{progressError}}
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" 
+            (click)="close()" 
+            [disabled]="isProcessing" i18n>Cancel</button>
+    <button type="button" class="btn btn-warning" 
+            (click)="applyRollback()" 
+            [disabled]="!rollbackForm.valid || isProcessing || revertableFieldsetGroups.length === 0" i18n>
+      <span class="material-icons" *ngIf="!isProcessing">restore</span>
+      <span class="spinner-border spinner-border-sm" role="status" *ngIf="isProcessing"></span>
+      Roll Back Changes
+    </button>
+  </div>
+</ng-template>
