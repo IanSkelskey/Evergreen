@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, lastValueFrom, Observable } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
+import { tap, map, catchError, toArray, defaultIfEmpty } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
@@ -453,17 +453,6 @@ export class PatronBucketService {
         )
       );
       
-      // Check if we ended with an error state
-      if (lastError && (!lastProgress || lastProgress.stage !== 'COMPLETE')) {
-        return {
-          success: false,
-          error: lastError
-        };
-      }
-      
-      return {
-        success: true
-      };
     } catch (error) {
       console.error('Error in batchEditPatrons:', error);
       throw error;
@@ -577,20 +566,252 @@ export class PatronBucketService {
         )
       );
       
-      // Check if we ended with an error state
-      if (lastError && (!lastProgress || lastProgress.stage !== 'COMPLETE')) {
-        return {
-          success: false,
-          error: lastError
-        };
-      }
-      
-      return {
-        success: true
-      };
     } catch (error) {
       console.error('Error in applyRollbackToPatronBucket:', error);
       throw error;
     }
+  }
+
+  /**
+   * Retrieve a patron by barcode
+   * @param barcode The patron barcode to lookup
+   * @returns Promise resolving to patron object or error information
+   */
+  async retrievePatronByBarcode(barcode: string): Promise<{patron?: any, error?: string, errorTitle?: string}> {
+    try {
+      const response = await lastValueFrom(
+        this.net.request(
+          'open-ils.actor',
+          'open-ils.actor.user.fleshed.retrieve_by_barcode',
+          this.auth.token(),
+          barcode.trim()
+        ).pipe(
+          catchError(err => {
+            console.error('Error fetching patron:', err);
+            return of(null);
+          })
+        )
+      );
+
+      if (!response) {
+        return {
+          error: $localize`No patron found with barcode "${barcode}"`,
+          errorTitle: $localize`Patron Not Found`
+        };
+      }
+
+      // Check for API errors
+      if (response && typeof response === 'object' && response.ilsevent) {
+        let errorTitle = $localize`Error Finding Patron`;
+        let errorMessage: string;
+        
+        switch(response.textcode) {
+          case 'ACTOR_CARD_NOT_FOUND':
+            errorMessage = $localize`No patron found with barcode "${barcode}".`;
+            break;
+          case 'ACTOR_USER_NOT_FOUND':
+            errorMessage = $localize`The patron associated with barcode "${barcode}" could not be found.`; 
+            break;
+          case 'NO_SESSION':
+            errorTitle = $localize`Session Expired`;
+            errorMessage = $localize`Your session has expired. Please log in again.`;
+            break;
+          case 'ACTOR_USER_BARRED':
+            errorMessage = $localize`This patron account is barred. Barcode: ${barcode}`;
+            break;
+          case 'ACTOR_CARD_INACTIVE':
+            errorMessage = $localize`This patron card is marked as inactive. Barcode: ${barcode}`;
+            break;
+          default:
+            errorMessage = $localize`Unable to retrieve patron with barcode "${barcode}". Error: ${response.desc || response.textcode}`;
+        }
+        
+        return {
+          error: errorMessage,
+          errorTitle: errorTitle
+        };
+      }
+
+      return { patron: response };
+    } catch (error) {
+      return {
+        error: $localize`Error retrieving patron: ${error.message || error}`,
+        errorTitle: $localize`Error Finding Patron`
+      };
+    }
+  }
+
+  /**
+   * Add a single patron to bucket by barcode
+   * @param bucketId The bucket ID to add to
+   * @param barcode The patron barcode
+   * @returns Result with success info and patron details
+   */
+  async addPatronByBarcode(bucketId: number, barcode: string): Promise<{
+    success: boolean,
+    added?: boolean,
+    duplicate?: boolean,
+    patronName?: string,
+    error?: string,
+    errorTitle?: string
+  }> {
+    try {
+      // Lookup patron by barcode
+      const lookupResult = await this.retrievePatronByBarcode(barcode);
+      
+      if (lookupResult.error) {
+        return {
+          success: false,
+          error: lookupResult.error,
+          errorTitle: lookupResult.errorTitle
+        };
+      }
+
+      const patron = lookupResult.patron;
+      
+      // Check if patron already exists in the bucket
+      const existingItems = await this.checkPatronInBucket(bucketId, patron.id());
+      
+      if (existingItems && existingItems.length > 0) {
+        return {
+          success: true,
+          duplicate: true
+        };
+      }
+      
+      // Add patron to the bucket
+      const addResult = await this.addPatronsToPatronBucket(bucketId, [patron.id()]);
+      
+      if (addResult.added > 0) {
+        const patronName = patron.family_name() + ', ' + patron.first_given_name();
+        return {
+          success: true,
+          added: true,
+          patronName: patronName
+        };
+      } else if (addResult.alreadyInBucket > 0) {
+        return {
+          success: true,
+          duplicate: true
+        };
+      }
+      
+      return {
+        success: false,
+        error: $localize`Failed to add patron to bucket`
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        error: $localize`Error processing request: ${error.message || error}`
+      };
+    }
+  }
+
+  /**
+   * Process barcodes from file content and add patrons to bucket
+   * @param bucketId The bucket ID to add to
+   * @param fileContent The file content containing barcodes
+   * @param progressCallback Optional callback for progress updates
+   * @returns Result with counts and summary
+   */
+  async processBarcodeFile(
+    bucketId: number, 
+    fileContent: string,
+    progressCallback?: (progress: {value: number, max: number}) => void
+  ): Promise<{
+    added: number,
+    duplicates: number,
+    errors: number,
+    processed: number
+  }> {
+    const barcodes = fileContent
+      .split(/[\r\n]+/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    if (barcodes.length === 0) {
+      throw new Error($localize`No barcodes found in the uploaded file.`);
+    }
+    
+    let processed = 0;
+    let added = 0;
+    let errors = 0;
+    let duplicates = 0;
+    
+    for (const barcode of barcodes) {
+      try {
+        const response = await lastValueFrom(
+          this.net.request(
+            'open-ils.actor',
+            'open-ils.actor.user.fleshed.retrieve_by_barcode',
+            this.auth.token(),
+            barcode
+          )
+        );
+        
+        processed++;
+        if (progressCallback) {
+          progressCallback({
+            value: processed,
+            max: barcodes.length
+          });
+        }
+        
+        // Check for API errors
+        if (response && typeof response === 'object' && response.ilsevent) {
+          console.warn(`Error for barcode ${barcode}:`, response);
+          errors++;
+          continue;
+        }
+        
+        if (response && response.id()) {
+          // Check for duplicates
+          const existingItems = await lastValueFrom(
+            this.pcrud.search('cubi', {
+              bucket: bucketId,
+              target_user: response.id()
+            }).pipe(
+              toArray(),
+              defaultIfEmpty([]),
+              catchError(err => {
+                console.error(`Error checking if patron with barcode ${barcode} is in bucket:`, err);
+                return of([]);
+              })
+            )
+          );
+          
+          if (existingItems && existingItems.length > 0) {
+            duplicates++;
+            continue;
+          }
+          
+          // Add patron to bucket
+          try {
+            const addResult = await this.addPatronsToPatronBucket(bucketId, [response.id()]);
+            
+            if (addResult.added > 0) {
+              added++;
+            } else {
+              errors++;
+            }
+          } catch (err) {
+            console.error(`Error adding patron with barcode ${barcode}:`, err);
+            errors++;
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing barcode ${barcode}:`, error);
+        errors++;
+      }
+    }
+    
+    return {
+      added,
+      duplicates,
+      errors,
+      processed
+    };
   }
 }

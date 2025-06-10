@@ -1,10 +1,4 @@
 import {Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef} from '@angular/core';
-import {lastValueFrom, of} from 'rxjs';
-import {catchError, toArray, defaultIfEmpty} from 'rxjs/operators';
-import {AuthService} from '@eg/core/auth.service';
-import {NetService} from '@eg/core/net.service';
-import {PcrudService} from '@eg/core/pcrud.service';
-import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
@@ -30,10 +24,6 @@ export class PatronBucketQuickAddComponent implements OnInit {
     @ViewChild('progressDialog') progressDialog: ProgressDialogComponent;
 
     constructor(
-        private auth: AuthService,
-        private net: NetService,
-        private evt: EventService,
-        private pcrud: PcrudService,
         private toast: ToastService,
         private bucketService: PatronBucketService
     ) {}
@@ -57,96 +47,28 @@ export class PatronBucketQuickAddComponent implements OnInit {
         try {
             this.progressDialog.open();
             
-            const response = await lastValueFrom(
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.user.fleshed.retrieve_by_barcode',
-                    this.auth.token(),
-                    this.quickAddBarcode.trim()
-                ).pipe(
-                    catchError(err => {
-                        console.error('Error fetching patron:', err);
-                        return [null];
-                    })
-                )
+            const result = await this.bucketService.addPatronByBarcode(
+                this.bucketId, 
+                this.quickAddBarcode.trim()
             );
-
-            if (!response) {
-                this.alertDialog.dialogTitle = $localize`Patron Not Found`;
-                this.alertDialog.dialogBody = $localize`No patron found with barcode "${this.quickAddBarcode}"`;
+            
+            if (!result.success) {
+                this.alertDialog.dialogTitle = result.errorTitle || $localize`Error`;
+                this.alertDialog.dialogBody = result.error;
                 await this.alertDialog.open();
                 return;
             }
-
-            const evt = this.evt.parse(response);
-            if (evt) {
-                let errorTitle = $localize`Error Finding Patron`;
-                let errorMessage: string;
-                
-                switch(evt.textcode) {
-                    case 'ACTOR_CARD_NOT_FOUND':
-                        errorMessage = $localize`No patron found with barcode "${this.quickAddBarcode}".`;
-                        break;
-                    case 'ACTOR_USER_NOT_FOUND':
-                        errorMessage = $localize`The patron associated with barcode "${this.quickAddBarcode}" could not be found.`; 
-                        break;
-                    case 'NO_SESSION':
-                        errorTitle = $localize`Session Expired`;
-                        errorMessage = $localize`Your session has expired. Please log in again.`;
-                        break;
-                    case 'ACTOR_USER_BARRED':
-                        errorMessage = $localize`This patron account is barred. Barcode: ${this.quickAddBarcode}`;
-                        break;
-                    case 'ACTOR_CARD_INACTIVE':
-                        errorMessage = $localize`This patron card is marked as inactive. Barcode: ${this.quickAddBarcode}`;
-                        break;
-                    default:
-                        errorMessage = $localize`Unable to retrieve patron with barcode "${this.quickAddBarcode}". Error: ${evt.desc || evt.textcode}`;
-                }
-                
-                this.alertDialog.dialogTitle = errorTitle;
-                this.alertDialog.dialogBody = errorMessage;
-                await this.alertDialog.open();
-                return;
-            }
-
-            const patron = response;
             
-            try {
-                // Check if patron already exists in the bucket
-                const existingItems = await this.bucketService.checkPatronInBucket(this.bucketId, patron.id());
-                
-                if (existingItems && existingItems.length > 0) {
-                    this.duplicatesFound++;
-                    this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
-                    this.quickAddBarcode = '';
-                    this.focusBarcodeInput();
-                    return;
-                }
-                
-                // Add patron to the bucket
-                const addResult = await this.bucketService.addPatronsToPatronBucket(
-                    this.bucketId, 
-                    [patron.id()]
-                );
-                
-                if (addResult.added > 0) {
-                    this.quickAddCount++;
-                    const patronName = patron.family_name() + ', ' + patron.first_given_name();
-                    this.toast.success($localize`Added patron "${patronName}" to bucket`);
-                    
-                    this.quickAddBarcode = '';
-                    this.patronAdded.emit(true);
-                } else if (addResult.alreadyInBucket > 0) {
-                    this.duplicatesFound++;
-                    this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
-                }
-                
-            } catch (innerError) {
-                console.error('Error in bucket operations:', innerError);
-                this.toast.danger($localize`Error processing request: ${innerError.message || innerError}`);
+            if (result.duplicate) {
+                this.duplicatesFound++;
+                this.toast.warning($localize`Patron with barcode "${this.quickAddBarcode}" is already in this bucket`);
+            } else if (result.added) {
+                this.quickAddCount++;
+                this.toast.success($localize`Added patron "${result.patronName}" to bucket`);
+                this.patronAdded.emit(true);
             }
             
+            this.quickAddBarcode = '';
             this.focusBarcodeInput();
             
         } catch (error) {
@@ -166,112 +88,39 @@ export class PatronBucketQuickAddComponent implements OnInit {
         const file = event.target.files[0];
         try {
             this.progressDialog.open();
+            this.progressDialog.dialogTitle = $localize`Processing Barcodes`;
             
             const fileContent = await this.readFileContents(file);
             
-            const barcodes = fileContent
-                .split(/[\r\n]+/)
-                .map(line => line.trim())
-                .filter(line => line.length > 0);
-            
-            if (barcodes.length === 0) {
-                this.toast.warning($localize`No barcodes found in the uploaded file.`);
-                this.progressDialog.close();
-                return;
-            }
-            
-            let processed = 0;
-            let added = 0;
-            let errors = 0;
-            let duplicates = 0;
-            
-            this.progressDialog.dialogTitle = $localize`Processing Barcodes`;
-            
-            for (const barcode of barcodes) {
-                try {
-                    const response = await lastValueFrom(this.net.request(
-                        'open-ils.actor',
-                        'open-ils.actor.user.fleshed.retrieve_by_barcode',
-                        this.auth.token(),
-                        barcode
-                    ));
-                    
-                    processed++;
+            const result = await this.bucketService.processBarcodeFile(
+                this.bucketId,
+                fileContent,
+                (progress) => {
                     this.progressDialog.update({
-                        value: processed,
-                        max: barcodes.length,
+                        value: progress.value,
+                        max: progress.max,
                     });
-                    
-                    const evt = this.evt.parse(response);
-                    if (evt) {
-                        console.warn(`Error for barcode ${barcode}:`, evt);
-                        errors++;
-                        continue;
-                    }
-                    
-                    if (response && response.id()) {
-                        // Fix: Use toArray and defaultIfEmpty to handle empty results
-                        const existingItems = await lastValueFrom(
-                            this.pcrud.search('cubi', {
-                                bucket: this.bucketId,
-                                target_user: response.id()
-                            }).pipe(
-                                toArray(),
-                                defaultIfEmpty([]),
-                                catchError(err => {
-                                    console.error(`Error checking if patron with barcode ${barcode} is in bucket:`, err);
-                                    return of([]);
-                                })
-                            )
-                        );
-                        
-                        if (existingItems && existingItems.length > 0) {
-                            duplicates++;
-                            continue;
-                        }
-                        
-                        // FIX: Use bucket service instead of direct API call
-                        try {
-                            const addResult = await this.bucketService.addPatronsToPatronBucket(
-                                this.bucketId, 
-                                [response.id()]
-                            );
-                            
-                            const addEvt = this.evt.parse(addResult);
-                            if (addEvt) {
-                                console.warn(`Error adding patron with barcode ${barcode}:`, addEvt);
-                                errors++;
-                            } else {
-                                added++;
-                            }
-                        } catch (err) {
-                            console.error(`Error adding patron with barcode ${barcode}:`, err);
-                            errors++;
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error processing barcode ${barcode}:`, error);
-                    errors++;
                 }
-            }
+            );
             
             event.target.value = '';
             
-            this.fileUploadCount += added;
-            this.duplicatesFound += duplicates;
+            this.fileUploadCount += result.added;
+            this.duplicatesFound += result.duplicates;
             
             this.progressDialog.close();
-            if (added > 0) {
-                this.toast.success($localize`Added ${added} patron(s) to bucket from file.`);
+            
+            if (result.added > 0) {
+                this.toast.success($localize`Added ${result.added} patron(s) to bucket from file.`);
                 this.patronAdded.emit(true);
             }
             
-            if (duplicates > 0) {
-                this.toast.info($localize`${duplicates} patron(s) were already in the bucket.`);
+            if (result.duplicates > 0) {
+                this.toast.info($localize`${result.duplicates} patron(s) were already in the bucket.`);
             }
             
-            if (errors > 0) {
-                this.toast.warning($localize`${errors} barcode(s) could not be processed.`);
+            if (result.errors > 0) {
+                this.toast.warning($localize`${result.errors} barcode(s) could not be processed.`);
             }
             
         } catch (error) {
