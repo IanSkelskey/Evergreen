@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, lastValueFrom, Observable } from 'rxjs';
-import { tap, map, catchError, toArray, defaultIfEmpty } from 'rxjs/operators';
+import { tap, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
@@ -102,6 +102,29 @@ export class PatronBucketService {
       console.error('Error checking if patron is in bucket:', error);
       return [];
     }
+  }
+
+  // Favorite functionality - delegate to shared service
+  async loadFavoritePatronBucketFlags(): Promise<void> {
+    await this.bucketService.loadFavoriteBucketFlags(this.BUCKET_TYPE);
+  }
+
+  isFavoritePatronBucket(bucketId: number): boolean {
+    return this.bucketService.isFavoriteBucket(this.BUCKET_TYPE, bucketId);
+  }
+
+  async addFavoritePatronBucketFlag(bucketId: number): Promise<void> {
+    await this.bucketService.addFavoriteBucket(this.BUCKET_TYPE, bucketId);
+    this.requestPatronBucketsRefresh();
+  }
+
+  async removeFavoritePatronBucketFlag(bucketId: number): Promise<void> {
+    await this.bucketService.removeFavoriteBucket(this.BUCKET_TYPE, bucketId);
+    this.requestPatronBucketsRefresh();
+  }
+
+  getFavoritePatronBucketIds(): number[] {
+    return this.bucketService.getFavoriteBucketIds(this.BUCKET_TYPE);
   }
 
   // Patron-specific functionality

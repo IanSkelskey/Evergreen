@@ -2,7 +2,6 @@ import {Injectable} from '@angular/core';
 import {Subject, Observable, of, lastValueFrom} from 'rxjs';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
-// import {ServerStoreService} from '@eg/core/server-store.service';
 import {StoreService} from '@eg/core/store.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService,IdlObject} from '@eg/core/idl.service';
@@ -10,9 +9,7 @@ import { BucketService } from '@eg/staff/share/buckets/bucket.service';
 
 @Injectable()
 export class RecordBucketService {
-    maxRecentRecordBuckets = 10;
-    private favoriteRecordBucketFlags: {[bucketId: number]: IdlObject} = {};
-
+    private readonly BUCKET_TYPE = 'biblio';
     private bibBucketsRefreshRequested = new Subject<void>();
     bibBucketsRefreshRequested$ = this.bibBucketsRefreshRequested.asObservable();
 
@@ -25,13 +22,61 @@ export class RecordBucketService {
         private bucketService: BucketService
     ) {}
 
-    requestBibBucketsRefresh() {
+    // Bucket Management - Direct delegation to shared service
+    requestBibBucketsRefresh(): void {
         this.bibBucketsRefreshRequested.next();
-        // Also notify the shared bucket service for better integration
-        this.bucketService.requestBucketsRefresh('biblio');
+        this.bucketService.requestBucketsRefresh(this.BUCKET_TYPE);
     }
 
+    logRecordBucket(bucketId: number): void {
+        this.bucketService.logBucket(this.BUCKET_TYPE, bucketId);
+    }
+
+    recentRecordBucketIds(): number[] {
+        return this.bucketService.getRecentBuckets(this.BUCKET_TYPE);
+    }
+
+    async checkBucketAccess(bucket: IdlObject | number, requiresWrite: boolean = false): Promise<IdlObject> {
+        return this.bucketService.checkBucketAccess(this.BUCKET_TYPE, bucket, requiresWrite);
+    }
+
+    async createBucket(name: string, description: string = '', bucketType: string = 'staff_client', isPublic: boolean = false): Promise<{id: number, name: string}> {
+        const id = await lastValueFrom(
+            this.bucketService.createBucket(this.BUCKET_TYPE, name, description, bucketType, isPublic)
+        );
+        return { id, name };
+    }
+
+    async retrieveBucketById(bucketId: number): Promise<IdlObject> {
+        return lastValueFrom(this.bucketService.retrieveBucketById(this.BUCKET_TYPE, bucketId));
+    }
+
+    async updateBucket(bucket: IdlObject): Promise<any> {
+        await lastValueFrom(this.bucketService.updateBucket(this.BUCKET_TYPE, bucket));
+        return { success: true, id: bucket.id() };
+    }
+
+    async deleteBucket(bucketId: number): Promise<{success: boolean, message?: string}> {
+        try {
+            await lastValueFrom(this.bucketService.deleteBucket(this.BUCKET_TYPE, bucketId));
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, message: error.message || 'Unknown error' };
+        }
+    }
+
+    getRecordBucketCountStats(bucketIds: number[]): Observable<any> {
+        return this.bucketService.getBucketStats(this.BUCKET_TYPE, bucketIds);
+    }
+
+    transformBucketsForGrid(buckets: IdlObject[] | IdlObject): any[] {
+        return this.bucketService.transformBucketsForGrid(this.BUCKET_TYPE, buckets);
+    }
+
+    // Record-specific functionality
     async retrieveRecordBucketItems(bucketId: number, limit = 100): Promise<any[]> {
+        await this.checkBucketAccess(bucketId);
+        
         const query: any = {
             bucket: bucketId
         };
@@ -63,23 +108,7 @@ export class RecordBucketService {
     }
 
     async addBibsToRecordBucket(bucketId: number, bibIds: number[]): Promise<any> {
-        this.logRecordBucket(bucketId);
-        const items = [];
-        bibIds.forEach(itemId => {
-            const item = this.idl.create('cbrebi');
-            item.bucket(bucketId);
-            item.target_biblio_record_entry(itemId);
-            items.push(item);
-        });
-        const requestObs = this.net.request(
-            'open-ils.actor',
-            'open-ils.actor.container.item.create',
-            this.auth.token(),
-            'biblio',
-            items
-        );
-
-        return lastValueFrom(requestObs);
+        return this.bucketService.addItemsToBucket(this.BUCKET_TYPE, bucketId, bibIds, true);
     }
 
     async removeBibsFromRecordBucket(bucketId: number, bibIds: number[]): Promise<any> {
@@ -95,14 +124,6 @@ export class RecordBucketService {
         return lastValueFrom(requestObs);
     }
 
-    getRecordBucketCountStats(bucketIds: number[]): Observable<any> {
-        if (bucketIds.length === 0) {
-            return of({});
-        }
-
-        return this.bucketService.getBucketStats('biblio', bucketIds);
-    }
-
     async retrieveRecordBuckets(bucketIds: number[]): Promise<any[]> {
         if (bucketIds.length === 0) {
             return [];
@@ -110,7 +131,7 @@ export class RecordBucketService {
 
         const [buckets, countStats] = await Promise.all([
             this.loadRecordBuckets(bucketIds),
-            lastValueFrom(this.bucketService.getBucketStats('biblio', bucketIds))
+            lastValueFrom(this.bucketService.getBucketStats(this.BUCKET_TYPE, bucketIds))
         ]);
 
         interface CountStat {
@@ -124,8 +145,6 @@ export class RecordBucketService {
             Object.entries(countStats).map(([key, value]) => [String(key), value as CountStat])
         );
 
-        console.debug('retrieveRecordBuckets, buckets', buckets);
-        console.debug('retrieveRecordBuckets, countStats', countStats);
         const bundle = buckets.map(bucket => ({
             bucket: this.idl.toHash(bucket),
             item_count: convertedCountStats[bucket.id().toString()]?.item_count || 0,
@@ -134,7 +153,6 @@ export class RecordBucketService {
             usr_update_share_count: convertedCountStats[bucket.id().toString()]?.usr_update_share_count || 0,
             favorite: this.isFavoriteRecordBucket(bucket.id())
         }));
-        console.debug('retrieveRecordBuckets, bundle', bundle);
         return bundle;
     }
 
@@ -148,90 +166,27 @@ export class RecordBucketService {
         );
     }
 
-    async logRecordBucket(bucketId: number) {
-        console.debug('logRecordBucket', bucketId);
-        // Use the shared bucket service for consistency
-        this.bucketService.logBucket('biblio', bucketId);
-        
-        const recordBucketLog: number[] =
-            this.store.getLocalItem('eg.record_bucket_log') || [];
-
-        // Check if the bucketId is already in the array
-        if (!recordBucketLog.includes(bucketId)) {
-            // Add the new bucketId to the beginning of the array
-            recordBucketLog.unshift(bucketId);
-
-            // Trim the array if it exceeds the maximum size
-            if (recordBucketLog.length > this.maxRecentRecordBuckets) {
-                recordBucketLog.pop();
-            }
-
-            this.store.setLocalItem('eg.record_bucket_log', recordBucketLog);
-        }
-    }
-
-    recentRecordBucketIds(): number[] {
-        return this.store.getLocalItem('eg.record_bucket_log') || [];
-    }
-
-    async loadFavoriteRecordBucketFlags(userId: number) {
-        const flags = (await lastValueFrom(
-            this.pcrud.search('cbrebuf', { flag: 'favorite', usr: userId }, {}, { idlist: false, atomic: true })
-        ));
-        this.favoriteRecordBucketFlags = flags.reduce((acc, flag) => {
-            acc[flag.bucket()] = flag;
-            return acc;
-        }, {});
-        console.debug('Favorites, flags', flags);
+    // Favorite functionality - delegate to shared service
+    async loadFavoriteRecordBucketFlags(userId: number): Promise<void> {
+        await this.bucketService.loadFavoriteBucketFlags(this.BUCKET_TYPE);
     }
 
     isFavoriteRecordBucket(bucketId: number): boolean {
-        return !!this.favoriteRecordBucketFlags[bucketId];
+        return this.bucketService.isFavoriteBucket(this.BUCKET_TYPE, bucketId);
     }
 
     async addFavoriteRecordBucketFlag(bucketId: number, userId: number): Promise<void> {
-        // eslint-disable-next-line max-len
-        console.debug('addFavoriteRecordBucketFlag: bucketId, userId, favoriteRecordBucketFlags[bucketId]', bucketId, userId, this.favoriteRecordBucketFlags[bucketId]);
-        if (!this.favoriteRecordBucketFlags[bucketId]) {
-            const flag = this.idl.create('cbrebuf');
-            flag.isnew(true);
-            flag.bucket(bucketId);
-            flag.usr(userId);
-            flag.flag('favorite');
-
-            try {
-                const createdFlag = await lastValueFrom(this.pcrud.create(flag));
-                this.favoriteRecordBucketFlags[bucketId] = createdFlag;
-                // Request refresh after adding favorite
-                this.requestBibBucketsRefresh();
-            } catch (error) {
-                console.error(`Error adding favorite for bucket ${bucketId}:`, error);
-                throw error;
-            }
-        } else {
-            console.debug('addFavoriteRecordBucketFlag: suss');
-        }
+        await this.bucketService.addFavoriteBucket(this.BUCKET_TYPE, bucketId);
+        this.requestBibBucketsRefresh();
     }
 
     async removeFavoriteRecordBucketFlag(bucketId: number): Promise<void> {
-        console.debug('removeFavorite: bucketId, favoriteRecordBucketFlags[bucketId]', bucketId, this.favoriteRecordBucketFlags[bucketId]);
-        if (this.favoriteRecordBucketFlags[bucketId]) {
-            try {
-                await lastValueFrom(this.pcrud.remove(this.favoriteRecordBucketFlags[bucketId]));
-                delete this.favoriteRecordBucketFlags[bucketId];
-                // Request refresh after removing favorite
-                this.requestBibBucketsRefresh();
-            } catch (error) {
-                console.error(`Error removing favorite for bucket ${bucketId}:`, error);
-                throw error;
-            }
-        } else {
-            console.debug('removeFavorite: suss');
-        }
+        await this.bucketService.removeFavoriteBucket(this.BUCKET_TYPE, bucketId);
+        this.requestBibBucketsRefresh();
     }
 
     getFavoriteRecordBucketIds(): number[] {
-        return Object.keys(this.favoriteRecordBucketFlags).map(Number);
+        return this.bucketService.getFavoriteBucketIds(this.BUCKET_TYPE);
     }
 
     async checkForBibInRecordBuckets(bibId: number, bucketIds: number[]): Promise<number[]> {
@@ -246,8 +201,7 @@ export class RecordBucketService {
 
         try {
             const results = await lastValueFrom( this.pcrud.search('cbrebi', query, {}, { atomic: true }) );
-            console.debug('checkForBibInRecordBuckets, raw results', results);
-            const qualifyingBucketIds: number[] = Array.from( new Set( results.map(result => result.bucket()) ) ); // deduped
+            const qualifyingBucketIds: number[] = Array.from( new Set( results.map(result => result.bucket()) ) );
             return qualifyingBucketIds;
         } catch (error) {
             console.error('Error checking bib in buckets:', error);
