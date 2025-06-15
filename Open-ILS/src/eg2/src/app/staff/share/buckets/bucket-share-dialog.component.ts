@@ -5,7 +5,6 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {Tree, TreeNode} from '@eg/share/tree/tree';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {AuthService} from '@eg/core/auth.service';
-// import {FormatService} from '@eg/core/format.service';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {OrgService} from '@eg/core/org.service';
@@ -13,16 +12,17 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {EventService} from '@eg/core/event.service';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
-import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
 import {BucketUserShareComponent} from '@eg/staff/share/buckets/bucket-user-share.component';
 import {Pager} from '@eg/share/util/pager';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {BucketDialogService} from './bucket-dialog.service';
 
 @Component({
     selector: 'eg-bucket-share-dialog',
-    templateUrl: './bucket-share-dialog.component.html'
+    templateUrl: './bucket-share-dialog.component.html',
+    styleUrls: ['./bucket-share-dialog.component.css', './buckets.css']
 })
 
 export class BucketShareDialogComponent
@@ -40,10 +40,10 @@ export class BucketShareDialogComponent
     @Input() usersEditPermGrid: IdlObject[] = [];
     @Input() shareTree: Tree;
     @Input() containerObjects: any[];
+    @Input() bucketClass = 'biblio'; // Default to 'biblio' for backward compatibility
 
     @ViewChild('fail', { static: true }) fail: AlertDialogComponent;
     @ViewChild('confirm', { static: true }) confirm: ConfirmDialogComponent;
-    @ViewChild('patronSearch') patronSearch: PatronSearchDialogComponent;
 
     // ViewChild doesn't work in this context
     userShareViewPermGrid: BucketUserShareComponent;
@@ -69,14 +69,16 @@ export class BucketShareDialogComponent
         private evt: EventService,
         private idl: IdlService,
         private modal: NgbModal,
-        private toast: ToastService
+        private toast: ToastService,
+        private bucketDialogService: BucketDialogService
     ) {
         super(modal);
         if (this.modal) {} // de-lint
     }
 
     async ngOnInit() {
-        console.debug('BucketShareDialogComponent, this',this);
+        console.debug('BucketShareDialogComponent, this', this);
+        console.debug('BucketShareDialogComponent, bucketClass', this.bucketClass);
         await this.initAuGridViewPermGrid();
         await this.initAuGridEditPermGrid();
         if (!this.shareTree) {
@@ -100,6 +102,54 @@ export class BucketShareDialogComponent
         });
     }
 
+    // Map bucket class to container type for API calls
+    getContainerType(): string {
+        switch (this.bucketClass) {
+            case 'biblio': return 'biblio';
+            case 'user': return 'user';
+            case 'call_number': return 'call_number';
+            case 'copy': return 'copy';
+            case 'booking': return 'booking';
+            default: return this.bucketClass;
+        }
+    }
+
+    // Map bucket class to update_*_bucket_user_share_mapping API method
+    getUserShareApiMethod(): string {
+        switch (this.bucketClass) {
+            case 'biblio': return 'open-ils.actor.container.update_record_bucket_user_share_mapping';
+            case 'user': return 'open-ils.actor.container.update_user_bucket_user_share_mapping';
+            case 'call_number': return 'open-ils.actor.container.update_call_number_bucket_user_share_mapping';
+            case 'copy': return 'open-ils.actor.container.update_copy_bucket_user_share_mapping';
+            case 'booking': return 'open-ils.actor.container.update_booking_bucket_user_share_mapping';
+            default: return 'open-ils.actor.container.update_record_bucket_user_share_mapping';
+        }
+    }
+
+    // Map bucket class to retrieve_*_bucket_shared_org_ids API method
+    getOrgShareRetrieveApiMethod(): string {
+        switch (this.bucketClass) {
+            case 'biblio': return 'open-ils.actor.container.retrieve_record_bucket_shared_org_ids';
+            case 'user': return 'open-ils.actor.container.retrieve_user_bucket_shared_org_ids';
+            case 'call_number': return 'open-ils.actor.container.retrieve_call_number_bucket_shared_org_ids';
+            case 'copy': return 'open-ils.actor.container.retrieve_copy_bucket_shared_org_ids';
+            case 'booking': return 'open-ils.actor.container.retrieve_booking_bucket_shared_org_ids';
+            default: return 'open-ils.actor.container.retrieve_record_bucket_shared_org_ids';
+        }
+    }
+
+    // Map bucket class to update_*_bucket_org_share_mapping API method
+    getOrgShareUpdateApiMethod(): string {
+        switch (this.bucketClass) {
+            case 'biblio': return 'open-ils.actor.container.update_record_bucket_org_share_mapping';
+            case 'user': return 'open-ils.actor.container.update_user_bucket_org_share_mapping';
+            case 'call_number': return 'open-ils.actor.container.update_call_number_bucket_org_share_mapping';
+            case 'copy': return 'open-ils.actor.container.update_copy_bucket_org_share_mapping';
+            case 'booking': return 'open-ils.actor.container.update_booking_bucket_org_share_mapping';
+            default: return 'open-ils.actor.container.update_record_bucket_org_share_mapping';
+        }
+    }
+
     trickeryViewPermGrid = (that: any) => {
         console.debug('trickeryViewPermGrid, that', that);
         this.userShareViewPermGrid = that;
@@ -119,7 +169,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.getContainerType(),
                 this.containerObjects.map(o => o.id),
                 'VIEW_CONTAINER'
             )
@@ -157,7 +207,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.getContainerType(),
                 this.containerObjects.map(o => o.id),
                 'UPDATE_CONTAINER'
             )
@@ -273,7 +323,13 @@ export class BucketShareDialogComponent
     }
 
     addUsersViewPermGrid = () => {
-        this.patronSearch.open({size: 'xl'}).toPromise().then(
+        const patronSearch = this.bucketDialogService.getPatronSearchDialog();
+        if (!patronSearch) {
+            console.error('Patron search dialog not available');
+            return;
+        }
+        
+        patronSearch.open({size: 'xl'}).toPromise().then(
             users => {
                 console.debug('patronSearch, result', users);
                 if (!users || users.length === 0) { return; }
@@ -292,7 +348,13 @@ export class BucketShareDialogComponent
     };
 
     addUsersEditPermGrid = () => {
-        this.patronSearch.open({size: 'xl'}).toPromise().then(
+        const patronSearch = this.bucketDialogService.getPatronSearchDialog();
+        if (!patronSearch) {
+            console.error('Patron search dialog not available');
+            return;
+        }
+        
+        patronSearch.open({size: 'xl'}).toPromise().then(
             users => {
                 console.debug('patronSearch, result', users);
                 if (!users || users.length === 0) { return; }
@@ -416,7 +478,7 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            this.getUserShareApiMethod(),
             this.auth.token(),
             this.containerObjects.map(o => o.id),
             selectedUserIds,
@@ -451,7 +513,7 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            this.getUserShareApiMethod(),
             this.auth.token(),
             this.containerObjects.map(o => o.id),
             selectedUserIds,
@@ -595,7 +657,7 @@ export class BucketShareDialogComponent
         this._original_orgs = (await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
-                'open-ils.actor.container.retrieve_record_bucket_shared_org_ids', // hard-coded to record buckets for now
+                this.getOrgShareRetrieveApiMethod(),
                 this.auth.token(),
                 this.containerObjects.map( o => o.id ),
             )
@@ -612,7 +674,7 @@ export class BucketShareDialogComponent
     updateOrgShares$ = (checkedNodes) => {
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_org_share_mapping', // hard-coded to record buckets for now
+            this.getOrgShareUpdateApiMethod(),
             this.auth.token(),
             this.containerObjects.map( o => o.id ),
             checkedNodes.map( n => n.id )

@@ -1,0 +1,254 @@
+<eg-title i18n-prefix prefix="Patron Bucket Content">
+</eg-title>
+
+<eg-staff-banner bannerText="Patron Bucket Content" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-confirm-dialog #confirmDialog></eg-confirm-dialog>
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+<eg-patron-bucket-add-dialog #addPatronDialog></eg-patron-bucket-add-dialog>
+<eg-patron-barcodes-paste-dialog #barcodesPasteDialog></eg-patron-barcodes-paste-dialog>
+<eg-patron-barcode-confirm-dialog #barcodeConfirmDialog></eg-patron-barcode-confirm-dialog>
+<eg-patron-barcode-upload #uploadBarcodeDialog></eg-patron-barcode-upload>
+<!-- Add the bucket item transfer dialog component -->
+<eg-bucket-item-transfer-dialog #itemTransferDialog bucketClass="user"></eg-bucket-item-transfer-dialog>
+<!-- Add the batch edit dialog component -->
+<eg-patron-bucket-batch-edit #batchEditDialog></eg-patron-bucket-batch-edit>
+<eg-patron-bucket-rollback #rollbackDialog></eg-patron-bucket-rollback>
+<eg-patron-bucket-delete-all #deleteAllDialog></eg-patron-bucket-delete-all>
+
+<div class="container-fluid px-0">
+  <!-- Top navigation buttons -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="navigation-buttons">
+        <a *ngIf="returnTo" class="btn btn-outline-secondary" 
+          routerLink="/staff/circ/patron/bucket/{{returnTo}}" i18n>
+          <span class="material-icons">arrow_back</span>
+          Back to Buckets
+        </a>
+        <a *ngIf="!returnTo" class="btn btn-outline-secondary" 
+          routerLink="/staff/circ/patron/bucket" i18n>
+          <span class="material-icons">arrow_back</span>
+          Back to Buckets
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bucket header with information -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="bucket-header d-flex flex-wrap align-items-baseline">
+        <h3 class="my-0 me-3">
+          {{bucket?.name()}}
+          <span *ngIf="bucketId" class="ms-2 text-muted" style="font-size: 1rem;">
+            (ID: {{bucketId}})
+          </span>
+        </h3>
+        <span class="me-3 text-muted" *ngIf="bucket?.owner()">
+          <span i18n>Owner:</span>
+          <a href="/eg2/staff/circ/patron/{{bucket?.owner()?.id()}}/edit" 
+            target="_blank" class="ms-1">
+            {{bucket?.owner()?.usrname()}}
+          </a>
+        </span>
+        <span *ngIf="bucket?.description()" class="bucket-description text-muted">
+          {{bucket?.description()}}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls row - optimized for horizontal layout -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="action-controls-wrapper d-flex flex-wrap align-items-start">
+        <!-- Left side controls -->
+        <div class="me-auto d-flex flex-wrap">
+          <!-- Patron actions group -->
+          <div class="btn-group me-3 mb-2">
+            <button class="btn btn-primary d-flex align-items-center" 
+              (click)="openAddPatronDialog()" 
+              ngbTooltip="Search for patrons and add them directly to this bucket" i18n-ngbTooltip
+              i18n>
+              <span class="material-icons">group_add</span>
+              Search & Add Patrons
+            </button>
+            <div ngbDropdown class="btn-group">
+              <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center" 
+                ngbDropdownToggle i18n>
+                <span class="material-icons">add</span>
+                More Add Options
+              </button>
+              <div ngbDropdownMenu>
+                <button ngbDropdownItem (click)="openBarcodeUploadDialog()" i18n>
+                  <span class="material-icons">upload_file</span>
+                  Upload Barcode File
+                  <span class="small text-muted ms-1">(Text file with barcodes)</span>
+                </button>
+                <button ngbDropdownItem (click)="openBarcodesPasteDialog()" i18n>
+                  <span class="material-icons">content_paste</span>
+                  Paste Barcodes
+                  <span class="small text-muted ms-1">(List of barcodes)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bulk actions dropdown, positioned horizontally with other controls -->
+          <div ngbDropdown class="mb-2 me-3">
+            <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" 
+              id="bulkActionsDropdown" ngbDropdownToggle>
+              <span class="material-icons me-1">build</span>
+              <span i18n>Bulk Actions</span>
+            </button>
+            <div ngbDropdownMenu aria-labelledby="bulkActionsDropdown">
+              <button ngbDropdownItem (click)="updateAllPatrons()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">group</span>
+                <span>Update All Patrons</span>
+              </button>
+              <button ngbDropdownItem (click)="modifyStatcats()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">category</span>
+                <span>Modify Statistical Categories</span>
+              </button>
+              <button ngbDropdownItem (click)="viewChangeset()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">history</span>
+                <span>View Changesets</span>
+              </button>
+              <button ngbDropdownItem (click)="applyRollback()" class="d-flex align-items-center" i18n>
+                <span class="material-icons me-2">restore</span>
+                <span>Apply Rollback</span>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem class="text-danger d-flex align-items-center" (click)="deleteAllPatrons()" i18n>
+                <span class="material-icons me-2">delete_forever</span>
+                <span>Delete All Patrons</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right side controls - Quick add component -->
+        <eg-patron-bucket-quick-add #quickAddComp
+          [bucketId]="bucketId"
+          (patronAdded)="onPatronAdded()">
+        </eg-patron-bucket-quick-add>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid section - updated to match legacy implementation -->
+  <div class="row">
+    <div class="col-12">
+      <eg-grid #grid idlClass="au" i18n-persistKey 
+        persistKey="user.bucket.view"
+        [dataSource]="dataSource" 
+        [sortable]="true" [filterable]="true"
+        [showDeclaredFieldsOnly]="true"
+        (rowSelectionChange)="gridSelectionChange($event)">
+        
+        <!-- Toolbar actions -->
+        <eg-grid-toolbar-action label="Remove from Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="removeFromBucket($event)"
+            icon="delete">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Move to Another Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="moveAddToBucket($event, true)"
+            tooltip="Copy patrons to another bucket and remove from this bucket" i18n-tooltip
+            icon="drive_file_move">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Copy to Another Bucket" i18n-label
+            [disabled]="noSelectedRows"
+            (onClick)="moveAddToBucket($event, false)"
+            tooltip="Copy patrons to another bucket while keeping them in this bucket" i18n-tooltip
+            icon="content_copy">
+        </eg-grid-toolbar-action>
+
+        <eg-grid-toolbar-action label="Edit Patron(s)" i18n-label
+            [disabled]="noSelectedRows || !hasUpdatePerm"
+            (onClick)="editSelectedPatrons($event)"
+            icon="edit">
+        </eg-grid-toolbar-action>
+        
+        <!-- Required hidden ID field -->
+        <eg-grid-column path="id" [index]="true" [hidden]="true"
+          i18n-label label="ID"></eg-grid-column>
+        
+        <!-- Match exact columns from legacy implementation -->
+        <eg-grid-column name="card.barcode" [cellTemplate]="barcodeTemplate"
+          i18n-label label="Barcode"></eg-grid-column>
+          
+        <eg-grid-column path="first_given_name" 
+          [sortable]="true" [multiSortable]="true"
+          i18n-label label="First Name"></eg-grid-column>
+          
+        <eg-grid-column path="second_given_name" 
+          i18n-label label="Middle Name"></eg-grid-column>
+          
+        <eg-grid-column name="family_name" [cellTemplate]="familyNameTemplate"
+          [sortable]="true" [multiSortable]="true"
+          i18n-label label="Last Name"></eg-grid-column>
+          
+        <eg-grid-column path="home_ou.name" 
+          i18n-label label="Home Library"></eg-grid-column>
+          
+        <eg-grid-column path="money_summary.balance_owed" datatype="money"
+          [cellTemplate]="moneyTemplate"
+          i18n-label label="Balance Owed"></eg-grid-column>
+      </eg-grid>
+    </div>
+  </div>
+</div>
+
+<!-- Update templates to match the search component -->
+<ng-template #barcodeTemplate let-r="row">
+  <div class="text-link-cell">
+    <a *ngIf="r.card()"
+      href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+      target="_blank">
+      <span [ngbTooltip]="'Open patron ' + r.card().barcode() + ' checkout page'" i18n-ngbTooltip>
+        {{r.card().barcode()}}
+      </span>
+    </a>
+  </div>
+</ng-template>
+
+<ng-template #familyNameTemplate let-r="row">
+  <div class="text-link-cell">
+    <a href="/eg2/staff/circ/patron/{{r.id()}}/checkout" 
+      target="_blank">
+      <span [ngbTooltip]="'View patron: ' + r.family_name() + ', ' + r.first_given_name()" i18n-ngbTooltip>
+        {{r.family_name()}}
+      </span>
+    </a>
+  </div>
+</ng-template>
+
+<ng-template #moneyTemplate let-r="row">
+  <!-- Link to bills page when there's a positive balance owed -->
+  <div class="text-link-cell">
+    <a *ngIf="r.money_summary()?.balance_owed() > 0"
+       href="/eg2/staff/circ/patron/{{r.id()}}/bills" 
+       target="_blank"
+       class="text-danger money-value">
+      <span [ngbTooltip]="'View bills for ' + r.family_name() + ' (' + (r.money_summary()?.balance_owed() | currency) + ')'" 
+        i18n-ngbTooltip>
+        {{r.money_summary()?.balance_owed() | currency}}
+      </span>
+    </a>
+    
+    <!-- Display without link for zero or negative balances -->
+    <span *ngIf="r.money_summary()?.balance_owed() <= 0"
+          [ngClass]="{'text-success': r.money_summary()?.balance_owed() < 0}" 
+          class="money-value">
+      {{r.money_summary()?.balance_owed() | currency}}
+    </span>
+  </div>
+</ng-template>
+
+<eg-progress-dialog #progressDialog></eg-progress-dialog>

@@ -1,248 +1,106 @@
-import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
-import {throwError, switchMap} from 'rxjs';
-import {NetService} from '@eg/core/net.service';
-import {IdlService} from '@eg/core/idl.service';
-import {EventService} from '@eg/core/event.service';
-import {ToastService} from '@eg/share/toast/toast.service';
-import {AuthService} from '@eg/core/auth.service';
-import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import {StringComponent} from '@eg/share/string/string.component';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
-
-/**
- * Dialog for adding bib records to new and existing record buckets.
- */
+import { Component, ViewChild, Input, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { DialogComponent } from '@eg/share/dialog/dialog.component';
+import { ProgressDialogComponent } from '@eg/share/dialog/progress.component';
+import { BucketService } from './bucket.service';
+import { ToastService } from '@eg/share/toast/toast.service';
 
 @Component({
-    selector: 'eg-bucket-dialog',
-    templateUrl: 'bucket-dialog.component.html'
+  selector: 'eg-bucket-dialog',
+  templateUrl: './bucket-dialog.component.html',
+  styleUrls: ['./bucket-dialog.component.css', './buckets.css']
 })
-
 export class BucketDialogComponent extends DialogComponent implements OnInit {
+  @ViewChild('progressDialog') private progressDialog: ProgressDialogComponent;
 
-    activeTabId = 1; // Existing Buckets tab
-    selectedBucket: number;
-    sharedBucketId: number;
-    sharedBucketName: string;
-    newBucketName: string;
-    newBucketDesc: string;
-    buckets: any[];
-    showExistingBuckets = true;
+  @Input() bucketClass: 'biblio' | 'user' | 'callnumber' | 'copy' = 'biblio';
+  @Input() editMode = false;
+  @Input() bucketId: number;
+  @Input() bucketData: any;
+  @Input() showPublicOption = true;
+  @Input() bucketTypes = [
+    { value: 'staff_client', label: $localize`Staff Client` },
+    { value: 'vandelay_queue', label: $localize`Import Queue` },
+    { value: 'hold_subscription', label: $localize`Hold Subscription` }
+  ];
 
-    @Input() bucketClass: 'biblio' | 'user' | 'callnumber' | 'copy';
-    @Input() bucketType: string; // e.g. staff_client
+  pending = false;
+  errorMessage: string = null;
 
-    // ID's of items to add to the bucket
-    @Input() itemIds: number[];
+  private bucketClassLabels = {
+    'biblio': $localize`Bibliographic Record`,
+    'user': $localize`Patron`,
+    'callnumber': $localize`Call Number`,
+    'copy': $localize`Item`
+  };
 
-    // If set, itemIds will be derived from the records in a bib queue
-    @Input() fromBibQueue: number;
+  constructor(
+    modalService: NgbModal,
+    private bucketService: BucketService,
+    private toast: ToastService
+  ) {
+    super(modalService);
+  }
 
-    // bucket item classes are these plus a following 'i'.
-    bucketFmClass: 'ccb' | 'ccnb' | 'cbreb' | 'cub';
-    targetField: string;
+  ngOnInit() {
+    // Defer initialization to open()
+  }
 
-    @ViewChild('confirmAddToShared') confirmAddToShared: ConfirmDialogComponent;
-    @ViewChild('successString') successString: StringComponent;
+  override open(options?: any) {
+    this.errorMessage = null;
+    this.pending = false;
+    return super.open(options);
+  }
 
-    constructor(
-        private modal: NgbModal, // required for passing to parent
-        private renderer: Renderer2,
-        private toast: ToastService,
-        private idl: IdlService,
-        private net: NetService,
-        private bucketService: BucketService,
-        private evt: EventService,
-        private auth: AuthService) {
-        super(modal); // required for subclassing
-        this.buckets = [];
-        this.itemIds = [];
-        this.fromBibQueue = null;
-    }
+  getBucketClassLabel(): string {
+    return this.bucketClassLabels[this.bucketClass] || this.bucketClass;
+  }
 
-    ngOnInit() {
-        this.onOpen$.subscribe(ok => {
-            this.reset(); // Reset data on dialog open
-            if (this.showExistingBuckets) {
-                this.net.request(
-                    'open-ils.actor',
-                    'open-ils.actor.container.retrieve_by_class.authoritative',
-                    this.auth.token(), this.auth.user().id(),
-                    this.bucketClass, this.bucketType
-                // eslint-disable-next-line rxjs-x/no-nested-subscribe
-                ).subscribe(buckets => this.buckets = buckets);
-            } else {
-                this.activeTabId = 2; // New Bucket tab
-            }
-        });
-    }
+  async onFormSubmit(formData: any) {
+    this.pending = true;
+    this.errorMessage = null;
+    try {
+      if (this.progressDialog) this.progressDialog.open();
 
-    reset() {
-        this.selectedBucket = null;
-        this.sharedBucketId = null;
-        this.sharedBucketName = '';
-        this.newBucketName = '';
-        this.newBucketDesc = '';
-
-        if (!this.bucketClass) {
-            this.bucketClass = 'biblio';
+      let result;
+      if (this.editMode && this.bucketId) {
+        if (typeof formData.id !== 'function') {
+          formData.id = this.bucketId;
+        } else if (formData.id() !== this.bucketId) {
+          formData.id(this.bucketId);
         }
+        result = await this.bucketService.updateBucket(this.bucketClass, formData).toPromise();
+      } else {
+        const name = typeof formData.name === 'function' ? formData.name() : formData.name;
+        const description = typeof formData.description === 'function' ? formData.description() : formData.description || '';
+        const bucketType = typeof formData.btype === 'function' ? formData.btype() : formData.btype || 'staff_client';
+        const isPublic = typeof formData.pub === 'function' ? formData.pub() === 't' : formData.pub === 't';
+        result = await this.bucketService.createBucket(
+          this.bucketClass, name, description, bucketType, isPublic
+        ).toPromise();
+      }
 
-        switch (this.bucketClass) {
-            case 'biblio':
-                if (this.fromBibQueue) {
-                    this.bucketType = 'vandelay_queue';
-                }
-                this.bucketFmClass = 'cbreb';
-                this.targetField = 'target_biblio_record_entry';
-                break;
-            case 'copy':
-                this.bucketFmClass = 'ccb';
-                this.targetField = 'target_copy';
-                break;
-            case 'callnumber':
-                this.bucketFmClass = 'ccnb';
-                this.targetField = 'target_call_number';
-                break;
-            case 'user':
-                this.bucketFmClass = 'cub';
-                this.targetField = 'target_user';
-        }
+      if (this.progressDialog) this.progressDialog.close();
+      this.pending = false;
+      this.close(result);
 
-        if (!this.bucketType) {
-            this.bucketType = 'staff_client';
-        }
-
-        this.showExistingBuckets = this.itemIds.length > 0 || Boolean(this.fromBibQueue);
+      const actionText = this.editMode ? $localize`updated` : $localize`created`;
+      this.toast.success($localize`${this.getBucketClassLabel()} bucket ${actionText} successfully`);
+    } catch (error) {
+      if (this.progressDialog) this.progressDialog.close();
+      this.pending = false;
+      // Prefer error.message, fallback to a generic message
+      this.errorMessage = (error && error.message) ?
+        error.message :
+        $localize`An error occurred while ${this.editMode ? 'updating' : 'creating'} the ${this.getBucketClassLabel()} bucket.`;
     }
+  }
 
-    addToSelected() {
-        this.addToBucket(this.selectedBucket);
-    }
+  onFormCancel() {
+    this.close();
+  }
 
-    addToShared() {
-        this.net.request('open-ils.actor',
-            'open-ils.actor.container.flesh',
-            this.auth.token(), this.bucketClass,
-            this.sharedBucketId)
-            .pipe(switchMap((resp) => {
-                const evt = this.evt.parse(resp);
-                if (evt) {
-                    this.toast.danger(evt.toString());
-                    return throwError(evt);
-                } else {
-                    this.sharedBucketName = resp.name();
-                    return this.confirmAddToShared.open();
-                }
-            })).subscribe(() => {
-                this.addToBucket(this.sharedBucketId);
-            });
-    }
-
-    bucketChanged(entry: ComboboxEntry) {
-        if (entry) {
-            this.selectedBucket = entry.id;
-        } else {
-            this.selectedBucket = null;
-        }
-    }
-
-    formatBucketEntries(): ComboboxEntry[] {
-        return this.buckets.map(b => ({id: b.id(), label: b.name()}));
-    }
-
-    // Create a new bucket then add the record
-    addToNew() {
-        const bucket = this.idl.create(this.bucketFmClass);
-
-        bucket.owner(this.auth.user().id());
-        bucket.name(this.newBucketName);
-        bucket.description(this.newBucketDesc);
-        bucket.btype(this.bucketType);
-
-        this.net.request(
-            'open-ils.actor',
-            'open-ils.actor.container.create',
-            this.auth.token(), this.bucketClass, bucket
-        ).subscribe(bktId => {
-            const evt = this.evt.parse(bktId);
-            if (evt) {
-                this.toast.danger(evt.desc);
-            } else {
-                // make it find-able to the queue-add method which
-                // requires the bucket name.
-                bucket.id(bktId);
-                this.buckets.push(bucket);
-                if (this.showExistingBuckets) { // aka, in a "add to bucket" context
-                    this.addToBucket(bktId);
-                } else {
-                    this.bucketService.logRecordBucket(bktId);
-                    this.bucketService.requestBibBucketsRefresh();
-                    this.close({success: true, bucket: bktId}); // we're done
-                }
-            }
-        });
-    }
-
-    addToBucket(id: number) {
-        if (this.itemIds.length > 0) {
-            this.addRecordToBucket(id);
-        } else if (this.fromBibQueue) {
-            this.addBibQueueToBucket(id);
-        }
-    }
-
-    // Add the record(s) to the bucket with provided ID.
-    addRecordToBucket(bucketId: number) {
-        this.bucketService.logRecordBucket(bucketId);
-        const items = [];
-        this.itemIds.forEach(itemId => {
-            const item = this.idl.create(this.bucketFmClass + 'i');
-            item.bucket(bucketId);
-            item[this.targetField](itemId);
-            items.push(item);
-        });
-
-        this.net.request(
-            'open-ils.actor',
-            'open-ils.actor.container.item.create',
-            this.auth.token(), this.bucketClass, items
-        ).subscribe(resp => {
-            const evt = this.evt.parse(resp);
-            if (evt) {
-                this.toast.danger(evt.toString());
-            } else {
-                this.toast.success(this.successString.text);
-                this.bucketService.requestBibBucketsRefresh();
-                this.close({success: true, bucket: bucketId}); // we're done
-            }
-        });
-    }
-
-    addBibQueueToBucket(bucketId: number) {
-        const bucket = this.buckets.filter(b => b.id() === bucketId)[0];
-        if (!bucket) { return; }
-        this.bucketService.logRecordBucket(bucketId);
-
-        this.net.request(
-            'open-ils.vandelay',
-            'open-ils.vandelay.bib_queue.to_bucket',
-            this.auth.token(), this.fromBibQueue, bucket.name()
-        ).toPromise().then(resp => {
-            const evt = this.evt.parse(resp);
-            if (evt) {
-                this.toast.danger(evt.toString());
-            } else {
-                this.bucketService.requestBibBucketsRefresh();
-                this.close({success: true, bucket: bucketId}); // we're done
-            }
-        });
-    }
+  override close(result?: any) {
+    return super.close(result || null);
+  }
 }
-
-
-
-

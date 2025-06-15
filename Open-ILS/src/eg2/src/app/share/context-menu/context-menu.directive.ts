@@ -43,7 +43,7 @@ export class ContextMenuDirective extends NgbPopover {
         p7: NgZone, @Inject(DOCUMENT) p8: any, p9: ChangeDetectorRef,
         p10: ApplicationRef, private menuService: ContextMenuService) {
 
-        super();
+        super(p1, p2, p3, p5, p6, p7, p8, p9, p10);
 
         this.menuItemSelected = new EventEmitter<ContextMenuEntry>();
 

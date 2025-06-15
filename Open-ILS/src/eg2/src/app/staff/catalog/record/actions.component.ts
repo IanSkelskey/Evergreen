@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, Output, EventEmitter} from '@angular/core';
+import {Component, OnInit, Input, Output, EventEmitter, ViewChild} from '@angular/core';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {StoreService} from '@eg/core/store.service';
@@ -9,6 +9,7 @@ import {StaffCatalogService} from '../catalog.service';
 import {StringService} from '@eg/share/string/string.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 
 export const AC_CLEAR_CACHE_PATH = '/opac/extras/ac/clearcache/all/r/';
 
@@ -17,6 +18,9 @@ export const AC_CLEAR_CACHE_PATH = '/opac/extras/ac/clearcache/all/r/';
     templateUrl: 'actions.component.html'
 })
 export class RecordActionsComponent implements OnInit {
+
+    @ViewChild('recordBucketDialog', { static: false }) 
+    recordBucketDialog: BucketItemTransferDialogComponent;
 
     @Output() addHoldingsRequested: EventEmitter<void>
         = new EventEmitter<void>();

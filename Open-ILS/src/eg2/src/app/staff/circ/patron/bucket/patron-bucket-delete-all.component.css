@@ -1,0 +1,56 @@
+.form-label.required::after {
+  content: '*';
+  color: var(--bs-danger);
+  margin-left: 3px;
+}
+
+.material-icons.small {
+  font-size: 16px;
+  vertical-align: text-bottom;
+}
+
+/* Progress bar styling */
+.progress-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progress {
+  height: 20px;
+}
+
+/* Dialog specific styling */
+:host ::ng-deep .modal-content {
+  min-height: 300px;
+}
+
+:host ::ng-deep .modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Button styling - match old app style */
+button .material-icons {
+  font-size: 16px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Danger styling */
+.bucket-icon.text-danger {
+  color: var(--bs-danger);
+}
+
+.btn-danger {
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+}
+
+.btn-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.progress-bar.bg-danger {
+  background-color: var(--bs-danger);
+}

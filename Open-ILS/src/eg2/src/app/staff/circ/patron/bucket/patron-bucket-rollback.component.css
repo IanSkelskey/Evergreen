@@ -1,0 +1,43 @@
+.form-label.required::after {
+  content: '*';
+  color: var(--bs-danger);
+  margin-left: 3px;
+}
+
+.material-icons {
+  font-size: 16px;
+  vertical-align: text-bottom;
+  margin-right: 4px;
+}
+
+/* Progress bar styling */
+.progress-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progress {
+  height: 20px;
+}
+
+/* Dialog specific styling */
+:host ::ng-deep .modal-content {
+  min-height: 300px;
+}
+
+:host ::ng-deep .modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Consistent styling with other bucket components */
+.btn-warning {
+  color: white;
+}
+
+/* Selected option in dropdown - better visibility */
+select option:checked {
+  font-weight: bold;
+  background-color: var(--bs-primary);
+  color: white;
+}

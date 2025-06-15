@@ -8,12 +8,12 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
-// import {AdminPageComponent} from '@eg/staff/share/admin-page/admin-page.component';
 import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
@@ -21,8 +21,10 @@ import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+import {RecordBucketExportDialogComponent} from '@eg/staff/cat/bucket/record/record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from '@eg/staff/cat/bucket/record/record-bucket-item-upload-dialog.component';
+import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.component';
+import {BucketDialogService} from '@eg/staff/share/buckets/bucket-dialog.service';
 
 /**
  * Record bucket grid interface
@@ -66,6 +68,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     favoriteIds: number[] = [];
 
     @ViewChild('transferDialog', { static: true }) transferDialog: BucketTransferDialogComponent;
+    @ViewChild('patronSearch', { static: true }) patronSearch: PatronSearchDialogComponent;
     @ViewChild('shareBucketDialog', { static: true }) shareBucketDialog: BucketShareDialogComponent;
     @ViewChild('newBucketDialog', { static: true }) newBucketDialog: BucketDialogComponent;
     @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
@@ -92,12 +95,39 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private net: NetService,
         private evt: EventService,
         private flatData: GridFlatDataService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
+        private bucketDialogService: BucketDialogService,
+        private sharedBucketService: BucketService // Add the shared BucketService
     ) {}
 
     async ngOnInit() {
         this.initInProgress = true; console.warn('initInProgress = true');
         console.debug('RecordBucketComponent: this',this);
+
+        // Register the patron search dialog as early as possible
+        setTimeout(() => {
+            if (this.patronSearch) {
+                this.bucketDialogService.setPatronSearchDialog(this.patronSearch);
+            }
+        });
+
+        // Subscribe to bucket refresh notifications from the service
+        this.bucketService.bibBucketsRefreshRequested$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(() => {
+            console.debug('Received bucket refresh request');
+            this.grid.reload();
+            this.updateCounts();
+        });
+
+        // Also subscribe to the shared bucket service's refresh event
+        this.sharedBucketService.bucketRefresh$['biblio'].pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(() => {
+            console.debug('Received shared bucket refresh request');
+            this.grid.reload();
+            this.updateCounts();
+        });
 
         this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
             console.debug('segments',segments);
@@ -539,7 +569,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
         console.debug('rows', rows);
         this.shareBucketDialog.containerObjects = rows;
-        this.shareBucketDialog.containerObjects = rows;
+        // Remove passing patronSearch directly
         this.shareBucketDialog.loadAouTree();
         this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();
@@ -679,23 +709,33 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     };
 
     openNewBucketDialog = async (rows: any[]) => {
-        this.newBucketDialog.bucketClass = 'biblio';
-
         try {
-            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
-                catchError((error: unknown) => {
-                    console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
-                    return EMPTY;
-                }),
-                takeUntil(this.destroy$),
-            );
+            if (this.newBucketDialog) {
+                this.newBucketDialog.bucketClass = 'biblio';
+                this.newBucketDialog.editMode = false;
+                this.newBucketDialog.bucketId = null;
+                this.newBucketDialog.bucketData = null;
+                this.newBucketDialog.showPublicOption = true;
+                
+                const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                    catchError((error: unknown) => {
+                        console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                        return EMPTY;
+                    }),
+                    takeUntil(this.destroy$),
+                );
 
-            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
-            console.debug('New bucket results:', results);
+                const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+                console.debug('New bucket results:', results);
 
-            this.grid.reload();
-            this.updateCounts();
-
+                if (results && results.success) {
+                    // Use the bucket service to trigger a refresh
+                    this.bucketService.requestBibBucketsRefresh();
+                    // Also immediately update the display
+                    this.grid.reload();
+                    this.updateCounts();
+                }
+            }
         } catch (error) {
             console.error('Error in new bucket dialog:', error);
         }
@@ -703,11 +743,20 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
 
     retrieveBucketById() {
         if (!this.bucketIdToRetrieve) { return; }
-        if (this.jumpToContentsOnRetrieveById) {
-            this.jumpToBucketContent(this.bucketIdToRetrieve);
-        } else {
-            this.switchTo('retrieved_by_id');
-        }
+        
+        // Show loading state
+        const bucketId = this.bucketIdToRetrieve;
+        console.debug('Retrieving bucket by ID:', bucketId);
+        
+        // Test the bucket exists first
+        this.testReferencedBucket(bucketId, (response) => {
+            // If we get here, the bucket exists
+            console.debug('Bucket found, navigating to content');
+            // Log this bucket as recently used
+            this.bucketService.logRecordBucket(bucketId);
+            // Navigate directly to the bucket content page
+            this.router.navigate(['content', bucketId], { relativeTo: this.route.parent });
+        });
     }
 
     testReferencedBucket(bucketId: number, /* old-school */ callback: Function) {
@@ -742,12 +791,57 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
     openEditBucketDialog = async (rows: any[]) => {
         console.debug('edit bucket',rows);
         if (!rows.length) { return; }
-        const bucket = rows[0];
-        this.editDialog.mode = 'update';
-        this.editDialog.recordId = bucket.id;
-        this.editDialog.open()
+        
+        try {
+            const bucket = rows[0];
+            
+            if (!this.newBucketDialog) {
+                // Fall back to the fm-editor
+                this.editDialog.mode = 'update';
+                this.editDialog.recordId = bucket.id;
+                this.editDialog.open()
+                    .subscribe(ok => {
+                        if (ok) {
+                            // Update the grid and counts
+                            this.bucketService.requestBibBucketsRefresh();
+                            this.grid.reload();
+                            this.updateCounts();
+                        }
+                    });
+                return;
+            }
+            
+            this.newBucketDialog.bucketClass = 'biblio';
+            this.newBucketDialog.editMode = true;
+            this.newBucketDialog.bucketId = bucket.id;
+            this.newBucketDialog.bucketData = {
+                id: bucket.id,
+                name: bucket.name,
+                description: bucket.description,
+                btype: bucket.btype,
+                owner: bucket.owner,
+                pub: bucket.pub === 't' || bucket.pub === true
+            };
+            this.newBucketDialog.showPublicOption = true;
+            
+            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                catchError((error: unknown) => {
+                    console.debug('Error in dialog observable:', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
 
-            .subscribe(ok => this.grid.reload());
+            const results = await lastValueFrom(dialogObservable, { defaultValue: null });
+            if (results && results.success) {
+                // Update the grid and counts
+                this.bucketService.requestBibBucketsRefresh();
+                this.grid.reload();
+                this.updateCounts();
+            }
+        } catch (error) {
+            console.error('Error in edit bucket dialog:', error);
+        }
     };
 
     async uploadRecords(rows: any[]): Promise<void> {
@@ -830,6 +924,9 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Track which rows need to be updated in the UI
+        const updatedRows = [];
+
         for (const row of rows) {
             if (!this.bucketService.isFavoriteRecordBucket(row.id)) {
                 console.debug('row is not a favorite', row);
@@ -837,6 +934,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     /* eslint-disable no-await-in-loop */
                     await this.bucketService.addFavoriteRecordBucketFlag(row.id, this.auth.user().id());
                     row.favorite = true;
+                    updatedRows.push(row.id);
                     console.debug('row is now a favorite', row);
                 } catch (error) {
                     console.error(`Error adding favorite for bucket ${row.id}:`, error);
@@ -846,10 +944,14 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             }
         }
 
-        setTimeout(() => {
+        if (updatedRows.length > 0) {
+            // Update the favorite IDs list right away
+            this.favoriteIds = this.bucketService.getFavoriteRecordBucketIds();
+            
+            // Force a reload of the grid to reflect changes immediately
             this.grid.reload();
             this.updateCounts();
-        }, 1000);
+        }
     };
 
     unFavoriteBucket = async (rows: any[]) => {
@@ -859,6 +961,9 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Track which rows need to be updated in the UI
+        const updatedRows = [];
+
         for (const row of rows) {
             if (this.bucketService.isFavoriteRecordBucket(row.id)) {
                 console.debug('row is a favorite', row);
@@ -866,6 +971,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     /* eslint-disable no-await-in-loop */
                     await this.bucketService.removeFavoriteRecordBucketFlag(row.id);
                     row.favorite = false;
+                    updatedRows.push(row.id);
                     console.debug('row is no longer a favorite', row);
                 } catch (error) {
                     console.error(`Error removing favorite for bucket ${row.id}:`, error);
@@ -875,10 +981,14 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
             }
         }
 
-        setTimeout(() => {
+        if (updatedRows.length > 0) {
+            // Update the favorite IDs list right away
+            this.favoriteIds = this.bucketService.getFavoriteRecordBucketIds();
+            
+            // Force a reload of the grid to reflect changes immediately
             this.grid.reload();
             this.updateCounts();
-        }, 1000);
+        }
     };
 
     ngOnDestroy() {
