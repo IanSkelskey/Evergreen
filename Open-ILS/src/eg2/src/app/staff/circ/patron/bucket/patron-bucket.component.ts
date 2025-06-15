@@ -3,9 +3,6 @@ import {Router, ActivatedRoute} from '@angular/router';
 import {Observable, Subject, from, lastValueFrom, EMPTY, of} from 'rxjs';
 import {takeUntil, catchError, switchMap, map} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
-import {NetService} from '@eg/core/net.service';
-import {PcrudService} from '@eg/core/pcrud.service';
-import {EventService} from '@eg/core/event.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
@@ -20,7 +17,6 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {PatronBucketService} from './patron-bucket.service';
 import {PatronBucketStateService} from './state.service';
 import {DatePipe} from '@angular/common';
-import {OrgService} from '@eg/core/org.service';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {BucketDialogService} from '@eg/staff/share/buckets/bucket-dialog.service';
@@ -62,11 +58,7 @@ export class PatronBucketComponent implements OnInit, OnDestroy {
         private router: Router,
         private route: ActivatedRoute,
         private auth: AuthService,
-        private net: NetService,
-        private pcrud: PcrudService,
-        private evt: EventService,
         private toast: ToastService,
-        private org: OrgService,
         private bucketService: PatronBucketService,
         private bucketState: PatronBucketStateService,
         private modal: NgbModal,

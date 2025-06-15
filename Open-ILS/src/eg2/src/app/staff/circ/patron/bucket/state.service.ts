@@ -102,17 +102,27 @@ export class PatronBucketStateService {
     }
     
     // Get shared buckets
-    getSharedBuckets(): Promise<any[]> {
-        return this.pcrud.search('cub', 
-            {pub: true}, // Get buckets where public=true
-            {
-                flesh: 1,
-                flesh_fields: {
-                    cub: ['owner']
-                },
-                order_by: [{class: 'cub', field: 'create_time', direction: 'desc'}]
-            }
-        ).toPromise();
+    async getSharedBuckets(): Promise<any[]> {
+        try {
+            const result = await lastValueFrom(
+                this.pcrud.search('cub', 
+                    {pub: true}, // Get buckets where public=true
+                    {
+                        flesh: 1,
+                        flesh_fields: {
+                            cub: ['owner']
+                        },
+                        order_by: [{class: 'cub', field: 'create_time', direction: 'desc'}]
+                    },
+                    {atomic: true}
+                )
+            );
+            
+            return Array.isArray(result) ? result : (result ? [result] : []);
+        } catch (error) {
+            console.error('Error retrieving shared buckets:', error);
+            return [];
+        }
     }
     
     // Update counts for all views
