@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/opac">
+      <img src="/images/evergreen-logo-white.svg" alt="Evergreen Logo" class="eg-logo" />
+    </a>
+    <button class="navbar-toggler" type="button" (click)="isCollapsed = !isCollapsed" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" [ngbCollapse]="isCollapsed">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/opac/search" routerLinkActive="active">Search</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/opac/account" routerLinkActive="active">My Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/opac/places" routerLinkActive="active">Locations</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <!-- Dark/Light/Auto mode toggle -->
+        <li ngbDropdown class="nav-item dropdown color-mode-toggle">
+          <a class="nav-link dropdown-toggle" ngbDropdownToggle>
+            <span *ngIf="colorMode==='auto'" class="material-icons">brightness_medium</span>
+            <span *ngIf="colorMode==='light'" class="material-icons">light_mode</span>
+            <span *ngIf="colorMode==='dark'" class="material-icons">dark_mode</span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
+            <button class="dropdown-item" (click)="changeColorMode('auto')">Auto</button>
+            <button class="dropdown-item" (click)="changeColorMode('light')">Light</button>
+            <button class="dropdown-item" (click)="changeColorMode('dark')">Dark</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
