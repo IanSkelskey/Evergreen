@@ -21,15 +21,33 @@
       <ul class="navbar-nav ms-auto">
         <!-- Dark/Light/Auto mode toggle -->
         <li ngbDropdown class="nav-item dropdown color-mode-toggle">
-          <a class="nav-link dropdown-toggle" ngbDropdownToggle>
-            <span *ngIf="colorMode==='auto'" class="material-icons">brightness_medium</span>
-            <span *ngIf="colorMode==='light'" class="material-icons">light_mode</span>
-            <span *ngIf="colorMode==='dark'" class="material-icons">dark_mode</span>
-          </a>
-          <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
-            <button class="dropdown-item" (click)="changeColorMode('auto')">Auto</button>
-            <button class="dropdown-item" (click)="changeColorMode('light')">Light</button>
-            <button class="dropdown-item" (click)="changeColorMode('dark')">Dark</button>
+          <button type="button" class="nav-link dropdown-toggle with-material-icon" ngbDropdownToggle>
+            <ng-container *ngIf="colorMode==='light'">
+              <span class="material-icons" aria-hidden="true">light_mode</span>
+              <span class="visually-hidden" i18n>Current color mode: Light</span>
+            </ng-container>
+            <ng-container *ngIf="colorMode==='dark'">
+              <span class="material-icons" aria-hidden="true">dark_mode</span>
+              <span class="visually-hidden" i18n>Current color mode: Dark</span>
+            </ng-container>
+            <ng-container *ngIf="colorMode==='auto'">
+              <span class="material-icons" aria-hidden="true">brightness_medium</span>
+              <span class="visually-hidden" i18n>Current color mode: Auto</span>
+            </ng-container>
+          </button>
+          <div class="dropdown-menu color-mode dropdown-menu-end" ngbDropdownMenu>
+            <button type="button" class="dropdown-item" ngbDropdownItem (click)="changeColorMode('light')">
+              <span class="material-icons" aria-hidden="true">light_mode</span>
+              <span i18n>Light</span>
+            </button>
+            <button type="button" class="dropdown-item" ngbDropdownItem (click)="changeColorMode('dark')">
+              <span class="material-icons" aria-hidden="true">dark_mode</span>
+              <span i18n>Dark</span>
+            </button>
+            <button type="button" class="dropdown-item" ngbDropdownItem (click)="changeColorMode('auto')">
+              <span class="material-icons" aria-hidden="true">brightness_medium</span>
+              <span i18n>Auto</span>
+            </button>
           </div>
         </li>
       </ul>

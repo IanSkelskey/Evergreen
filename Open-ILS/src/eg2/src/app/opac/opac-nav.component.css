@@ -47,7 +47,6 @@
   color: var(--nav-link-hover);
   background-color: var(--nav-hover-bg);
   border-bottom: 2px solid var(--nav-hover-border-bottom);
-  border-radius: 0.3em;
   cursor: pointer;
 }
 
@@ -58,6 +57,9 @@
   border-top-right-radius: 0;
   margin-top: 4px;
   padding: 0;
+  /* round bottom corners */
+  border-bottom-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
 }
 
 :host .navbar-collapse.show .dropdown-menu {
@@ -69,6 +71,30 @@
 :host .dropdown-item:focus {
   background-color: var(--nav-hover-bg);
   color: var(--nav-dropdown-item-color);
+}
+
+/* Align material-icons with sibling text */
+:host .with-material-icon,
+:host .dropdown-item {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+}
+
+/* add padding inside dropdown items */
+:host .dropdown-item {
+  padding: 0.5rem 0.75rem;
+}
+
+/* spacing between icon and text */
+:host .dropdown-item .material-icons {
+  margin-right: 0.5rem;
+}
+
+/* always round bottom corners on last dropdown item */
+:host .dropdown-menu .dropdown-item:last-child {
+  border-bottom-left-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
 }
 
 [data-bs-theme="dark"] :host {
