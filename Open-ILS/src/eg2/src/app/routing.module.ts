@@ -21,6 +21,9 @@ const routes: Routes = [{
     path: 'staff/selfcheck',
     resolve : {startup : BaseResolver},
     loadChildren: () => import('./staff/scko/scko.module').then(m => m.SckoModule)
+}, {
+    path: 'opac',
+    loadChildren: () => import('./opac/opac.module').then(m => m.OpacModule)
 }];
 
 @NgModule({
