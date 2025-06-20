@@ -17,6 +17,7 @@
   background-color: var(--nav-bg-end);
   border-bottom: 2px solid var(--border);
   margin-bottom: 1rem;
+  align-items: center; /* center logo vertically */
 }
 
 .navbar-brand .eg-logo {
