@@ -1,0 +1,8 @@
+<form class="searchbar" (submit)="onSearch()">
+  <div class="input-group">
+    <input type="text" class="form-control" placeholder="Search the Catalog" name="query" [(ngModel)]="query" />
+    <button class="btn btn-outline-light" type="submit">
+      <span class="material-icons">search</span>
+    </button>
+  </div>
+</form>

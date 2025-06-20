@@ -6,4 +6,7 @@ import { Component } from '@angular/core';
   templateUrl: './opac-footer.component.html',
   styleUrls: ['./opac-footer.component.css']
 })
-export class OpacFooterComponent {}
+export class OpacFooterComponent {
+  startYear = 2006;
+  currentYear = new Date().getFullYear();
+}

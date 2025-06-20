@@ -1,13 +1,97 @@
 /* Footer styles */
+:host {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
 footer {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  border-top: 1px solid #dee2e6;
+    color: var(--bs-white);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-top: 1px solid #dee2e6;
+    background: linear-gradient(var(--staff-navbar-a), var(--staff-navbar-b));
+    background-color: var(--staff-navbar-b);
+    text-align: center;
+}
+.list-inline {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 1rem;
 }
 .list-inline-item a {
-  color: #6c757d;
-  text-decoration: none;
+    color: var(--bs-white);
+    text-decoration: none;
 }
 .list-inline-item a:hover {
-  text-decoration: underline;
+    color: var(--bs-white);
+    text-decoration: underline;
+}
+footer .row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+footer .row > div {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+.list-inline {
+    flex-direction: column;
+}
+.list-inline .list-inline-item {
+    margin: 0.25rem 0;
+}
+footer .col-lg-6,
+footer .col-md-12,
+footer .text-lg-end {
+    text-align: center !important;
+}
+#footer_logo {
+    margin-top: 0.5rem;
+    color: var(--bs-white);
+}
+#footer_logo .eg-logo {
+    height: 24px;
+    margin-left: 0.25rem;
+    vertical-align: middle;
+}
+
+/* On large screens, display footer links inline */
+@media (min-width: 992px) {
+    .list-inline {
+        flex-direction: row;
+        justify-content: center;
+    }
+    .list-inline .list-inline-item {
+        margin: 0 0.5rem;
+    }
+}
+
+/* Force white text in all theme modes with higher specificity */
+:host footer,
+:host footer *,
+:host footer .list-inline-item a,
+:host footer span,
+:host footer div,
+:host footer p,
+:host footer #copyright_text,
+:host footer #footer_logo,
+:host footer #footer_logo * {
+    color: white !important;
+}
+
+/* Additional override for dark mode */
+[data-bs-theme="dark"] :host footer,
+[data-bs-theme="dark"] :host footer * {
+    color: white !important;
+}
+
+/* Override any Bootstrap text utilities */
+:host footer .text-dark,
+:host footer .text-body {
+    color: white !important;
 }
