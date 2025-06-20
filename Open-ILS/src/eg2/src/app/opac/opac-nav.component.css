@@ -26,6 +26,8 @@
 
 .nav-link {
   color: var(--nav-link-color);
+  border-bottom: 2px solid transparent;
+  padding: .5rem .75rem;
 }
 
 .nav-link.active,
@@ -36,6 +38,37 @@
 
 .color-mode-toggle .dropdown-menu {
   background-color: var(--nav-dropdown-bg);
+}
+
+:host .nav-link:hover,
+:host .nav-link:focus,
+:host .dropdown-toggle.nav-link:hover,
+:host .dropdown-toggle.nav-link:focus {
+  color: var(--nav-link-hover);
+  background-color: var(--nav-hover-bg);
+  border-bottom: 2px solid var(--nav-hover-border-bottom);
+  border-radius: 0.3em;
+  cursor: pointer;
+}
+
+:host .dropdown-menu {
+  background-color: var(--nav-dropdown-bg);
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: 4px;
+  padding: 0;
+}
+
+:host .navbar-collapse.show .dropdown-menu {
+  background-color: var(--bs-body-bg-alt);
+  color: var(--bs-body-color);
+}
+
+:host .dropdown-item:hover,
+:host .dropdown-item:focus {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-dropdown-item-color);
 }
 
 [data-bs-theme="dark"] :host {
