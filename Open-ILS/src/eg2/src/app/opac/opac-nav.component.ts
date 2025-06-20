@@ -14,13 +14,26 @@ export class OpacNavComponent implements OnInit {
   ngOnInit() {
     // Load saved setting or default to auto
     this.colorMode = (localStorage.getItem('egOpacColorMode') as any) || 'auto';
+    
+    // Add listener for system dark/light mode changes
+    const darkModePreference = window.matchMedia('(prefers-color-scheme: dark)');
+    darkModePreference.addEventListener('change', () => {
+      // Don't change color mode while printing
+      if (!window.matchMedia('print').matches) {
+        this.setColorMode();
+      }
+    });
+    
     this.setColorMode();
   }
 
   /** Apply the selected theme */
   setColorMode(): void {
     if (this.colorMode === 'auto') {
-      document.documentElement.removeAttribute('data-bs-theme');
+      // In auto mode, set theme based on system preference
+      document.documentElement.setAttribute('data-bs-theme',
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      );
     } else {
       document.documentElement.setAttribute('data-bs-theme', this.colorMode);
     }
