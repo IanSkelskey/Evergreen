@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -8,10 +8,19 @@ import { OpacRoutingModule } from './routing.module';
 import { OpacComponent } from './opac.component';
 import { OpacNavComponent } from './opac-nav.component';
 import { OpacFooterComponent } from './opac-footer.component';
+import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
 import { SearchbarComponent } from './searchbar/searchbar.component';
 
 @NgModule({
   declarations: [OpacComponent, OpacNavComponent, SearchbarComponent, OpacFooterComponent],
-  imports: [CommonModule, FormsModule, OpacRoutingModule, RouterModule, NgbModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    OpacRoutingModule,
+    RouterModule,
+    NgbModule,
+    CommonWidgetsModule
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class OpacModule {}

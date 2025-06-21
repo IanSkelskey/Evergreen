@@ -1,8 +1,67 @@
-<form class="searchbar" (submit)="onSearch()">
-  <div class="input-group">
-    <input type="text" class="form-control" placeholder="Search the Catalog" name="query" [(ngModel)]="query" />
-    <button class="btn btn-outline-light" type="submit">
-      <span class="material-icons">search</span>
-    </button>
+<div id="search-wrapper">
+  <div id="search-box">
+    <span class="search_catalog_lbl">Search the Catalog</span>
+    <span class="adv_search_catalog_lbl">
+      <a routerLink="/opac/advanced">Advanced Search</a>
+    </span>
+    <span class="browse_the_catalog_lbl">
+      <a routerLink="/opac/browse">Browse the Catalog</a>
+    </span>
   </div>
-</form>
+
+  <form class="searchbar" (submit)="onSearch()">
+    <div class="search-controls">
+      <div class="search-field">
+        <label for="search_box">Search:</label>
+        <input 
+          type="search" 
+          id="search_box" 
+          class="form-control" 
+          name="query" 
+          [(ngModel)]="query" 
+          placeholder="Enter search terms" 
+          aria-label="Enter search query"
+          autofocus
+        />
+      </div>
+
+      <div class="search-field">
+        <label for="qtype">Type:</label>
+        <select id="qtype" class="form-select" name="qtype" [(ngModel)]="qtype">
+          <option *ngFor="let option of qtypeOptions" [value]="option.value">
+            {{option.label}}
+          </option>
+        </select>
+      </div>
+
+      <div class="search-field">
+        <label for="format">Format:</label>
+        <select id="format" class="form-select" name="format" [(ngModel)]="format">
+          <option *ngFor="let option of formatOptions" [value]="option.value">
+            {{option.label}}
+          </option>
+        </select>
+      </div>
+
+      <div class="search-field">
+        <label id="library-select-label" for="library-selector">Library:</label>
+        <eg-org-select
+          id="library-selector"
+          ariaLabel="Select search library"
+          ariaLabelledby="library-select-label"
+          placeholder="All Libraries"
+          persistKey="opac.search.lib"
+          applyDefault="true"
+          (onChange)="onOrgChange($event)"
+        ></eg-org-select>
+      </div>
+
+      <div class="search-submit">
+        <button id="search-submit-go" type="submit" class="btn btn-primary">
+          <span class="material-icons">search</span>
+          <span>Search</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

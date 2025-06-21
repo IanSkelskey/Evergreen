@@ -23,6 +23,7 @@ const routes: Routes = [{
     loadChildren: () => import('./staff/scko/scko.module').then(m => m.SckoModule)
 }, {
     path: 'opac',
+    resolve : {startup : BaseResolver},
     loadChildren: () => import('./opac/opac.module').then(m => m.OpacModule)
 }];
 
