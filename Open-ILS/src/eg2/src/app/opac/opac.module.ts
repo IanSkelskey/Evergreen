@@ -9,7 +9,7 @@ import { OpacComponent } from './opac.component';
 import { OpacNavComponent } from './opac-nav.component';
 import { OpacFooterComponent } from './opac-footer.component';
 import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
-import { SearchbarComponent } from './searchbar/searchbar.component';
+import { SearchbarComponent } from './searchbar.component';
 
 @NgModule({
   declarations: [OpacComponent, OpacNavComponent, SearchbarComponent, OpacFooterComponent],

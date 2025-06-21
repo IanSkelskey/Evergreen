@@ -1,7 +1,7 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {OpacComponent} from './opac.component';
-import {SearchbarComponent} from './searchbar/searchbar.component';
+import {SearchbarComponent} from './searchbar.component';
 
 const routes: Routes = [{
   path: '',
