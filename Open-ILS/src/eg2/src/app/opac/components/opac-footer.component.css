@@ -1,10 +1,8 @@
 /* Footer styles */
 :host {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    /* Remove fixed positioning */
     width: 100%;
-    z-index: 1000;
+    margin-top: auto; /* Push to the bottom when in a flex container */
 }
 footer {
     color: var(--bs-white);
