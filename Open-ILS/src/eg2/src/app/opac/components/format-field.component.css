@@ -1,0 +1,13 @@
+.format-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.format-field label {
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.format-field select {
+  width: 100%;
+}

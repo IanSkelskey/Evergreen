@@ -1,0 +1,36 @@
+<div class="format-field">
+  <label class="form-label" for="opac-format-select">Format</label>
+  <select 
+    id="opac-format-select" 
+    class="form-select" 
+    [disabled]="loading"
+    [value]="selectedFormat"
+    (change)="onFormatChange($event)">
+    <option value="">All Formats</option>
+    
+    <!-- Show loading indicator if formats aren't ready -->
+    <option *ngIf="loading" disabled>Loading formats...</option>
+    
+    <!-- Simple formats first (when data is loaded) -->
+    <ng-container *ngIf="!loading && catalogService.ccvmMap.search_format">
+      <ng-container *ngFor="let format of catalogService.ccvmMap.search_format">
+        <option 
+          *ngIf="format.is_simple() === 't' && format.opac_visible() !== 'f'" 
+          [value]="format.code()" 
+          [selected]="selectedFormat === format.code()">
+          {{format.search_label() || format.value()}}
+        </option>
+      </ng-container>
+      
+      <!-- Non-simple formats next -->
+      <ng-container *ngFor="let format of catalogService.ccvmMap.search_format">
+        <option 
+          *ngIf="format.is_simple() !== 't' && format.opac_visible() !== 'f'" 
+          [value]="format.code()"
+          [selected]="selectedFormat === format.code()">
+          {{format.search_label() || format.value()}}
+        </option>
+      </ng-container>
+    </ng-container>
+  </select>
+</div>

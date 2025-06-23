@@ -35,12 +35,11 @@
       </div>
 
       <div class="search-field">
-        <label for="format">Format:</label>
-        <select id="format" class="form-select" name="format" [(ngModel)]="format">
-          <option *ngFor="let option of formatOptions" [value]="option.value">
-            {{option.label}}
-          </option>
-        </select>
+        <!-- Replace static format dropdown with our new component -->
+        <eg-opac-format-field
+          [selectedFormat]="format"
+          (formatChange)="format = $event">
+        </eg-opac-format-field>
       </div>
 
       <div class="search-field">
