@@ -19,10 +19,10 @@ export class SearchbarComponent implements OnInit {
   qtypeOptions = [
     { value: 'keyword', label: 'Keyword' },
     { value: 'title', label: 'Title' },
+    { value: 'jtitle', label: 'Journal Title' },
     { value: 'author', label: 'Author' },
     { value: 'subject', label: 'Subject' },
     { value: 'series', label: 'Series' },
-    { value: 'identifier', label: 'ISBN/ISSN/etc.' }
   ];
   
   // Format options
