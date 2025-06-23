@@ -5,11 +5,11 @@ import { RouterModule } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { OpacRoutingModule } from './routing.module';
-import { OpacComponent } from './opac.component';
-import { OpacNavComponent } from './opac-nav.component';
-import { OpacFooterComponent } from './opac-footer.component';
+import { OpacComponent } from './components/opac.component';
+import { OpacNavComponent } from './components/opac-nav.component';
+import { OpacFooterComponent } from './components/opac-footer.component';
 import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
-import { SearchbarComponent } from './searchbar.component';
+import { SearchbarComponent } from './components/searchbar.component';
 import { FormatFieldComponent } from './components/format-field.component';
 
 @NgModule({
