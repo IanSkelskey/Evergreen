@@ -1,0 +1,78 @@
+<div class="opac-results-container">
+  <!-- Results title and count -->
+  <ng-container *ngIf="searchIsDone()">
+    <h2 class="results-title">
+      Search Results: {{catalogService.currentResults.count}} items found
+    </h2>
+  </ng-container>
+  
+  <!-- Progress bar while searching -->
+  <div class="row" *ngIf="searchIsActive()">
+    <div class="col-lg-6 offset-lg-3 pt-3">
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped active w-100"
+          role="progressbar" aria-valuenow="100" 
+          aria-valuemin="0" aria-valuemax="100">
+          <span class="visually-hidden">Searching...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- No results found message -->
+  <div *ngIf="searchIsDone() && !searchHasResults()">
+    <div class="row pt-3">
+      <div class="col-lg-6 offset-lg-3">
+        <div class="alert alert-warning">
+          <span>No Matching Items Were Found</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Results display -->
+  <div *ngIf="searchHasResults()" class="results-content">
+    <!-- Results toolbar -->
+    <div class="results-toolbar">
+      <div class="toolbar-left">
+        <div class="btn-group" role="group" aria-label="Result display options">
+          <button type="button" class="btn btn-outline-primary" (click)="toggleShowMore()">
+            <ng-container *ngIf="showMoreDetails">Show Fewer Details</ng-container>
+            <ng-container *ngIf="!showMoreDetails">Show More Details</ng-container>
+          </button>
+        </div>
+      </div>
+      
+      <div class="toolbar-right">
+        <!-- Pagination controls -->
+        <eg-opac-pagination
+          [currentPage]="searchParams.page"
+          [totalCount]="catalogService.pager.totalCount"
+          [pageSize]="catalogService.pager.limit"
+          (pageChange)="goToPage($event)">
+        </eg-opac-pagination>
+      </div>
+    </div>
+    
+    <!-- Results list -->
+    <div class="results-list">
+      <ng-container *ngFor="let record of catalogService.currentResults.records; let idx = index">
+        <eg-opac-record
+          [record]="record"
+          [index]="idx"
+          [showDetails]="showMoreDetails">
+        </eg-opac-record>
+      </ng-container>
+    </div>
+    
+    <!-- Bottom pagination -->
+    <div class="pagination-bottom">
+      <eg-opac-pagination
+        [currentPage]="searchParams.page"
+        [totalCount]="catalogService.pager.totalCount"
+        [pageSize]="catalogService.pager.limit"
+        (pageChange)="goToPage($event)">
+      </eg-opac-pagination>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+.pagination {
+  margin: 0;
+}
+
+.pagination li:not(.active) button {
+  cursor: pointer;
+}
+
+.pagination button { 
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color); 
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: var(--bs-white);
+}
+
+.pagination button:hover { 
+  background-color: var(--bs-body-bg-highlight);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color); 
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color-disabled); 
+}

@@ -1,0 +1,28 @@
+<nav aria-label="Search results pagination" *ngIf="totalPages > 1">
+  <ul class="pagination">
+    <!-- Previous page button -->
+    <li class="page-item" [ngClass]="{disabled: isFirstPage()}">
+      <button type="button" class="page-link" (click)="prevPage()" aria-label="Previous Page">
+        <span aria-hidden="true">&laquo;</span>
+      </button>
+    </li>
+    
+    <!-- Page number buttons -->
+    <li class="page-item" 
+      *ngFor="let page of getPageRange()"
+      [ngClass]="{active: currentPage === page}">
+      <button type="button" class="page-link" (click)="setPage(page)"
+        [attr.aria-label]="'Page ' + (page + 1)"
+        [attr.aria-current]="currentPage === page ? 'page' : null">
+        {{page + 1}}
+      </button>
+    </li>
+    
+    <!-- Next page button -->
+    <li class="page-item" [ngClass]="{disabled: isLastPage()}">
+      <button type="button" class="page-link" (click)="nextPage()" aria-label="Next Page">
+        <span aria-hidden="true">&raquo;</span>
+      </button>
+    </li>
+  </ul>
+</nav>

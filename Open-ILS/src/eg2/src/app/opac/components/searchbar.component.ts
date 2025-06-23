@@ -48,11 +48,14 @@ export class SearchbarComponent implements OnInit {
   }
 
   onSearch(): void {
+    // Only proceed if query is not empty
+    if (!this.query.trim()) return;
+    
     // Get org ID for search if an org is selected
     const orgId = this.selectedOrg ? this.selectedOrg.id() : '';
     
-    // Navigate with all search parameters
-    this.router.navigate(['/opac/search'], { 
+    // Navigate to results page with search parameters
+    this.router.navigate(['/opac/results'], { 
       queryParams: { 
         query: this.query,
         qtype: this.qtype,

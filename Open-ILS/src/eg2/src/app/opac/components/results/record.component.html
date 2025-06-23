@@ -1,0 +1,105 @@
+<div class="record-container">
+  <div class="record-header">
+    <span class="record-number">{{index + 1}}.</span>
+  </div>
+  
+  <div class="record-content">
+    <!-- Jacket image and title section -->
+    <div class="record-main">
+      <div class="record-image">
+        <a [routerLink]="['/opac/record', record?.id]">
+          <img src="/opac/extras/ac/jacket/medium/r/{{record?.id}}" alt="Book cover" />
+        </a>
+      </div>
+      
+      <div class="record-details">
+        <h3 class="record-title">
+          <a [routerLink]="['/opac/record', record?.id]">{{getTitle()}}</a>
+        </h3>
+        
+        <div class="record-author" *ngIf="getAuthor()">
+          <a [routerLink]="['/opac/results']" [queryParams]="{qtype: 'author', query: getAuthor()}">
+            {{getAuthor()}}
+          </a>
+        </div>
+        
+        <div class="record-format" *ngIf="record?.format">
+          <ng-container *ngFor="let format of record.format">
+            <span class="format-item">
+              <img [src]="getFormatIcon(format)" alt="Format icon" />
+              <span>{{getFormatLabel(format)}}</span>
+            </span>
+          </ng-container>
+        </div>
+        
+        <!-- Basic details -->
+        <div class="record-basic-details">
+          <div *ngIf="getPublicationInfo()" class="detail-row">
+            <span class="detail-label">Publisher:</span>
+            <span class="detail-value">{{getPublicationInfo()}}</span>
+          </div>
+          
+          <div *ngIf="getPhysicalDescription()" class="detail-row">
+            <span class="detail-label">Physical Description:</span>
+            <span class="detail-value">{{getPhysicalDescription()}}</span>
+          </div>
+          
+          <div *ngIf="getISBN()" class="detail-row">
+            <span class="detail-label">ISBN:</span>
+            <span class="detail-value">{{getISBN()}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Availability section -->
+    <div class="record-availability">
+      <div class="availability-header">
+        <span>Availability</span>
+      </div>
+      
+      <div class="availability-content" *ngIf="record?.copies?.length">
+        <div class="copy-count-summary">
+          <span>{{record.available}} of {{record.copies.length}} copies available</span>
+        </div>
+        
+        <!-- More detailed availability info shown when showDetails is true -->
+        <div class="copy-details" *ngIf="showDetails">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Call Number</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let copy of record.copies">
+                <td>{{catalogService.orgName(copy.circ_lib)}}</td>
+                <td>{{copy.call_number}}</td>
+                <td>{{copy.status}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="availability-content" *ngIf="!record?.copies?.length">
+        <span>No copies available</span>
+      </div>
+      
+      <!-- Actions buttons -->
+      <div class="record-actions">
+        <button type="button" class="btn btn-primary btn-sm" 
+          [routerLink]="['/opac/record', record?.id]">
+          View Details
+        </button>
+        
+        <button type="button" class="btn btn-success btn-sm" 
+          [routerLink]="['/opac/place-hold', record?.id]">
+          Place Hold
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

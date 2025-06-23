@@ -11,6 +11,9 @@ import { OpacFooterComponent } from './components/opac-footer.component';
 import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
 import { SearchbarComponent } from './components/searchbar.component';
 import { FormatFieldComponent } from './components/format-field.component';
+import { ResultsComponent } from './components/results/results.component';
+import { PaginationComponent } from './components/results/pagination.component';
+import { RecordComponent } from './components/results/record.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +21,10 @@ import { FormatFieldComponent } from './components/format-field.component';
     OpacNavComponent, 
     SearchbarComponent, 
     OpacFooterComponent,
-    FormatFieldComponent
+    FormatFieldComponent,
+    ResultsComponent,
+    PaginationComponent,
+    RecordComponent
   ],
   imports: [
     CommonModule,
