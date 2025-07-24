@@ -3,41 +3,7 @@ import { SyntaxHighlightingService, HighlightedCode } from './syntax-highlightin
 
 @Component({
   selector: 'app-code-editor',
-  template: `
-    <div class="code-editor-container" [attr.data-language]="language()" [class.no-line-numbers]="!showLineNumbers()">
-      <!-- Code input (invisible textarea) -->
-      <textarea
-        #codeTextarea
-        class="code-input"
-        [value]="code()"
-        (input)="onCodeChange($event)"
-        (scroll)="onScroll($event)"
-        (keydown)="onKeyDown($event)"
-        [placeholder]="placeholder()"
-        spellcheck="false"
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        wrap="off"
-      ></textarea>
-      
-      <!-- Highlighted code display -->
-      <pre 
-        class="code-display" 
-        [innerHTML]="highlightedCode().html"
-        [attr.data-language]="language()"
-      ></pre>
-      
-      <!-- Line numbers -->
-      @if (showLineNumbers()) {
-        <div class="line-numbers">
-          @for (lineNum of lineNumbers(); track lineNum) {
-            <span class="line-number">{{ lineNum }}</span>
-          }
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.css']
 })
 export class CodeEditorComponent implements OnInit, OnDestroy, OnChanges {
