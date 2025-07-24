@@ -8,9 +8,7 @@
 /* Locally served material icon fonts  */
 @import '~material-design-icons-iconfont/dist/material-design-icons.css';
 
-/* Highlight.js styles for code syntax highlighting */
-@import 'highlight.js/styles/github.css' screen and (prefers-color-scheme: light);
-@import 'highlight.js/styles/github-dark.css' screen and (prefers-color-scheme: dark);
+@import '../src/app/share/code-editor/highlight-theme.css';
 
 :root {
   /* Spacing options, based on bootstrap's spacing utility
