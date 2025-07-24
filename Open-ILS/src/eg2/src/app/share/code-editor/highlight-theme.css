@@ -6,6 +6,7 @@
   Updated: 07/24/2024
 */
 
+/* Base styles (Light Mode) */
 .hljs {
   color: var(--bs-body-color);
   background: transparent;
@@ -27,7 +28,7 @@
 .hljs-title.class_.inherited__,
 .hljs-title.function_ {
   /* prettylights-syntax-entity */
-  color: var(--eg-purple);
+  color: #7C3AED;
 }
 
 .hljs-attr,
@@ -41,31 +42,20 @@
 .hljs-selector-class,
 .hljs-selector-id {
   /* prettylights-syntax-constant */
-  color: var(--primary);
+  color: var(--bs-blue-800);
 }
 
 .hljs-regexp,
 .hljs-string,
 .hljs-meta .hljs-string {
   /* prettylights-syntax-string */
-  color: var(--bs-blue-800);
-}
-
-:root[data-bs-theme="dark"] .hljs-regexp,
-:root[data-bs-theme="dark"] .hljs-string,
-:root[data-bs-theme="dark"] .hljs-meta .hljs-string {
-  color: var(--bs-blue-300);
+  color: var(--eg-green-700);
 }
 
 .hljs-built_in,
 .hljs-symbol {
   /* prettylights-syntax-variable */
   color: var(--bs-orange-600);
-}
-
-:root[data-bs-theme="dark"] .hljs-built_in,
-:root[data-bs-theme="dark"] .hljs-symbol {
-  color: var(--bs-orange-100);
 }
 
 .hljs-comment,
@@ -99,10 +89,6 @@
   color: var(--bs-yellow-625);
 }
 
-:root[data-bs-theme="dark"] .hljs-bullet {
-  color: var(--bs-yellow-200);
-}
-
 .hljs-emphasis {
   /* prettylights-syntax-markup-italic */
   color: var(--bs-body-color);
@@ -134,4 +120,41 @@
 .hljs-punctuation,
 .hljs-tag {
   /* purposely ignored */
+}
+
+/* Dark Mode Overrides */
+:root[data-bs-theme="dark"] .hljs-attr,
+:root[data-bs-theme="dark"] .hljs-attribute,
+:root[data-bs-theme="dark"] .hljs-literal,
+:root[data-bs-theme="dark"] .hljs-meta,
+:root[data-bs-theme="dark"] .hljs-number,
+:root[data-bs-theme="dark"] .hljs-operator,
+:root[data-bs-theme="dark"] .hljs-variable,
+:root[data-bs-theme="dark"] .hljs-selector-attr,
+:root[data-bs-theme="dark"] .hljs-selector-class,
+:root[data-bs-theme="dark"] .hljs-selector-id {
+  color: var(--bs-blue-300);
+}
+
+:root[data-bs-theme="dark"] .hljs-title,
+:root[data-bs-theme="dark"] .hljs-title.class_,
+:root[data-bs-theme="dark"] .hljs-title.class_.inherited__,
+:root[data-bs-theme="dark"] .hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: var(--eg-purple);
+}
+
+:root[data-bs-theme="dark"] .hljs-regexp,
+:root[data-bs-theme="dark"] .hljs-string,
+:root[data-bs-theme="dark"] .hljs-meta .hljs-string {
+  color: var(--eg-green-200);
+}
+
+:root[data-bs-theme="dark"] .hljs-built_in,
+:root[data-bs-theme="dark"] .hljs-symbol {
+  color: var(--bs-orange-100);
+}
+
+:root[data-bs-theme="dark"] .hljs-bullet {
+  color: var(--bs-yellow-200);
 }

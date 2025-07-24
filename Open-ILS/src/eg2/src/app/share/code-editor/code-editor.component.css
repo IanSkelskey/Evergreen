@@ -20,6 +20,7 @@
   border-radius: 0.25rem;
   border: 1px solid var(--code-border);
   overflow: hidden;
+  background: var(--code-bg);
 }
 
 .code-input {
