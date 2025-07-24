@@ -11,9 +11,12 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 @Component({
-    templateUrl: './trigger-edit.component.html'
+    templateUrl: './trigger-edit.component.html',
+    imports: [CodeEditorModule],
+    standalone: false
 })
 
 export class EditEventDefinitionComponent implements OnInit {
@@ -238,4 +241,9 @@ export class EditEventDefinitionComponent implements OnInit {
     back = () => {
         this.router.navigate(['/staff/admin/local/action_trigger/event_definition/']);
     };
+
+    // Helper method to identify template fields that should use syntax highlighting
+    isTemplateField(fieldName: string): boolean {
+        return ['template', 'message_template'].includes(fieldName);
+    }
 }

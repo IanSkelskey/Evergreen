@@ -1,0 +1,139 @@
+:host {
+  /* Use Evergreen color variables instead of custom ones */
+  --code-bg: var(--bs-body-bg);
+  --code-fg: var(--bs-body-color);
+  --code-border: var(--border);
+  --line-numbers-bg: var(--bs-body-bg-alt);
+  --line-numbers-fg: var(--bs-text-highlight);
+  --scrollbar-track: var(--bs-body-bg-alt);
+  --scrollbar-thumb: var(--bs-gray-500);
+  --scrollbar-thumb-hover: var(--bs-gray-600);
+}
+
+/* No need for custom dark theme detection - it inherits from the app */
+
+/* Container for the code editor inside the trigger editor */
+.code-editor-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.25rem;
+  border: 1px solid var(--code-border);
+  overflow: hidden;
+}
+
+.code-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 1rem 1rem 4rem;
+  margin: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--code-fg);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  z-index: 2;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+}
+
+.code-display {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 1rem 1rem 4rem;
+  margin: 0;
+  background: transparent;
+  color: var(--code-fg);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+}
+
+/* Adjust padding when line numbers are hidden */
+.code-editor-container.no-line-numbers .code-input,
+.code-editor-container.no-line-numbers .code-display {
+  padding-left: 1rem;
+}
+
+.line-numbers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3.5rem;
+  height: 100%;
+  padding: 1rem 0.5rem;
+  background: var(--line-numbers-bg);
+  border-right: 1px solid var(--code-border);
+  color: var(--line-numbers-fg);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: right;
+  z-index: 3;
+  overflow: hidden;
+  user-select: none;
+}
+
+.line-number {
+  display: block;
+  min-height: 1.5em;
+}
+
+/* Highlight.js theme customization */
+.code-display .hljs {
+  background: transparent !important;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Use Evergreen's focus style */
+.code-input:focus,
+.code-input:focus-visible {
+  outline: 0.25rem solid rgba(var(--primary-focus-outline-rgb), 0.75);
+  outline-offset: -1px;
+}
+
+/* Scrollbar styling - using Evergreen variables */
+.code-input::-webkit-scrollbar,
+.code-display::-webkit-scrollbar,
+.line-numbers::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.code-input::-webkit-scrollbar-track,
+.code-display::-webkit-scrollbar-track,
+.line-numbers::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.code-input::-webkit-scrollbar-thumb,
+.code-display::-webkit-scrollbar-thumb,
+.line-numbers::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.code-input::-webkit-scrollbar-thumb:hover,
+.code-display::-webkit-scrollbar-thumb:hover,
+.line-numbers::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
