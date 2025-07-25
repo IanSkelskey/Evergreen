@@ -48,14 +48,14 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     protected onScroll(event: Event): void {
         const textarea = event.target as HTMLTextAreaElement;
         const codeDisplay = textarea.parentElement?.querySelector('.code-display') as HTMLElement;
-        
+
         if (codeDisplay) {
             // Use requestAnimationFrame for smoother scrolling
             requestAnimationFrame(() => {
                 // Sync scroll positions with the code display
                 codeDisplay.scrollTop = textarea.scrollTop;
                 codeDisplay.scrollLeft = textarea.scrollLeft;
-                
+
                 // Also sync line numbers if they exist
                 if (this.showLineNumbers()) {
                     const lineNumbers = textarea.closest('.code-editor-container')?.querySelector('.line-numbers') as HTMLElement;
@@ -63,7 +63,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                         lineNumbers.scrollTop = textarea.scrollTop;
                     }
                 }
-                
+
                 // Check if horizontal scrollbar is needed
                 this.checkHorizontalOverflow(textarea);
             });
@@ -72,9 +72,15 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
     protected onKeyDown(event: KeyboardEvent): void {
         if (event.key === 'Tab') {
-            event.preventDefault();
             const textarea = event.target as HTMLTextAreaElement;
-            this.handleTabKey(textarea, event.shiftKey);
+            const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
+
+            // Only capture Tab when there's a text selection
+            // This allows Tab to work normally for field navigation when no text is selected
+            if (hasSelection) {
+                event.preventDefault();
+                this.handleTabKey(textarea, event.shiftKey);
+            }
         }
     }
 
@@ -84,12 +90,12 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
         // Update highlighting, ensuring proper handling of final newlines
         let processedCode = currentCode || '';
-        
+
         // Ensure final newline has content so it's properly displayed
         if (processedCode.endsWith('\n')) {
             processedCode += ' ';
         }
-        
+
         const result = this.syntaxHighlightingService.highlightCode(processedCode, currentLanguage);
         this.highlightedCode.set(result);
 
@@ -183,44 +189,44 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     private updateTextarea(textarea: HTMLTextAreaElement, value: string, start: number, end: number): void {
         // Focus the textarea to ensure commands work
         textarea.focus();
-        
+
         const currentValue = textarea.value;
-        
+
         // Only update if the value actually changed
         if (currentValue !== value) {
             // Find the first position where the text differs
             let firstDiffPos = 0;
             const minLength = Math.min(currentValue.length, value.length);
-            
+
             while (firstDiffPos < minLength && currentValue[firstDiffPos] === value[firstDiffPos]) {
                 firstDiffPos++;
             }
-            
+
             // Find the last position where the text differs (working backwards)
             let lastDiffPosFromEnd = 0;
             while (
                 lastDiffPosFromEnd < minLength - firstDiffPos &&
-                currentValue[currentValue.length - 1 - lastDiffPosFromEnd] === 
+                currentValue[currentValue.length - 1 - lastDiffPosFromEnd] ===
                 value[value.length - 1 - lastDiffPosFromEnd]
             ) {
                 lastDiffPosFromEnd++;
             }
-            
+
             // Calculate the actual positions
             const selStart = firstDiffPos;
             const selEnd = currentValue.length - lastDiffPosFromEnd;
             const replacement = value.substring(firstDiffPos, value.length - lastDiffPosFromEnd);
-            
+
             // Select just the text that differs
             textarea.setSelectionRange(selStart, selEnd);
-            
+
             // Replace with the new content
             document.execCommand('insertText', false, replacement);
         }
-        
+
         // Set the final cursor position
         textarea.setSelectionRange(start, end);
-        
+
         // Ensure Angular detects the change
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -228,7 +234,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     private checkHorizontalOverflow(element: HTMLElement): void {
         // Check if content is wider than the container
         const hasHorizontalOverflow = element.scrollWidth > element.clientWidth;
-        
+
         // Add or remove class based on overflow status
         if (hasHorizontalOverflow) {
             element.classList.add('show-horizontal-scrollbar');

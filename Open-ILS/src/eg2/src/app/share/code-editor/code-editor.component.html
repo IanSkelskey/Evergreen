@@ -24,6 +24,7 @@
       autocorrect="off"
       autocapitalize="off"
       wrap="off"
+      [attr.aria-label]="'Code editor for ' + language() + '. Tab key is used for indentation when text is selected, otherwise it navigates between fields.'"
     ></textarea>
     
     <!-- Highlighted code display -->
@@ -31,6 +32,10 @@
       class="code-display" 
       [innerHTML]="highlightedCode().html"
       [attr.data-language]="language()"
+      aria-hidden="true"
     ></pre>
+  </div>
+  <div class="sr-only" aria-live="polite">
+    Press Tab to navigate between form fields. To indent code, select text first then press Tab.
   </div>
 </div>
