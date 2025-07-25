@@ -76,7 +76,8 @@
   white-space: pre;
   word-wrap: normal;
   overflow-wrap: normal;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   box-sizing: border-box;
   tab-size: 2;
 }
@@ -119,6 +120,17 @@
 /* Scrollbar styling */
 :is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
+  display: block;
+}
+
+:is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar:horizontal {
+  display: none;
+  height: 0;
+}
+
+:is(.code-input, .code-display, .line-numbers).show-horizontal-scrollbar::-webkit-scrollbar:horizontal {
+  display: block;
   height: 8px;
 }
 

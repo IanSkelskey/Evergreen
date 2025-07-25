@@ -63,6 +63,9 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                         lineNumbers.scrollTop = textarea.scrollTop;
                     }
                 }
+                
+                // Check if horizontal scrollbar is needed
+                this.checkHorizontalOverflow(textarea);
             });
         }
     }
@@ -93,6 +96,13 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         // Update line numbers
         const lineCount = Math.max(processedCode.split('\n').length, 1);
         this.lineNumbers.set(Array.from({ length: lineCount }, (_, i) => i + 1));
+
+        // After updating content, check if horizontal scrollbar is needed
+        setTimeout(() => {
+            if (this.codeTextarea) {
+                this.checkHorizontalOverflow(this.codeTextarea.nativeElement);
+            }
+        }, 0);
     }
 
     private handleTabKey(textarea: HTMLTextAreaElement, isShiftTab: boolean): void {
@@ -213,5 +223,25 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         
         // Ensure Angular detects the change
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    private checkHorizontalOverflow(element: HTMLElement): void {
+        // Check if content is wider than the container
+        const hasHorizontalOverflow = element.scrollWidth > element.clientWidth;
+        
+        // Add or remove class based on overflow status
+        if (hasHorizontalOverflow) {
+            element.classList.add('show-horizontal-scrollbar');
+            const codeDisplay = element.parentElement?.querySelector('.code-display');
+            if (codeDisplay) {
+                codeDisplay.classList.add('show-horizontal-scrollbar');
+            }
+        } else {
+            element.classList.remove('show-horizontal-scrollbar');
+            const codeDisplay = element.parentElement?.querySelector('.code-display');
+            if (codeDisplay) {
+                codeDisplay.classList.remove('show-horizontal-scrollbar');
+            }
+        }
     }
 }
