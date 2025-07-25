@@ -40,7 +40,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     protected onCodeChange(event: Event): void {
         const newCode = (event.target as HTMLTextAreaElement).value;
         this.codeChange.emit(newCode);
-        
+
         // Defer update to next tick for better performance
         setTimeout(() => this.updateView(), 0);
     }
@@ -49,7 +49,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         const textarea = event.target as HTMLTextAreaElement;
         const { scrollTop, scrollLeft } = textarea;
         const container = textarea.parentElement;
-        
+
         // Sync scroll positions
         container?.querySelectorAll('.code-display, .line-numbers').forEach(el => {
             const element = el as HTMLElement;
@@ -71,11 +71,11 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     private updateView(): void {
         const currentCode = this.code();
         const currentLanguage = this.language();
-        
+
         // Update highlighting
         const result = this.syntaxHighlightingService.highlightCode(currentCode, currentLanguage);
         this.highlightedCode.set(result);
-        
+
         // Update line numbers
         const lineCount = Math.max((currentCode || '').split('\n').length, 1);
         this.lineNumbers.set(Array.from({ length: lineCount }, (_, i) => i + 1));
@@ -84,17 +84,17 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     private handleTabKey(textarea: HTMLTextAreaElement, isShiftTab: boolean): void {
         const { value, selectionStart, selectionEnd } = textarea;
         const hasSelection = selectionStart !== selectionEnd;
-        
-        const newValue = isShiftTab 
+
+        const newValue = isShiftTab
             ? this.removeIndent(value, selectionStart, selectionEnd, hasSelection)
             : this.addIndent(value, selectionStart, selectionEnd, hasSelection);
-        
+
         this.updateTextarea(textarea, newValue.text, newValue.start, newValue.end);
     }
 
-    private addIndent(value: string, start: number, end: number, hasSelection: boolean): 
+    private addIndent(value: string, start: number, end: number, hasSelection: boolean):
         { text: string; start: number; end: number } {
-        
+
         if (!hasSelection) {
             // Single cursor - insert indent
             return {
@@ -103,14 +103,14 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                 end: start + this.INDENT.length
             };
         }
-        
+
         // Multi-line selection - indent each line
         const before = value.substring(0, start);
         const selection = value.substring(start, end);
         const after = value.substring(end);
-        
+
         const indented = selection.split('\n').map(line => this.INDENT + line).join('\n');
-        
+
         return {
             text: before + indented + after,
             start: start,
@@ -118,14 +118,14 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         };
     }
 
-    private removeIndent(value: string, start: number, end: number, hasSelection: boolean): 
+    private removeIndent(value: string, start: number, end: number, hasSelection: boolean):
         { text: string; start: number; end: number } {
-        
+
         if (!hasSelection) {
             // Single cursor - remove indent from current line
             const lineStart = value.lastIndexOf('\n', start - 1) + 1;
             const lineContent = value.substring(lineStart);
-            
+
             if (lineContent.startsWith(this.INDENT)) {
                 return {
                     text: value.substring(0, lineStart) + lineContent.substring(this.INDENT.length),
@@ -133,19 +133,19 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                     end: Math.max(start - this.INDENT.length, lineStart)
                 };
             }
-            
+
             return { text: value, start, end };
         }
-        
+
         // Multi-line selection - unindent each line
         const before = value.substring(0, start);
         const selection = value.substring(start, end);
         const after = value.substring(end);
-        
+
         const unindented = selection.split('\n')
             .map(line => line.startsWith(this.INDENT) ? line.substring(this.INDENT.length) : line)
             .join('\n');
-        
+
         return {
             text: before + unindented + after,
             start: start,

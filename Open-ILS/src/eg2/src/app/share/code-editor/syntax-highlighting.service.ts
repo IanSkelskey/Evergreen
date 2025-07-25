@@ -67,7 +67,7 @@ export class SyntaxHighlightingService {
 
         try {
             const mappedLanguage = this.getMappedLanguage(language);
-            
+
             // Try specific language first, then auto-detect
             const result = this.isLanguageAvailable(mappedLanguage)
                 ? hljs.highlight(code, { language: mappedLanguage })

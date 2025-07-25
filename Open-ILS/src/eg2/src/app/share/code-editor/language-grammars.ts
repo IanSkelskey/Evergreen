@@ -2,9 +2,9 @@ import hljs from 'highlight.js';
 
 // Common TT2 keywords
 const TT2_KEYWORDS = [
-    'IF', 'ELSE', 'ELSIF', 'UNLESS', 'SWITCH', 'CASE', 'FOR', 'FOREACH', 
-    'WHILE', 'NEXT', 'LAST', 'RETURN', 'STOP', 'TRY', 'THROW', 'CATCH', 
-    'END', 'FILTER', 'MACRO', 'SET', 'DEFAULT', 'INSERT', 'INCLUDE', 
+    'IF', 'ELSE', 'ELSIF', 'UNLESS', 'SWITCH', 'CASE', 'FOR', 'FOREACH',
+    'WHILE', 'NEXT', 'LAST', 'RETURN', 'STOP', 'TRY', 'THROW', 'CATCH',
+    'END', 'FILTER', 'MACRO', 'SET', 'DEFAULT', 'INSERT', 'INCLUDE',
     'PROCESS', 'WRAPPER', 'BLOCK', 'CALL', 'USE', 'DEBUG', 'TAGS'
 ].join('|');
 
