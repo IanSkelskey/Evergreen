@@ -136,20 +136,24 @@
 
 :is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
+  cursor: default;
 }
 
 :is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 4px;
+  cursor: default;
 }
 
 :is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+  cursor: default;
 }
 
 /* Add styling for scrollbar corner to match the track color */
 :is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar-corner {
   background: var(--scrollbar-track);
+  cursor: default;
 }
 
 /* Highlight.js theme customization */
