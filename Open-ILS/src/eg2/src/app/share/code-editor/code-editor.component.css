@@ -147,6 +147,11 @@
   background: var(--scrollbar-thumb-hover);
 }
 
+/* Add styling for scrollbar corner to match the track color */
+:is(.code-input, .code-display, .line-numbers)::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
 /* Highlight.js theme customization */
 .code-display .hljs {
   background: transparent !important;
