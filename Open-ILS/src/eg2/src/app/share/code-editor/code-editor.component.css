@@ -26,6 +26,7 @@
 .line-numbers {
   flex: 0 0 3.5rem;
   padding: 1rem 0.5rem;
+  padding-bottom: calc(1rem + 8px); /* Match the code area padding */
   background: var(--line-numbers-bg);
   border-right: 1px solid var(--code-border);
   color: var(--line-numbers-fg);
@@ -41,6 +42,14 @@
 .line-number {
   display: block;
   min-height: 1.5em;
+}
+
+/* Add this to ensure line numbers have the same bottom spacing */
+.line-numbers::after {
+  content: '';
+  display: block;
+  height: 1rem; /* Match the height in code-input::after */
+  width: 100%;
 }
 
 /* Code area wrapper - contains both textarea and pre */
