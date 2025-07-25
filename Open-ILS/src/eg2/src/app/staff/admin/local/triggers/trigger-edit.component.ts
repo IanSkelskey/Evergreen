@@ -11,7 +11,6 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
-import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 @Component({
     templateUrl: './trigger-edit.component.html',

@@ -1,96 +1,85 @@
 import hljs from 'highlight.js';
 
+// Common TT2 keywords
+const TT2_KEYWORDS = [
+    'IF', 'ELSE', 'ELSIF', 'UNLESS', 'SWITCH', 'CASE', 'FOR', 'FOREACH', 
+    'WHILE', 'NEXT', 'LAST', 'RETURN', 'STOP', 'TRY', 'THROW', 'CATCH', 
+    'END', 'FILTER', 'MACRO', 'SET', 'DEFAULT', 'INSERT', 'INCLUDE', 
+    'PROCESS', 'WRAPPER', 'BLOCK', 'CALL', 'USE', 'DEBUG', 'TAGS'
+].join('|');
+
 /**
  * Register TT2 Pseudo-Perl language grammar
  */
-export function registerTT2PseudoPerl(): void {
-    hljs.registerLanguage('tt2-pseudoperl', function (hljsInstance) {
-        return {
-            name: 'TT2 Pseudo-Perl',
-            case_insensitive: false,
+function registerTT2PseudoPerl(): void {
+    hljs.registerLanguage('tt2-pseudoperl', (hljsInstance) => ({
+        name: 'TT2 Pseudo-Perl',
+        case_insensitive: false,
+        contains: [
+            // Comments and strings
+            hljsInstance.HASH_COMMENT_MODE,
+            hljsInstance.QUOTE_STRING_MODE,
+            hljsInstance.APOS_STRING_MODE,
+            hljsInstance.C_NUMBER_MODE,
 
-            contains: [
-                // # or ## line comments
-                hljsInstance.HASH_COMMENT_MODE,
-                // Single and double quoted strings
-                hljsInstance.QUOTE_STRING_MODE,
-                hljsInstance.APOS_STRING_MODE,
-                // Numbers
-                hljsInstance.C_NUMBER_MODE,
+            // TT2 Keywords
+            {
+                className: 'keyword',
+                begin: `\\b(${TT2_KEYWORDS})\\b`,
+                relevance: 10
+            },
 
-                // Keywords for TT2 directives
-                {
-                    className: 'keyword',
-                    begin: new RegExp('\\b(' +
-                        'IF|ELSE|ELSIF|UNLESS|SWITCH|CASE|FOR|FOREACH|WHILE|NEXT|LAST|RETURN|STOP|' +
-                        'TRY|THROW|CATCH|END|FILTER|MACRO|SET|DEFAULT|INSERT|INCLUDE|PROCESS|WRAPPER|BLOCK|CALL|USE|DEBUG|TAGS' +
-                        ')\\b'),
-                    relevance: 10
-                },
+            // Method calls with dot-chaining
+            {
+                className: 'title.function',
+                begin: /([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\s*\(/,
+                end: /(?=\()/,
+                returnBegin: true,
+                contains: [
+                    { className: 'variable', begin: /^[a-zA-Z_]\w*/ },
+                    { className: 'property', begin: /\.[a-zA-Z_]\w*/, excludeBegin: true }
+                ]
+            },
 
-                // Function calls with optional dot-chaining
-                {
-                    className: 'title.function',
-                    begin: /([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\s*\(/,
-                    end: /(?=\()/,
-                    returnBegin: true,
-                    contains: [
-                        {
-                            className: 'variable',
-                            begin: /^[a-zA-Z_]\w*/
-                        },
-                        {
-                            className: 'property',
-                            begin: /\.[a-zA-Z_]\w*/,
-                            excludeBegin: true
-                        }
-                    ]
-                },
+            // Variables with $ prefix
+            {
+                className: 'variable',
+                begin: /\$[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/,
+                relevance: 5
+            },
 
-                // Variables with $ prefix
-                {
-                    className: 'variable',
-                    begin: /\$[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/,
-                    relevance: 5
-                },
-
-                // Bare identifiers as variables (lower relevance to not override keywords)
-                {
-                    className: 'variable',
-                    begin: /\b[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*\b/,
-                    relevance: 0
-                }
-            ]
-        };
-    });
+            // Bare identifiers as variables
+            {
+                className: 'variable',
+                begin: /\b[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*\b/,
+                relevance: 0
+            }
+        ]
+    }));
 }
 
 /**
  * Register Template Toolkit language grammar
  */
-export function registerTT2(): void {
-    hljs.registerLanguage('tt2', function (hljsInstance) {
-        return {
-            name: 'Template Toolkit',
-            case_insensitive: false,
-            // Outside TT2 blocks → highlight as HTML/XML
-            subLanguage: 'xml',
-            relevance: 0,
-
-            contains: [
-                {
-                    // Match TT2 blocks: [% ... %] or [%- ... -%]
-                    className: 'template-tag',
-                    begin: '\\[%-?',
-                    end: '-?%\\]',
-                    subLanguage: 'tt2-pseudoperl',
-                    excludeBegin: true,
-                    excludeEnd: true,
-                    relevance: 10
-                }
-            ]
-        };
-    });
+function registerTT2(): void {
+    hljs.registerLanguage('tt2', (hljsInstance) => ({
+        name: 'Template Toolkit',
+        case_insensitive: false,
+        subLanguage: 'xml',
+        relevance: 0,
+        contains: [
+            {
+                // TT2 blocks: [% ... %] or [%- ... -%]
+                className: 'template-tag',
+                begin: '\\[%-?',
+                end: '-?%\\]',
+                subLanguage: 'tt2-pseudoperl',
+                excludeBegin: true,
+                excludeEnd: true,
+                relevance: 10
+            }
+        ]
+    }));
 }
 
 /**

@@ -3,24 +3,50 @@ import hljs from 'highlight.js';
 import { registerCustomLanguages } from './language-grammars';
 
 export interface HighlightedCode {
-  html: string;
-  language: string;
-  valid: boolean;
+    html: string;
+    language: string;
+    valid: boolean;
 }
 
 @Injectable({
     providedIn: 'root'
 })
 export class SyntaxHighlightingService {
-    private readonly supportedLanguages = new Set([
-        'javascript', 'typescript', 'python', 'java', 'csharp', 'cpp', 'c',
-        'html', 'css', 'json', 'xml', 'sql', 'markdown', 'bash', 'powershell',
-        'php', 'ruby', 'go', 'rust', 'kotlin', 'swift', 'dart', 'scala',
-        'yaml', 'dockerfile', 'nginx', 'apache', 'tt2', 'tt2-pseudoperl'
-    ]);
+    private readonly languageMap: Record<string, string> = {
+        'csharp': 'cs',
+        'cpp': 'cpp',
+        'c': 'c',
+        'javascript': 'javascript',
+        'typescript': 'typescript',
+        'python': 'python',
+        'java': 'java',
+        'html': 'html',
+        'css': 'css',
+        'json': 'json',
+        'xml': 'xml',
+        'sql': 'sql',
+        'markdown': 'markdown',
+        'bash': 'bash',
+        'powershell': 'powershell',
+        'plain': 'plaintext',
+        'tt2': 'tt2',
+        'tt2-pseudoperl': 'tt2-pseudoperl',
+        'php': 'php',
+        'ruby': 'ruby',
+        'go': 'go',
+        'rust': 'rust',
+        'kotlin': 'kotlin',
+        'swift': 'swift',
+        'dart': 'dart',
+        'scala': 'scala',
+        'yaml': 'yaml',
+        'dockerfile': 'dockerfile',
+        'nginx': 'nginx',
+        'apache': 'apache'
+    };
 
     constructor() {
-    // Configure highlight.js
+        // Configure highlight.js
         hljs.configure({
             ignoreUnescapedHTML: true,
             throwUnescapedHTML: false
@@ -31,36 +57,21 @@ export class SyntaxHighlightingService {
     }
 
     /**
-   * Highlights the given code with the specified language
-   */
+     * Highlights the given code with the specified language
+     */
     highlightCode(code: string, language: string): HighlightedCode {
-    // Handle null or undefined code
-        if (code === null || code === undefined) {
-            return {
-                html: '',
-                language: language,
-                valid: true
-            };
-        }
-
-        if (!code.trim()) {
-            return {
-                html: '',
-                language: language,
-                valid: true
-            };
+        // Handle empty or null code
+        if (!code?.trim()) {
+            return { html: '', language, valid: true };
         }
 
         try {
-            let result;
-
-            if (this.isLanguageSupported(language) && this.isLanguageRegistered(language)) {
-                // Use specific language highlighting
-                result = hljs.highlight(code, { language: this.mapLanguage(language) });
-            } else {
-                // Auto-detect language or fallback
-                result = hljs.highlightAuto(code);
-            }
+            const mappedLanguage = this.getMappedLanguage(language);
+            
+            // Try specific language first, then auto-detect
+            const result = this.isLanguageAvailable(mappedLanguage)
+                ? hljs.highlight(code, { language: mappedLanguage })
+                : hljs.highlightAuto(code);
 
             return {
                 html: result.value,
@@ -69,73 +80,49 @@ export class SyntaxHighlightingService {
             };
         } catch (error) {
             console.warn('Syntax highlighting failed:', error);
-            // Return escaped HTML as fallback
             return {
                 html: this.escapeHtml(code),
-                language: language,
+                language,
                 valid: false
             };
         }
     }
 
     /**
-   * Check if a language is supported by this service
-   */
-    isLanguageSupported(language: string): boolean {
-        return this.supportedLanguages.has(language.toLowerCase());
+     * Get list of supported languages
+     */
+    getSupportedLanguages(): string[] {
+        return Object.keys(this.languageMap).sort();
     }
 
     /**
-   * Check if a language is actually registered with highlight.js
-   */
-    private isLanguageRegistered(language: string): boolean {
-        const mappedLanguage = this.mapLanguage(language);
+     * Check if a language is supported
+     */
+    isLanguageSupported(language: string): boolean {
+        return language.toLowerCase() in this.languageMap;
+    }
+
+    /**
+     * Get the mapped language name for highlight.js
+     */
+    private getMappedLanguage(language: string): string {
+        return this.languageMap[language.toLowerCase()] || language;
+    }
+
+    /**
+     * Check if a language is available in highlight.js
+     */
+    private isLanguageAvailable(language: string): boolean {
         try {
-            // Try to get the language definition
-            return hljs.getLanguage(mappedLanguage) !== undefined;
+            return hljs.getLanguage(language) !== undefined;
         } catch {
             return false;
         }
     }
 
     /**
-   * Get list of supported languages
-   */
-    getSupportedLanguages(): string[] {
-        return Array.from(this.supportedLanguages).sort();
-    }
-
-    /**
-   * Map custom language names to highlight.js language names
-   */
-    private mapLanguage(language: string): string {
-        const languageMap: Record<string, string> = {
-            'csharp': 'cs',
-            'cpp': 'cpp',
-            'c': 'c',
-            'javascript': 'javascript',
-            'typescript': 'typescript',
-            'python': 'python',
-            'java': 'java',
-            'html': 'html',
-            'css': 'css',
-            'json': 'json',
-            'xml': 'xml',
-            'sql': 'sql',
-            'markdown': 'markdown',
-            'bash': 'bash',
-            'powershell': 'powershell',
-            'plain': 'plaintext',
-            'tt2': 'tt2',
-            'tt2-pseudoperl': 'tt2-pseudoperl'
-        };
-
-        return languageMap[language.toLowerCase()] || language;
-    }
-
-    /**
-   * Escape HTML characters for safe display
-   */
+     * Escape HTML characters for safe display
+     */
     private escapeHtml(text: string): string {
         const div = document.createElement('div');
         div.textContent = text;

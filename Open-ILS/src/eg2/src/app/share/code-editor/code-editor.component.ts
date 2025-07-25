@@ -16,142 +16,146 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     // Outputs
     codeChange = output<string>();
 
-  // View references
-  @ViewChild('codeTextarea', { static: true }) codeTextarea!: ElementRef<HTMLTextAreaElement>;
+    // View references
+    @ViewChild('codeTextarea', { static: true }) codeTextarea!: ElementRef<HTMLTextAreaElement>;
 
-  // Internal state
-  protected highlightedCode = signal<HighlightedCode>({ html: '', language: '', valid: true });
-  protected lineNumbers = signal<number[]>([1]);
+    // Internal state
+    protected highlightedCode = signal<HighlightedCode>({ html: '', language: '', valid: true });
+    protected lineNumbers = signal<number[]>([1]);
 
-  constructor(private syntaxHighlightingService: SyntaxHighlightingService) {}
+    private readonly INDENT = '  ';
 
-  ngOnInit(): void {
-      // Initial update
-      this.updateHighlighting();
-      this.updateLineNumbers();
-  }
+    constructor(private syntaxHighlightingService: SyntaxHighlightingService) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-      // Update when inputs change
-      if ('code' in changes || 'language' in changes) {
-          this.updateHighlighting();
-          this.updateLineNumbers();
-      }
-  }
+    ngOnInit(): void {
+        this.updateView();
+    }
 
-  protected onCodeChange(event: Event): void {
-      const target = event.target as HTMLTextAreaElement;
-      const newCode = target.value;
-      this.codeChange.emit(newCode);
+    ngOnChanges(changes: SimpleChanges): void {
+        if ('code' in changes || 'language' in changes) {
+            this.updateView();
+        }
+    }
 
-      // Update highlighting and line numbers when code changes
-      setTimeout(() => {
-          this.updateHighlighting();
-          this.updateLineNumbers();
-      }, 0);
-  }
+    protected onCodeChange(event: Event): void {
+        const newCode = (event.target as HTMLTextAreaElement).value;
+        this.codeChange.emit(newCode);
+        
+        // Defer update to next tick for better performance
+        setTimeout(() => this.updateView(), 0);
+    }
 
-  protected onScroll(event: Event): void {
-      const textarea = event.target as HTMLTextAreaElement;
-      const display = textarea.parentElement?.querySelector('.code-display') as HTMLElement;
-      const lineNumbers = textarea.parentElement?.querySelector('.line-numbers') as HTMLElement;
+    protected onScroll(event: Event): void {
+        const textarea = event.target as HTMLTextAreaElement;
+        const { scrollTop, scrollLeft } = textarea;
+        const container = textarea.parentElement;
+        
+        // Sync scroll positions
+        container?.querySelectorAll('.code-display, .line-numbers').forEach(el => {
+            const element = el as HTMLElement;
+            element.scrollTop = scrollTop;
+            if (el.classList.contains('code-display')) {
+                element.scrollLeft = scrollLeft;
+            }
+        });
+    }
 
-      if (display) {
-          display.scrollTop = textarea.scrollTop;
-          display.scrollLeft = textarea.scrollLeft;
-      }
+    protected onKeyDown(event: KeyboardEvent): void {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            const textarea = event.target as HTMLTextAreaElement;
+            this.handleTabKey(textarea, event.shiftKey);
+        }
+    }
 
-      if (lineNumbers && this.showLineNumbers()) {
-          lineNumbers.scrollTop = textarea.scrollTop;
-      }
-  }
+    private updateView(): void {
+        const currentCode = this.code();
+        const currentLanguage = this.language();
+        
+        // Update highlighting
+        const result = this.syntaxHighlightingService.highlightCode(currentCode, currentLanguage);
+        this.highlightedCode.set(result);
+        
+        // Update line numbers
+        const lineCount = Math.max((currentCode || '').split('\n').length, 1);
+        this.lineNumbers.set(Array.from({ length: lineCount }, (_, i) => i + 1));
+    }
 
-  protected onKeyDown(event: KeyboardEvent): void {
-      // Handle tab key for indentation
-      if (event.key === 'Tab') {
-          event.preventDefault();
-          const textarea = event.target as HTMLTextAreaElement;
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
+    private handleTabKey(textarea: HTMLTextAreaElement, isShiftTab: boolean): void {
+        const { value, selectionStart, selectionEnd } = textarea;
+        const hasSelection = selectionStart !== selectionEnd;
+        
+        const newValue = isShiftTab 
+            ? this.removeIndent(value, selectionStart, selectionEnd, hasSelection)
+            : this.addIndent(value, selectionStart, selectionEnd, hasSelection);
+        
+        this.updateTextarea(textarea, newValue.text, newValue.start, newValue.end);
+    }
 
-          if (event.shiftKey) {
-              // Remove indentation (Shift+Tab)
-              this.removeIndentation(textarea, start, end);
-          } else {
-              // Add indentation (Tab)
-              this.addIndentation(textarea, start, end);
-          }
-      }
-  }
+    private addIndent(value: string, start: number, end: number, hasSelection: boolean): 
+        { text: string; start: number; end: number } {
+        
+        if (!hasSelection) {
+            // Single cursor - insert indent
+            return {
+                text: value.substring(0, start) + this.INDENT + value.substring(end),
+                start: start + this.INDENT.length,
+                end: start + this.INDENT.length
+            };
+        }
+        
+        // Multi-line selection - indent each line
+        const before = value.substring(0, start);
+        const selection = value.substring(start, end);
+        const after = value.substring(end);
+        
+        const indented = selection.split('\n').map(line => this.INDENT + line).join('\n');
+        
+        return {
+            text: before + indented + after,
+            start: start,
+            end: start + indented.length
+        };
+    }
 
-  private updateHighlighting(): void {
-      const currentCode = this.code();
-      const currentLanguage = this.language();
-      const result = this.syntaxHighlightingService.highlightCode(currentCode, currentLanguage);
-      this.highlightedCode.set(result);
-  }
+    private removeIndent(value: string, start: number, end: number, hasSelection: boolean): 
+        { text: string; start: number; end: number } {
+        
+        if (!hasSelection) {
+            // Single cursor - remove indent from current line
+            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+            const lineContent = value.substring(lineStart);
+            
+            if (lineContent.startsWith(this.INDENT)) {
+                return {
+                    text: value.substring(0, lineStart) + lineContent.substring(this.INDENT.length),
+                    start: Math.max(start - this.INDENT.length, lineStart),
+                    end: Math.max(start - this.INDENT.length, lineStart)
+                };
+            }
+            
+            return { text: value, start, end };
+        }
+        
+        // Multi-line selection - unindent each line
+        const before = value.substring(0, start);
+        const selection = value.substring(start, end);
+        const after = value.substring(end);
+        
+        const unindented = selection.split('\n')
+            .map(line => line.startsWith(this.INDENT) ? line.substring(this.INDENT.length) : line)
+            .join('\n');
+        
+        return {
+            text: before + unindented + after,
+            start: start,
+            end: start + unindented.length
+        };
+    }
 
-  private updateLineNumbers(): void {
-      const codeStr = this.code() || '';
-      const lines = codeStr.split('\n').length;
-      const numbers = Array.from({ length: Math.max(lines, 1) }, (_, i) => i + 1);
-      this.lineNumbers.set(numbers);
-  }
-
-  private addIndentation(textarea: HTMLTextAreaElement, start: number, end: number): void {
-      const value = textarea.value;
-      const beforeSelection = value.substring(0, start);
-      const selection = value.substring(start, end);
-      const afterSelection = value.substring(end);
-
-      if (start === end) {
-      // No selection - just insert tab
-          const newValue = beforeSelection + '  ' + afterSelection;
-          textarea.value = newValue;
-          textarea.setSelectionRange(start + 2, start + 2);
-      } else {
-      // Multi-line selection - indent each line
-          const lines = selection.split('\n');
-          const indentedLines = lines.map(line => '  ' + line);
-          const newSelection = indentedLines.join('\n');
-          const newValue = beforeSelection + newSelection + afterSelection;
-
-          textarea.value = newValue;
-          textarea.setSelectionRange(start, start + newSelection.length);
-      }
-
-      // Trigger input event to update the code
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
-  private removeIndentation(textarea: HTMLTextAreaElement, start: number, end: number): void {
-      const value = textarea.value;
-      const beforeSelection = value.substring(0, start);
-      const selection = value.substring(start, end);
-      const afterSelection = value.substring(end);
-
-      if (start === end) {
-      // No selection - remove indentation from current line
-          const lineStart = beforeSelection.lastIndexOf('\n') + 1;
-          const currentLine = value.substring(lineStart, end);
-
-          if (currentLine.startsWith('  ')) {
-              const newValue = value.substring(0, lineStart) + currentLine.substring(2) + afterSelection;
-              textarea.value = newValue;
-              textarea.setSelectionRange(Math.max(start - 2, lineStart), Math.max(start - 2, lineStart));
-          }
-      } else {
-      // Multi-line selection - remove indentation from each line
-          const lines = selection.split('\n');
-          const unindentedLines = lines.map(line => line.startsWith('  ') ? line.substring(2) : line);
-          const newSelection = unindentedLines.join('\n');
-          const newValue = beforeSelection + newSelection + afterSelection;
-
-          textarea.value = newValue;
-          textarea.setSelectionRange(start, start + newSelection.length);
-      }
-
-      // Trigger input event to update the code
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+    private updateTextarea(textarea: HTMLTextAreaElement, value: string, start: number, end: number): void {
+        textarea.value = value;
+        textarea.setSelectionRange(start, end);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 }
