@@ -1,27 +1,4 @@
-<div class="code-editor-container" [attr.data-language]="language()" [class.no-line-numbers]="!showLineNumbers()">
-  <!-- Code input (invisible textarea) -->
-  <textarea
-    #codeTextarea
-    class="code-input"
-    [value]="code()"
-    (input)="onCodeChange($event)"
-    (scroll)="onScroll($event)"
-    (keydown)="onKeyDown($event)"
-    [placeholder]="placeholder()"
-    spellcheck="false"
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    wrap="off"
-  ></textarea>
-  
-  <!-- Highlighted code display -->
-  <pre 
-    class="code-display" 
-    [innerHTML]="highlightedCode().html"
-    [attr.data-language]="language()"
-  ></pre>
-  
+<div class="code-editor-container" [attr.data-language]="language()">
   <!-- Line numbers -->
   @if (showLineNumbers()) {
     <div class="line-numbers">
@@ -30,4 +7,30 @@
       }
     </div>
   }
+  
+  <!-- Code area wrapper -->
+  <div class="code-area">
+    <!-- Code input (invisible textarea) -->
+    <textarea
+      #codeTextarea
+      class="code-input"
+      [value]="code()"
+      (input)="onCodeChange($event)"
+      (scroll)="onScroll($event)"
+      (keydown)="onKeyDown($event)"
+      [placeholder]="placeholder()"
+      spellcheck="false"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      wrap="off"
+    ></textarea>
+    
+    <!-- Highlighted code display -->
+    <pre 
+      class="code-display" 
+      [innerHTML]="highlightedCode().html"
+      [attr.data-language]="language()"
+    ></pre>
+  </div>
 </div>

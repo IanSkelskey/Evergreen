@@ -47,17 +47,24 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
     protected onScroll(event: Event): void {
         const textarea = event.target as HTMLTextAreaElement;
-        const { scrollTop, scrollLeft } = textarea;
-        const container = textarea.parentElement;
-
-        // Sync scroll positions
-        container?.querySelectorAll('.code-display, .line-numbers').forEach(el => {
-            const element = el as HTMLElement;
-            element.scrollTop = scrollTop;
-            if (el.classList.contains('code-display')) {
-                element.scrollLeft = scrollLeft;
-            }
-        });
+        const codeDisplay = textarea.parentElement?.querySelector('.code-display') as HTMLElement;
+        
+        if (codeDisplay) {
+            // Use requestAnimationFrame for smoother scrolling
+            requestAnimationFrame(() => {
+                // Sync scroll positions with the code display
+                codeDisplay.scrollTop = textarea.scrollTop;
+                codeDisplay.scrollLeft = textarea.scrollLeft;
+                
+                // Also sync line numbers if they exist
+                if (this.showLineNumbers()) {
+                    const lineNumbers = textarea.closest('.code-editor-container')?.querySelector('.line-numbers') as HTMLElement;
+                    if (lineNumbers) {
+                        lineNumbers.scrollTop = textarea.scrollTop;
+                    }
+                }
+            });
+        }
     }
 
     protected onKeyDown(event: KeyboardEvent): void {
@@ -72,12 +79,19 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         const currentCode = this.code();
         const currentLanguage = this.language();
 
-        // Update highlighting
-        const result = this.syntaxHighlightingService.highlightCode(currentCode, currentLanguage);
+        // Update highlighting, ensuring proper handling of final newlines
+        let processedCode = currentCode || '';
+        
+        // Ensure final newline has content so it's properly displayed
+        if (processedCode.endsWith('\n')) {
+            processedCode += ' ';
+        }
+        
+        const result = this.syntaxHighlightingService.highlightCode(processedCode, currentLanguage);
         this.highlightedCode.set(result);
 
         // Update line numbers
-        const lineCount = Math.max((currentCode || '').split('\n').length, 1);
+        const lineCount = Math.max(processedCode.split('\n').length, 1);
         this.lineNumbers.set(Array.from({ length: lineCount }, (_, i) => i + 1));
     }
 
@@ -109,7 +123,10 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         const selection = value.substring(start, end);
         const after = value.substring(end);
 
-        const indented = selection.split('\n').map(line => this.INDENT + line).join('\n');
+        // Handle first line differently to preserve selection accuracy
+        const lines = selection.split('\n');
+        const indentedLines = lines.map(line => this.INDENT + line);
+        const indented = indentedLines.join('\n');
 
         return {
             text: before + indented + after,
