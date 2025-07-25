@@ -11,13 +11,13 @@
             <ng-template #textAreaTemplate let-field="field" let-record="record">
                 <!-- Use the code editor for template fields -->
                 <div *ngIf="isTemplateField(field.name)" class="code-editor-container" style="height: 600px;">
-                    <app-code-editor
+                    <eg-code-editor
                         [code]="record[field.name]() || ''"
                         [language]="'tt2'"
                         [placeholder]="'Enter ' + field.name + ' here...'"
                         [showLineNumbers]="true"
                         (codeChange)="record[field.name]($event)">
-                    </app-code-editor>
+                    </eg-code-editor>
                 </div>
                 <!-- Use regular textarea for non-template fields -->
                 <textarea *ngIf="!isTemplateField(field.name)" class="form-control" name="{{field.name}}"

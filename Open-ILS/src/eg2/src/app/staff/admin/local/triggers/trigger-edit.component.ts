@@ -15,7 +15,6 @@ import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 @Component({
     templateUrl: './trigger-edit.component.html',
-    imports: [CodeEditorModule],
     standalone: false
 })
 
