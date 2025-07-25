@@ -171,8 +171,47 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     }
 
     private updateTextarea(textarea: HTMLTextAreaElement, value: string, start: number, end: number): void {
-        textarea.value = value;
+        // Focus the textarea to ensure commands work
+        textarea.focus();
+        
+        const currentValue = textarea.value;
+        
+        // Only update if the value actually changed
+        if (currentValue !== value) {
+            // Find the first position where the text differs
+            let firstDiffPos = 0;
+            const minLength = Math.min(currentValue.length, value.length);
+            
+            while (firstDiffPos < minLength && currentValue[firstDiffPos] === value[firstDiffPos]) {
+                firstDiffPos++;
+            }
+            
+            // Find the last position where the text differs (working backwards)
+            let lastDiffPosFromEnd = 0;
+            while (
+                lastDiffPosFromEnd < minLength - firstDiffPos &&
+                currentValue[currentValue.length - 1 - lastDiffPosFromEnd] === 
+                value[value.length - 1 - lastDiffPosFromEnd]
+            ) {
+                lastDiffPosFromEnd++;
+            }
+            
+            // Calculate the actual positions
+            const selStart = firstDiffPos;
+            const selEnd = currentValue.length - lastDiffPosFromEnd;
+            const replacement = value.substring(firstDiffPos, value.length - lastDiffPosFromEnd);
+            
+            // Select just the text that differs
+            textarea.setSelectionRange(selStart, selEnd);
+            
+            // Replace with the new content
+            document.execCommand('insertText', false, replacement);
+        }
+        
+        // Set the final cursor position
         textarea.setSelectionRange(start, end);
+        
+        // Ensure Angular detects the change
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
     }
 }
