@@ -32,7 +32,7 @@
       class="code-display" 
       [innerHTML]="highlightedCode().html"
       [attr.data-language]="language()"
-      aria-hidden="true"
+      tabindex="-1"
     ></pre>
   </div>
   <div class="sr-only" aria-live="polite">

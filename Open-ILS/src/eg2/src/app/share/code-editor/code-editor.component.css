@@ -98,6 +98,10 @@
   z-index: 1;
   pointer-events: none;
   padding-bottom: calc(1rem + 8px); /* Add extra bottom padding to account for horizontal scrollbar */
+  user-select: none; /* Prevent text selection on the display layer */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .code-input {
