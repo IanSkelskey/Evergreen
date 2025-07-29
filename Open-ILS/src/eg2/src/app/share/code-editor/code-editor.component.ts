@@ -12,6 +12,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     language = input<string>('javascript');
     placeholder = input<string>('Enter your code here...');
     showLineNumbers = input<boolean>(true);
+    defaultFilename = input<string | null>(null); // New input for default filename
 
     // Outputs
     codeChange = output<string>();
@@ -281,6 +282,19 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         };
         
         const extension = extensions[language.toLowerCase()] || '.txt';
+        
+        // If a default filename was provided, use it
+        if (this.defaultFilename()) {
+            const customName = this.defaultFilename()!;
+            // If custom filename already has an extension, use it as-is
+            if (customName.includes('.')) {
+                return customName;
+            }
+            // Otherwise add the appropriate extension based on language
+            return `${customName}${extension}`;
+        }
+        
+        // Fall back to default name with extension
         return `code${extension}`;
     }
     

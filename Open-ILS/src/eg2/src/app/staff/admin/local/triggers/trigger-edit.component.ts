@@ -244,4 +244,22 @@ export class EditEventDefinitionComponent implements OnInit {
     isTemplateField(fieldName: string): boolean {
         return ['template', 'message_template'].includes(fieldName);
     }
+    
+    // Generate a default filename using the trigger name, field name, and current date
+    getDefaultFilename(fieldName: string): string {
+        // Format: triggername_fieldname_YYYY-MM-DD
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        // Clean up the trigger name for use in a filename
+        // Replace periods and other special characters with underscores
+        const safeTriggername = this.evtDefName
+            ? this.evtDefName.toString()
+                .replace(/\./g, '_') // Explicitly replace periods with underscores
+                .replace(/[^a-zA-Z0-9_]/g, '_')
+            : 'trigger';
+            
+        // Add field name to make filename specific to each instance
+        return `${safeTriggername}_${fieldName}_${dateStr}`;
+    }
 }

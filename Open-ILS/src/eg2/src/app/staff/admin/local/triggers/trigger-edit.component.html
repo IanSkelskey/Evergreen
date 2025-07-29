@@ -16,6 +16,7 @@
                         [language]="'tt2'"
                         [placeholder]="'Enter ' + field.name + ' here...'"
                         [showLineNumbers]="true"
+                        [defaultFilename]="getDefaultFilename(field.name)"
                         (codeChange)="record[field.name]($event)">
                     </eg-code-editor>
                 </div>
@@ -47,6 +48,7 @@
                         [language]="'tt2'"
                         [placeholder]="'Enter ' + field.name + ' here...'"
                         [showLineNumbers]="true"
+                        [defaultFilename]="getDefaultFilename(field.name)"
                         (codeChange)="record[field.name]($event)">
                     </app-code-editor>
                 </div>
