@@ -46,6 +46,7 @@
 .status-left {
   display: flex;
   align-items: center;
+  gap: 0.5rem; /* Add gap between buttons */
 }
 
 .status-right {
@@ -54,8 +55,8 @@
   gap: 1rem; /* Increased gap from 0.5rem to 1rem for more spacing between items */
 }
 
-/* Save button styling */
-.save-button {
+/* Action button styling (common to both load and save) */
+.action-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,28 +70,38 @@
   gap: 0.3rem;
 }
 
-.save-button:hover {
+.action-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.save-button:focus-visible {
+.action-button:focus-visible {
   outline: 0.15rem solid rgba(var(--primary-focus-outline-rgb), 0.75);
 }
 
 /* Icon styling - try different icon libraries that might be in use */
-.save-button i {
+.action-button i {
   font-size: 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.save-button .material-icons {
+.action-button .material-icons {
   font-size: 0.9rem;
 }
 
-.save-text {
+.button-text {
   font-size: 0.75rem;
+}
+
+/* Save button styling */
+.save-button {
+  /* Custom save button styles */
+}
+
+/* Load button styling */
+.load-button {
+  /* Custom load button styles */
 }
 
 /* Cursor position indicator */

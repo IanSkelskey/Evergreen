@@ -18,6 +18,8 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     codeChange = output<string>();
     lineNumbersToggled = output<boolean>();
     saveCode = output<{content: string, language: string}>();
+    // New output for file loading
+    fileLoaded = output<{content: string, filename: string}>();
 
     // View references
     @ViewChild('codeTextarea', { static: true }) codeTextarea!: ElementRef<HTMLTextAreaElement>;
@@ -489,5 +491,138 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                 codeDisplay.classList.remove('show-horizontal-scrollbar');
             }
         }
+    }
+
+    // Method to handle load button click
+    protected onLoadClick(): void {
+        // Try using File System Access API if available
+        if ('showOpenFilePicker' in window) {
+            this.loadWithFilePicker();
+        } else {
+            // Fall back to traditional file input for browsers without File System Access API
+            this.loadWithFileInput();
+        }
+    }
+
+    // Use File System Access API for file loading
+    private async loadWithFilePicker(): Promise<void> {
+        try {
+            // Define file types based on current language
+            const fileTypes = this.getFileTypes(this.language());
+            
+            // Show the file picker dialog
+            const [fileHandle] = await (window as any).showOpenFilePicker({
+                types: fileTypes,
+                multiple: false
+            });
+            
+            // Get the file object
+            const file = await fileHandle.getFile();
+            
+            // Read the file content
+            const content = await file.text();
+            
+            // Apply the content in an undoable way
+            this.applyLoadedContent(content);
+            
+            // Emit file loaded event
+            this.fileLoaded.emit({
+                content,
+                filename: file.name
+            });
+            
+            console.log('File loaded successfully using File System Access API');
+        } catch (error) {
+            // Handle errors or user cancellation
+            if (error.name !== 'AbortError') {
+                console.warn('Error using File System Access API, falling back to file input:', error);
+                this.loadWithFileInput();
+            }
+        }
+    }
+
+    // Fallback method using traditional file input
+    private loadWithFileInput(): void {
+        // Create a temporary file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = this.getAcceptAttributeValue(this.language());
+        
+        // Handle file selection
+        fileInput.onchange = (event) => {
+            const files = (event.target as HTMLInputElement).files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    const content = (e.target?.result as string) || '';
+                    
+                    // Apply the content in an undoable way
+                    this.applyLoadedContent(content);
+                    
+                    // Emit file loaded event
+                    this.fileLoaded.emit({
+                        content,
+                        filename: file.name
+                    });
+                };
+                
+                reader.readAsText(file);
+            }
+        };
+        
+        // Trigger the file dialog
+        fileInput.click();
+    }
+
+    // Helper to get accept attribute value for file input
+    private getAcceptAttributeValue(language: string): string {
+        const mimeTypes: {[key: string]: string} = {
+            'javascript': '.js,application/javascript,text/javascript',
+            'typescript': '.ts,application/typescript',
+            'html': '.html,.htm,text/html',
+            'css': '.css,text/css',
+            'json': '.json,application/json',
+            'markdown': '.md,.markdown,text/markdown',
+            'python': '.py,text/x-python',
+            'java': '.java,text/x-java',
+            'c': '.c,text/x-c',
+            'cpp': '.cpp,.cc,.cxx,text/x-c++',
+            'csharp': '.cs,text/x-csharp',
+            'ruby': '.rb,text/x-ruby',
+            'php': '.php,application/x-php',
+            'sql': '.sql,application/sql',
+            'xml': '.xml,application/xml,text/xml',
+            'yaml': '.yml,.yaml,application/yaml',
+            'bash': '.sh,application/x-sh',
+            'tt2': '.tt2,text/plain',
+            'plaintext': '.txt,text/plain'
+        };
+        
+        return mimeTypes[language.toLowerCase()] || '.txt,text/plain';
+    }
+
+    // Apply loaded content in a way that can be undone with Ctrl+Z
+    private applyLoadedContent(content: string): void {
+        if (!this.codeTextarea) return;
+
+        const textarea = this.codeTextarea.nativeElement;
+        const currentValue = textarea.value;
+        
+        // If content is the same, do nothing
+        if (currentValue === content) return;
+        
+        // Focus the textarea to ensure the undo operation works
+        textarea.focus();
+        
+        // Select all existing content
+        textarea.select();
+        
+        // Use the existing updateTextarea method which works with undo history
+        this.updateTextarea(textarea, content, 0, 0);
+        
+        // Update view after content change
+        this.updateView();
     }
 }

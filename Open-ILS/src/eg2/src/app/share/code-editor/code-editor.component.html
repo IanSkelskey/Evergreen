@@ -43,14 +43,22 @@
   
   <!-- Status bar -->
   <div class="status-bar">
-    <!-- Add save button to the left side -->
+    <!-- Add load and save buttons to the left side -->
     <div class="status-left">
       <button 
-        class="save-button" 
+        class="action-button load-button" 
+        (click)="onLoadClick()" 
+        aria-label="Load code from file">
+        <i class="material-icons">upload_file</i>
+        <span class="button-text">Load</span>
+      </button>
+      
+      <button 
+        class="action-button save-button" 
         (click)="onSaveClick()" 
         aria-label="Save code">
         <i class="material-icons">save</i>
-        <span class="save-text">Save</span>
+        <span class="button-text">Save</span>
       </button>
     </div>
     <div class="status-right">
