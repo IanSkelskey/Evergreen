@@ -19,7 +19,121 @@
   border: 1px solid var(--code-border);
   overflow: hidden;
   background: var(--code-bg);
-  display: flex; /* Use flexbox for better layout control */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main editor area - contains line numbers and code */
+.editor-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Changed back to space-between to have left and right sides */
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--bs-text-highlight);
+  background-color: var(--line-numbers-bg);
+  border-top: 1px solid var(--code-border);
+  height: 1.5rem;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+}
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Increased gap from 0.5rem to 1rem for more spacing between items */
+}
+
+/* Save button styling */
+.save-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--bs-text-highlight);
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+  gap: 0.3rem;
+}
+
+.save-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.save-button:focus-visible {
+  outline: 0.15rem solid rgba(var(--primary-focus-outline-rgb), 0.75);
+}
+
+/* Icon styling - try different icon libraries that might be in use */
+.save-button i {
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-button .material-icons {
+  font-size: 0.9rem;
+}
+
+.save-text {
+  font-size: 0.75rem;
+}
+
+/* Cursor position indicator */
+.cursor-position {
+  color: var(--bs-text-highlight);
+  font-size: 0.75rem;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+/* Line numbers toggle */
+.line-numbers-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--bs-text-highlight);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  user-select: none;
+}
+
+.line-numbers-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.line-numbers-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  position: relative;
+  top: -0.05rem;
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+}
+
+.language-indicator {
+  text-transform: lowercase;
+  opacity: 0.8;
 }
 
 /* Line numbers container */

@@ -1,4 +1,4 @@
-import { Component, input, output, ElementRef, ViewChild, OnInit, OnChanges, SimpleChanges, signal } from '@angular/core';
+import { Component, input, output, ElementRef, ViewChild, OnInit, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
 import { SyntaxHighlightingService, HighlightedCode } from './syntax-highlighting.service';
 
 @Component({
@@ -15,6 +15,8 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
     // Outputs
     codeChange = output<string>();
+    lineNumbersToggled = output<boolean>();
+    saveCode = output<{content: string, language: string}>();
 
     // View references
     @ViewChild('codeTextarea', { static: true }) codeTextarea!: ElementRef<HTMLTextAreaElement>;
@@ -22,6 +24,18 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     // Internal state
     protected highlightedCode = signal<HighlightedCode>({ html: '', language: '', valid: true });
     protected lineNumbers = signal<number[]>([1]);
+    private lineNumbersToggleState = signal<boolean | null>(null);
+    
+    // Add cursor position tracking
+    protected cursorLine = signal<number>(1);
+    protected cursorColumn = signal<number>(1);
+
+    // Computed state that combines input and toggle state
+    protected effectiveShowLineNumbers = computed(() => {
+        return this.lineNumbersToggleState() === null ? 
+            this.showLineNumbers() : 
+            this.lineNumbersToggleState();
+    });
 
     private readonly INDENT = '  ';
 
@@ -29,22 +43,43 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
     ngOnInit(): void {
         this.updateView();
+        this.updateCursorPosition(); // Initialize cursor position
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if ('code' in changes || 'language' in changes) {
             this.updateView();
         }
+        
+        // Reset toggle state when input changes
+        if ('showLineNumbers' in changes) {
+            this.lineNumbersToggleState.set(null);
+        }
+    }
+
+    protected toggleLineNumbers(): void {
+        const newValue = !this.effectiveShowLineNumbers();
+        this.lineNumbersToggleState.set(newValue);
+        this.lineNumbersToggled.emit(newValue);
     }
 
     protected onCodeChange(event: Event): void {
         const newCode = (event.target as HTMLTextAreaElement).value;
         this.codeChange.emit(newCode);
+        
+        // Update cursor position when text changes
+        this.updateCursorPosition();
 
         // Defer update to next tick for better performance
         setTimeout(() => this.updateView(), 0);
     }
 
+    // Add handlers for cursor movement events
+    protected onCursorMove(event: Event): void {
+        this.updateCursorPosition();
+    }
+
+    // Fix: Make onScroll method protected so it's accessible from the template
     protected onScroll(event: Event): void {
         const textarea = event.target as HTMLTextAreaElement;
         const codeDisplay = textarea.parentElement?.querySelector('.code-display') as HTMLElement;
@@ -82,6 +117,197 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                 this.handleTabKey(textarea, event.shiftKey);
             }
         }
+        
+        // Update cursor position on next tick after key handling
+        setTimeout(() => this.updateCursorPosition(), 0);
+    }
+
+    // Add a property to track if save was handled by parent
+    private saveHandled = false;
+
+    // Method to handle save button click
+    protected onSaveClick(): void {
+        // Reset the handled flag
+        this.saveHandled = false;
+        
+        // Get current content and language
+        const content = this.code();
+        const language = this.language();
+        
+        // Emit the event for parent components to handle
+        this.saveCode.emit({
+            content,
+            language
+        });
+        
+        // Set a timeout to check if the event was handled
+        setTimeout(() => {
+            // If not handled by parent, try using File System Access API
+            if (!this.saveHandled) {
+                this.saveWithDialog(content, language);
+            }
+        }, 100);
+    }
+
+    // Use File System Access API if available, otherwise fall back to direct download
+    private async saveWithDialog(content: string, language: string): Promise<void> {
+        // Check if the File System Access API is available
+        if ('showSaveFilePicker' in window) {
+            try {
+                // Generate suggested filename with extension
+                const suggestedName = this.getFilenameWithExtension(language);
+                
+                // Define file types based on language
+                const fileTypes = this.getFileTypes(language);
+                
+                // Show the save file picker dialog
+                const fileHandle = await (window as any).showSaveFilePicker({
+                    suggestedName,
+                    types: fileTypes,
+                });
+                
+                // Get a writable stream
+                const writable = await fileHandle.createWritable();
+                
+                // Write the content
+                await writable.write(content);
+                
+                // Close the stream
+                await writable.close();
+                
+                console.log('File saved successfully using File System Access API');
+            } catch (error) {
+                // If user cancels or there's an error, fall back to download
+                if (error.name !== 'AbortError') {
+                    console.warn('Error using File System Access API, falling back to download:', error);
+                    this.downloadFile(content, language);
+                }
+            }
+        } else {
+            // Fall back to direct download for browsers without File System Access API
+            console.log('File System Access API not supported, falling back to download');
+            this.downloadFile(content, language);
+        }
+    }
+
+    // Helper to get file types configuration for the file picker
+    private getFileTypes(language: string): Array<{description: string, accept: {[key: string]: string[]}}> {
+        // Map languages to MIME types and extensions
+        const mimeTypes: {[key: string]: {mime: string, extensions: string[]}} = {
+            'javascript': { mime: 'text/javascript', extensions: ['.js'] },
+            'typescript': { mime: 'application/typescript', extensions: ['.ts'] },
+            'html': { mime: 'text/html', extensions: ['.html', '.htm'] },
+            'css': { mime: 'text/css', extensions: ['.css'] },
+            'json': { mime: 'application/json', extensions: ['.json'] },
+            'markdown': { mime: 'text/markdown', extensions: ['.md', '.markdown'] },
+            'python': { mime: 'text/x-python', extensions: ['.py'] },
+            'java': { mime: 'text/x-java', extensions: ['.java'] },
+            'c': { mime: 'text/x-c', extensions: ['.c'] },
+            'cpp': { mime: 'text/x-c++', extensions: ['.cpp', '.cc', '.cxx'] },
+            'csharp': { mime: 'text/x-csharp', extensions: ['.cs'] },
+            'ruby': { mime: 'text/x-ruby', extensions: ['.rb'] },
+            'php': { mime: 'application/x-php', extensions: ['.php'] },
+            'sql': { mime: 'application/sql', extensions: ['.sql'] },
+            'xml': { mime: 'application/xml', extensions: ['.xml'] },
+            'yaml': { mime: 'application/yaml', extensions: ['.yml', '.yaml'] },
+            'bash': { mime: 'application/x-sh', extensions: ['.sh'] },
+            'tt2': { mime: 'text/plain', extensions: ['.tt2'] },
+            'plaintext': { mime: 'text/plain', extensions: ['.txt'] }
+        };
+        
+        // Get mime type and extensions for the language, default to plaintext
+        const { mime, extensions } = mimeTypes[language.toLowerCase()] || mimeTypes['plaintext'];
+        
+        // Create accept object with mime type mapped to extensions
+        const accept: {[key: string]: string[]} = {};
+        accept[mime] = extensions;
+        
+        // Return file types array with description and accept object
+        return [{
+            description: `${language.charAt(0).toUpperCase() + language.slice(1)} files`,
+            accept
+        }];
+    }
+
+    // Method to directly download the file (fallback method)
+    private downloadFile(content: string, language: string): void {
+        // Create a blob with the content
+        const blob = new Blob([content], { type: 'text/plain' });
+        
+        // Create a URL for the blob
+        const url = URL.createObjectURL(blob);
+        
+        // Generate an appropriate filename with extension
+        const filename = this.getFilenameWithExtension(language);
+        
+        // Create a temporary anchor element to trigger the download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        
+        // Append to the body, click, and remove
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+    
+    // Helper to get appropriate filename with extension based on language
+    private getFilenameWithExtension(language: string): string {
+        const extensions: {[key: string]: string} = {
+            'javascript': '.js',
+            'typescript': '.ts',
+            'html': '.html',
+            'css': '.css',
+            'json': '.json',
+            'markdown': '.md',
+            'python': '.py',
+            'java': '.java',
+            'c': '.c',
+            'cpp': '.cpp',
+            'csharp': '.cs',
+            'ruby': '.rb',
+            'php': '.php',
+            'sql': '.sql',
+            'xml': '.xml',
+            'yaml': '.yml',
+            'bash': '.sh',
+            'tt2': '.tt2',
+            'plaintext': '.txt'
+        };
+        
+        const extension = extensions[language.toLowerCase()] || '.txt';
+        return `code${extension}`;
+    }
+    
+    // Public method to mark save as handled by parent
+    public markSaveHandled(): void {
+        this.saveHandled = true;
+    }
+
+    // Helper method to update cursor position
+    private updateCursorPosition(): void {
+        if (!this.codeTextarea) return;
+        
+        const textarea = this.codeTextarea.nativeElement;
+        const cursorPos = textarea.selectionStart;
+        const textBeforeCursor = textarea.value.substring(0, cursorPos);
+        
+        // Calculate line number (count newlines before cursor + 1)
+        const line = (textBeforeCursor.match(/\n/g) || []).length + 1;
+        
+        // Calculate column (characters since last newline + 1)
+        const lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');
+        const column = lastNewlineIndex >= 0 
+            ? cursorPos - lastNewlineIndex 
+            : cursorPos + 1;
+            
+        this.cursorLine.set(line);
+        this.cursorColumn.set(column);
     }
 
     private updateView(): void {

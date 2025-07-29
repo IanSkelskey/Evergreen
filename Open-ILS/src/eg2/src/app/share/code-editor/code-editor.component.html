@@ -1,40 +1,65 @@
 <div class="code-editor-container" [attr.data-language]="language()">
-  <!-- Line numbers -->
-  @if (showLineNumbers()) {
-    <div class="line-numbers">
-      @for (lineNum of lineNumbers(); track lineNum) {
-        <span class="line-number">{{ lineNum }}</span>
-      }
-    </div>
-  }
-  
-  <!-- Code area wrapper -->
-  <div class="code-area">
-    <!-- Code input (invisible textarea) -->
-    <textarea
-      #codeTextarea
-      class="code-input"
-      [value]="code()"
-      (input)="onCodeChange($event)"
-      (scroll)="onScroll($event)"
-      (keydown)="onKeyDown($event)"
-      [placeholder]="placeholder()"
-      spellcheck="false"
-      autocomplete="off"
-      autocorrect="off"
-      autocapitalize="off"
-      wrap="off"
-      [attr.aria-label]="'Code editor for ' + language() + '. Tab key is used for indentation when text is selected, otherwise it navigates between fields.'"
-    ></textarea>
+  <div class="editor-main">
+    <!-- Line numbers -->
+    @if (effectiveShowLineNumbers()) {
+      <div class="line-numbers">
+        @for (lineNum of lineNumbers(); track lineNum) {
+          <span class="line-number">{{ lineNum }}</span>
+        }
+      </div>
+    }
     
-    <!-- Highlighted code display -->
-    <pre 
-      class="code-display" 
-      [innerHTML]="highlightedCode().html"
-      [attr.data-language]="language()"
-      tabindex="-1"
-    ></pre>
+    <!-- Code area wrapper -->
+    <div class="code-area">
+      <!-- Code input (invisible textarea) -->
+      <textarea
+        #codeTextarea
+        class="code-input"
+        [value]="code()"
+        (input)="onCodeChange($event)"
+        (scroll)="onScroll($event)"
+        (keydown)="onKeyDown($event)"
+        (click)="onCursorMove($event)"
+        (keyup)="onCursorMove($event)"
+        (mouseup)="onCursorMove($event)"
+        [placeholder]="placeholder()"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        wrap="off"
+        [attr.aria-label]="'Code editor for ' + language() + '. Tab key is used for indentation when text is selected, otherwise it navigates between fields.'"
+      ></textarea>
+      
+      <!-- Highlighted code display -->
+      <pre 
+        class="code-display" 
+        [innerHTML]="highlightedCode().html"
+        [attr.data-language]="language()"
+        tabindex="-1"
+      ></pre>
+    </div>
   </div>
+  
+  <!-- Status bar -->
+  <div class="status-bar">
+    <!-- Add save button to the left side -->
+    <div class="status-left">
+      <button 
+        class="save-button" 
+        (click)="onSaveClick()" 
+        aria-label="Save code">
+        <i class="material-icons">save</i>
+        <span class="save-text">Save</span>
+      </button>
+    </div>
+    <div class="status-right">
+      <span class="cursor-position">Ln {{cursorLine()}}, Col {{cursorColumn()}}</span>
+      <span class="separator">|</span>
+      <span class="language-indicator">{{ language() }}</span>
+    </div>
+  </div>
+  
   <div class="sr-only" aria-live="polite">
     Press Tab to navigate between form fields. To indent code, select text first then press Tab.
   </div>
