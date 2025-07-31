@@ -9,6 +9,7 @@ import {OuSettingJsonDialogComponent} from './org-unit-setting-json-dialog.compo
 import {ItemLocationSelectModule} from '@eg/share/item-location-select/item-location-select.module';
 import { TimezoneSelectComponent } from './timezone-select/timezone-select.component';
 import { Timezone } from '@eg/share/util/timezone';
+import { CodeEditorModule } from '@eg/share/code-editor/code-editor.module';
 
 @NgModule({
     declarations: [
@@ -22,7 +23,8 @@ import { Timezone } from '@eg/share/util/timezone';
         AdminCommonModule,
         ItemLocationSelectModule,
         OrgUnitSettingsRoutingModule,
-        TreeModule
+        TreeModule,
+        CodeEditorModule
     ],
     exports: [
     ],
