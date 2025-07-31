@@ -28,19 +28,22 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     protected highlightedCode = signal<HighlightedCode>({ html: '', language: '', valid: true });
     protected lineNumbers = signal<number[]>([1]);
     private lineNumbersToggleState = signal<boolean | null>(null);
-    
+
     // Add cursor position tracking
     protected cursorLine = signal<number>(1);
     protected cursorColumn = signal<number>(1);
 
     // Computed state that combines input and toggle state
     protected effectiveShowLineNumbers = computed(() => {
-        return this.lineNumbersToggleState() === null ? 
-            this.showLineNumbers() : 
+        return this.lineNumbersToggleState() === null ?
+            this.showLineNumbers() :
             this.lineNumbersToggleState();
     });
 
     private readonly INDENT = '  ';
+
+    // Add a property to track if save was handled by parent
+    saveHandled = false;
 
     constructor(private syntaxHighlightingService: SyntaxHighlightingService) {}
 
@@ -53,7 +56,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         if ('code' in changes || 'language' in changes) {
             this.updateView();
         }
-        
+
         // Reset toggle state when input changes
         if ('showLineNumbers' in changes) {
             this.lineNumbersToggleState.set(null);
@@ -69,7 +72,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     protected onCodeChange(event: Event): void {
         const newCode = (event.target as HTMLTextAreaElement).value;
         this.codeChange.emit(newCode);
-        
+
         // Update cursor position when text changes
         this.updateCursorPosition();
 
@@ -120,29 +123,26 @@ export class CodeEditorComponent implements OnInit, OnChanges {
                 this.handleTabKey(textarea, event.shiftKey);
             }
         }
-        
+
         // Update cursor position on next tick after key handling
         setTimeout(() => this.updateCursorPosition(), 0);
     }
-
-    // Add a property to track if save was handled by parent
-    private saveHandled = false;
 
     // Method to handle save button click
     protected onSaveClick(): void {
         // Reset the handled flag
         this.saveHandled = false;
-        
+
         // Get current content and language
         const content = this.code();
         const language = this.language();
-        
+
         // Emit the event for parent components to handle
         this.saveCode.emit({
             content,
             language
         });
-        
+
         // Set a timeout to check if the event was handled
         setTimeout(() => {
             // If not handled by parent, try using File System Access API
@@ -159,25 +159,25 @@ export class CodeEditorComponent implements OnInit, OnChanges {
             try {
                 // Generate suggested filename with extension
                 const suggestedName = this.getFilenameWithExtension(language);
-                
+
                 // Define file types based on language
                 const fileTypes = this.getFileTypes(language);
-                
+
                 // Show the save file picker dialog
                 const fileHandle = await (window as any).showSaveFilePicker({
                     suggestedName,
                     types: fileTypes,
                 });
-                
+
                 // Get a writable stream
                 const writable = await fileHandle.createWritable();
-                
+
                 // Write the content
                 await writable.write(content);
-                
+
                 // Close the stream
                 await writable.close();
-                
+
                 console.log('File saved successfully using File System Access API');
             } catch (error) {
                 // If user cancels or there's an error, fall back to download
@@ -217,14 +217,14 @@ export class CodeEditorComponent implements OnInit, OnChanges {
             'tt2': { mime: 'text/plain', extensions: ['.tt2'] },
             'plaintext': { mime: 'text/plain', extensions: ['.txt'] }
         };
-        
+
         // Get mime type and extensions for the language, default to plaintext
         const { mime, extensions } = mimeTypes[language.toLowerCase()] || mimeTypes['plaintext'];
-        
+
         // Create accept object with mime type mapped to extensions
         const accept: {[key: string]: string[]} = {};
         accept[mime] = extensions;
-        
+
         // Return file types array with description and accept object
         return [{
             description: `${language.charAt(0).toUpperCase() + language.slice(1)} files`,
@@ -236,29 +236,29 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     private downloadFile(content: string, language: string): void {
         // Create a blob with the content
         const blob = new Blob([content], { type: 'text/plain' });
-        
+
         // Create a URL for the blob
         const url = URL.createObjectURL(blob);
-        
+
         // Generate an appropriate filename with extension
         const filename = this.getFilenameWithExtension(language);
-        
+
         // Create a temporary anchor element to trigger the download
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
-        
+
         // Append to the body, click, and remove
         document.body.appendChild(a);
         a.click();
-        
+
         // Clean up
         setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }, 100);
     }
-    
+
     // Helper to get appropriate filename with extension based on language
     private getFilenameWithExtension(language: string): string {
         const extensions: {[key: string]: string} = {
@@ -282,12 +282,13 @@ export class CodeEditorComponent implements OnInit, OnChanges {
             'tt2': '.tt2',
             'plaintext': '.txt'
         };
-        
+
         const extension = extensions[language.toLowerCase()] || '.txt';
-        
+
         // If a default filename was provided, use it
         if (this.defaultFilename()) {
-            const customName = this.defaultFilename()!;
+            // Fix: replace non-null assertion with nullish coalescing operator
+            const customName = this.defaultFilename() ?? 'code';
             // If custom filename already has an extension, use it as-is
             if (customName.includes('.')) {
                 return customName;
@@ -295,11 +296,11 @@ export class CodeEditorComponent implements OnInit, OnChanges {
             // Otherwise add the appropriate extension based on language
             return `${customName}${extension}`;
         }
-        
+
         // Fall back to default name with extension
         return `code${extension}`;
     }
-    
+
     // Public method to mark save as handled by parent
     public markSaveHandled(): void {
         this.saveHandled = true;
@@ -307,21 +308,21 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
     // Helper method to update cursor position
     private updateCursorPosition(): void {
-        if (!this.codeTextarea) return;
-        
+        if (!this.codeTextarea) {return;}
+
         const textarea = this.codeTextarea.nativeElement;
         const cursorPos = textarea.selectionStart;
         const textBeforeCursor = textarea.value.substring(0, cursorPos);
-        
+
         // Calculate line number (count newlines before cursor + 1)
         const line = (textBeforeCursor.match(/\n/g) || []).length + 1;
-        
+
         // Calculate column (characters since last newline + 1)
         const lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');
-        const column = lastNewlineIndex >= 0 
-            ? cursorPos - lastNewlineIndex 
+        const column = lastNewlineIndex >= 0
+            ? cursorPos - lastNewlineIndex
             : cursorPos + 1;
-            
+
         this.cursorLine.set(line);
         this.cursorColumn.set(column);
     }
@@ -509,28 +510,28 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         try {
             // Define file types based on current language
             const fileTypes = this.getFileTypes(this.language());
-            
+
             // Show the file picker dialog
             const [fileHandle] = await (window as any).showOpenFilePicker({
                 types: fileTypes,
                 multiple: false
             });
-            
+
             // Get the file object
             const file = await fileHandle.getFile();
-            
+
             // Read the file content
             const content = await file.text();
-            
+
             // Apply the content in an undoable way
             this.applyLoadedContent(content);
-            
+
             // Emit file loaded event
             this.fileLoaded.emit({
                 content,
                 filename: file.name
             });
-            
+
             console.log('File loaded successfully using File System Access API');
         } catch (error) {
             // Handle errors or user cancellation
@@ -547,31 +548,31 @@ export class CodeEditorComponent implements OnInit, OnChanges {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = this.getAcceptAttributeValue(this.language());
-        
+
         // Handle file selection
         fileInput.onchange = (event) => {
             const files = (event.target as HTMLInputElement).files;
             if (files && files.length > 0) {
                 const file = files[0];
                 const reader = new FileReader();
-                
+
                 reader.onload = (e) => {
                     const content = (e.target?.result as string) || '';
-                    
+
                     // Apply the content in an undoable way
                     this.applyLoadedContent(content);
-                    
+
                     // Emit file loaded event
                     this.fileLoaded.emit({
                         content,
                         filename: file.name
                     });
                 };
-                
+
                 reader.readAsText(file);
             }
         };
-        
+
         // Trigger the file dialog
         fileInput.click();
     }
@@ -599,29 +600,29 @@ export class CodeEditorComponent implements OnInit, OnChanges {
             'tt2': '.tt2,text/plain',
             'plaintext': '.txt,text/plain'
         };
-        
+
         return mimeTypes[language.toLowerCase()] || '.txt,text/plain';
     }
 
     // Apply loaded content in a way that can be undone with Ctrl+Z
     private applyLoadedContent(content: string): void {
-        if (!this.codeTextarea) return;
+        if (!this.codeTextarea) {return;}
 
         const textarea = this.codeTextarea.nativeElement;
         const currentValue = textarea.value;
-        
+
         // If content is the same, do nothing
-        if (currentValue === content) return;
-        
+        if (currentValue === content) {return;}
+
         // Focus the textarea to ensure the undo operation works
         textarea.focus();
-        
+
         // Select all existing content
         textarea.select();
-        
+
         // Use the existing updateTextarea method which works with undo history
         this.updateTextarea(textarea, content, 0, 0);
-        
+
         // Update view after content change
         this.updateView();
     }
