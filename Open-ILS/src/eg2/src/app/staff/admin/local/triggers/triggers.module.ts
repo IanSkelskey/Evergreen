@@ -3,9 +3,6 @@ import {AdminCommonModule} from '@eg/staff/admin/common.module';
 import {TriggersComponent} from './triggers.component';
 import {TriggersRoutingModule} from './triggers_routing.module';
 import {EditEventDefinitionComponent} from './trigger-edit.component';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {RouterModule} from '@angular/router';
 import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 @NgModule({
@@ -16,9 +13,6 @@ import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
     imports: [
         AdminCommonModule,
         TriggersRoutingModule,
-        CommonModule,
-        FormsModule,
-        RouterModule,
         CodeEditorModule,
     ],
     exports: [
