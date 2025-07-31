@@ -1,14 +1,11 @@
 <eg-staff-banner bannerText="Local Admin Notifications/Action Triggers" i18n-bannerText>
 </eg-staff-banner>
 
-<ng-template #textAreaTemplate let-field="field" let-record="record">
-    <textarea class="form-control" name="{{field.name}}" [readonly]="field.readOnly"
-        [required]="field.isRequired()" [ngModel]="record[field.name]()"
-        (ngModelChange)="record[field.name]($event)" style="height: 600px;">
-    </textarea>
-</ng-template>
 <eg-fm-record-editor #eventDialog idlClass="atevdef"
-    [fieldOptions]="{message_template:{customTemplate:{template:textAreaTemplate}},template:{customTemplate:{template:textAreaTemplate}}}"
+    [fieldOptions]="{
+      message_template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'},
+      template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'}
+    }"
     fieldOrder="owner,name,hook,active,delay,delay_field,group_field,reactor,validator,repeat_delay,id,cleanup_failure,granularity,max_delay,message_library_path,message_template,message_title,message_usr_path,opt_in_setting,usr_field,retention_interval,cleanup_success,template"
     [remainOpenOnError]="true"
     [preloadLinkedValues]="true"
@@ -122,6 +119,12 @@
 <eg-string #deleteFailedString i18n-text text="Deletion of entry failed or was not allowed">
 </eg-string>
 <eg-string #deleteSuccessString i18n-text text="Delete of entry succeeded"></eg-string>
+<eg-string #updateFailedString i18n-text text="Update of entry failed or was not allowed">
+</eg-string>
+<eg-string #updateSuccessString i18n-text text="Update of entry succeeded"></eg-string>
+<eg-string #cloneFailedString i18n-text text="Clone of entry failed or was not allowed">
+</eg-string>
+<eg-string #cloneSuccessString i18n-text text="Clone of entry succeeded"></eg-string>
 <eg-string #updateFailedString i18n-text text="Update of entry failed or was not allowed">
 </eg-string>
 <eg-string #updateSuccessString i18n-text text="Update of entry succeeded"></eg-string>

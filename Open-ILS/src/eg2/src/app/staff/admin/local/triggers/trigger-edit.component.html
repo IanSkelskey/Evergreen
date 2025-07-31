@@ -8,28 +8,12 @@
     <li role="presentation" [ngbNavItem]="'def'">
         <a role="tab" ngbNavLink i18n>Edit Definition</a>
         <ng-template ngbNavContent>
-            <ng-template #textAreaTemplate let-field="field" let-record="record">
-                <!-- Use the code editor for template fields -->
-                <div *ngIf="isTemplateField(field.name)" class="code-editor-container" style="height: 600px;">
-                    <eg-code-editor
-                        [code]="record[field.name]() || ''"
-                        [language]="'tt2'"
-                        [placeholder]="'Enter ' + field.name + ' here...'"
-                        [showLineNumbers]="true"
-                        [defaultFilename]="getDefaultFilename(field.name)"
-                        (codeChange)="record[field.name]($event)">
-                    </eg-code-editor>
-                </div>
-                <!-- Use regular textarea for non-template fields -->
-                <textarea *ngIf="!isTemplateField(field.name)" class="form-control" name="{{field.name}}"
-                    [readonly]="field.readOnly" [required]="field.isRequired()"
-                    [ngModel]="record[field.name]()"
-                    (ngModelChange)="record[field.name]($event)" style="height: 600px;">
-                </textarea>
-            </ng-template>
             <eg-fm-record-editor #eventDialog idlClass="atevdef" displayMode="inline"
                 recordId="{{this.evtDefId}}" mode="update"
-                [fieldOptions]="{message_template:{customTemplate:{template:textAreaTemplate}},template:{customTemplate:{template:textAreaTemplate}}}"
+                [fieldOptions]="{
+                  message_template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'},
+                  template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'}
+                }"
                 fieldOrder="owner,name,hook,active,delay,delay_field,group_field,reactor,validator,repeat_delay,id,cleanup_failure,granularity,max_delay,message_library_path,message_template,message_title,message_usr_path,opt_in_setting,usr_field,retention_interval,cleanup_success,template">
             </eg-fm-record-editor>
             <div class="text-end">
@@ -40,25 +24,6 @@
     <li role="presentation" ngbNavItem="'alt'" *ngIf=this.evtAltEligible>
         <a role="tab" ngbNavLink i18n>Edit Alternate Template</a>
         <ng-template ngbNavContent>
-            <ng-template #textAreaTemplate let-field="field" let-record="record">
-                <!-- Use the code editor for template fields -->
-                <div *ngIf="isTemplateField(field.name)" class="code-editor-container" style="height: 600px;">
-                    <app-code-editor
-                        [code]="record[field.name]()"
-                        [language]="'tt2'"
-                        [placeholder]="'Enter ' + field.name + ' here...'"
-                        [showLineNumbers]="true"
-                        [defaultFilename]="getDefaultFilename(field.name)"
-                        (codeChange)="record[field.name]($event)">
-                    </app-code-editor>
-                </div>
-                <!-- Use regular textarea for non-template fields -->
-                <textarea *ngIf="!isTemplateField(field.name)" class="form-control" name="{{field.name}}"
-                    [readonly]="field.readOnly" [required]="field.isRequired()"
-                    [ngModel]="record[field.name]()"
-                    (ngModelChange)="record[field.name]($event)" style="height: 600px;">
-                </textarea>
-            </ng-template>
             <h3 class="mb-3">Alternate Templates</h3>
             <eg-grid #altTemplateGrid idlClass="atevalt" [dataSource]="altTemplateDataSource"
                 showFields="active,locale" persistKey="admin.local.triggers.atevalt"
@@ -71,7 +36,10 @@
                     (onClick)="deleteSelected($event)"></eg-grid-toolbar-action>
             </eg-grid>
             <eg-fm-record-editor #altTemplateDialog idlClass="atevalt"
-                 [fieldOptions]="{template:{customTemplate:{template:textAreaTemplate}},message_template:{customTemplate:{template:textAreaTemplate}}}"
+                 [fieldOptions]="{
+                   template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'},
+                   message_template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'}
+                 }"
                  fieldOrder="active,locale,template,message_title,message_template"
                  [preloadLinkedValues]="true"
                  hiddenFields="event_def,id"></eg-fm-record-editor>
