@@ -6,6 +6,8 @@ import {StringModule} from '@eg/share/string/string.module';
 import {TranslateModule} from '@eg/share/translate/translate.module';
 import {FmRecordEditorComponent, MinValidatorDirective, MaxValidatorDirective} from './fm-editor.component';
 import {FmRecordEditorActionComponent} from './fm-editor-action.component';
+// Import the code editor module
+import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 
 @NgModule({
@@ -20,7 +22,9 @@ import {FmRecordEditorActionComponent} from './fm-editor-action.component';
         StaffCommonModule,
         StringModule,
         TranslateModule,
-        CommonWidgetsModule
+        CommonWidgetsModule,
+        // Add the CodeEditorModule to imports
+        CodeEditorModule
     ],
     exports: [
         FmRecordEditorComponent,

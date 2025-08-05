@@ -43,7 +43,8 @@
             "allowedCommonJsDependencies": [
               "file-saver",
               "moment",
-              "moment-timezone"
+              "moment-timezone",
+              "highlight.js"
             ],
             "aot": false,
             "vendorChunk": true,

@@ -8,33 +8,22 @@
     <li role="presentation" [ngbNavItem]="'def'">
         <a role="tab" ngbNavLink i18n>Edit Definition</a>
         <ng-template ngbNavContent>
-            <ng-template #textAreaTemplate let-field="field" let-record="record">
-                <textarea class="form-control" name="{{field.name}}"
-                    [readonly]="field.readOnly" [required]="field.isRequired()"
-                    [ngModel]="record[field.name]()"
-                    (ngModelChange)="record[field.name]($event)" style="height: 600px;">
-                </textarea>
-            </ng-template>
             <eg-fm-record-editor #eventDialog idlClass="atevdef" displayMode="inline"
                 recordId="{{this.evtDefId}}" mode="update"
-                [fieldOptions]="{message_template:{customTemplate:{template:textAreaTemplate}},template:{customTemplate:{template:textAreaTemplate}}}"
+                [fieldOptions]="{
+                  message_template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'},
+                  template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'}
+                }"
                 fieldOrder="owner,name,hook,active,delay,delay_field,group_field,reactor,validator,repeat_delay,id,cleanup_failure,granularity,max_delay,message_library_path,message_template,message_title,message_usr_path,opt_in_setting,usr_field,retention_interval,cleanup_success,template">
             </eg-fm-record-editor>
             <div class="text-end">
                 <button type="button" class="btn btn-outline-dark me-3" (click)="back()">&#8592; Back to Notifications/Action Triggers</button>
             </div>
-    </ng-template>
+        </ng-template>
     </li>
-    <li role="presentation" ngbNavItem="'alt'" *ngIf=this.evtAltEligible>
+    <li role="presentation" [ngbNavItem]="'alt'" *ngIf=this.evtAltEligible>
         <a role="tab" ngbNavLink i18n>Edit Alternate Template</a>
         <ng-template ngbNavContent>
-            <ng-template #textAreaTemplate let-field="field" let-record="record">
-                <textarea class="form-control" name="{{field.name}}"
-                    [readonly]="field.readOnly" [required]="field.isRequired()"
-                    [ngModel]="record[field.name]()"
-                    (ngModelChange)="record[field.name]($event)" style="height: 600px;">
-                </textarea>
-            </ng-template>
             <h3 class="mb-3">Alternate Templates</h3>
             <eg-grid #altTemplateGrid idlClass="atevalt" [dataSource]="altTemplateDataSource"
                 showFields="active,locale" persistKey="admin.local.triggers.atevalt"
@@ -47,13 +36,16 @@
                     (onClick)="deleteSelected($event)"></eg-grid-toolbar-action>
             </eg-grid>
             <eg-fm-record-editor #altTemplateDialog idlClass="atevalt"
-                 [fieldOptions]="{template:{customTemplate:{template:textAreaTemplate}},message_template:{customTemplate:{template:textAreaTemplate}}}"
+                 [fieldOptions]="{
+                   template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'},
+                   message_template:{useCodeEditor: true, codeLanguage: 'tt2', codeEditorHeight: '400px'}
+                 }"
                  fieldOrder="active,locale,template,message_title,message_template"
                  [preloadLinkedValues]="true"
                  hiddenFields="event_def,id"></eg-fm-record-editor>
         </ng-template>
     </li>
-    <li role="presentation" ngbNavItem="'env'">
+    <li role="presentation" [ngbNavItem]="'env'">
         <a role="tab" ngbNavLink i18n>Edit Environment</a>
         <ng-template ngbNavContent>
             <h3 class="mb-3">Trigger Event Environment</h3>
@@ -71,7 +63,7 @@
                 hiddenFields="event_def,id"></eg-fm-record-editor>
         </ng-template>
     </li>
-    <li role="presentation" ngbNavItem="'param'">
+    <li role="presentation" [ngbNavItem]="'param'">
         <a role="tab" ngbNavLink i18n>Edit Parameters</a>
         <ng-template ngbNavContent>
             <h3 class="mb-3">Trigger Event Parameters</h3>
@@ -89,7 +81,7 @@
                 hiddenFields="event_def,id"></eg-fm-record-editor>
         </ng-template>
     </li>
-    <li role="presentation" ngbNavItem="'test'">
+    <li role="presentation" [ngbNavItem]="'test'">
         <a role="tab" ngbNavLink i18n>Run Tests</a>
         <ng-template ngbNavContent>
             <h3 class="mb-3">Run Tests</h3>

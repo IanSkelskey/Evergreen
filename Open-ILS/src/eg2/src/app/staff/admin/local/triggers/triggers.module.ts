@@ -3,6 +3,7 @@ import {AdminCommonModule} from '@eg/staff/admin/common.module';
 import {TriggersComponent} from './triggers.component';
 import {TriggersRoutingModule} from './triggers_routing.module';
 import {EditEventDefinitionComponent} from './trigger-edit.component';
+import {CodeEditorModule} from '@eg/share/code-editor/code-editor.module';
 
 @NgModule({
     declarations: [
@@ -12,6 +13,7 @@ import {EditEventDefinitionComponent} from './trigger-edit.component';
     imports: [
         AdminCommonModule,
         TriggersRoutingModule,
+        CodeEditorModule,
     ],
     exports: [
     ],
