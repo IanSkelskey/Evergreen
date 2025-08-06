@@ -400,6 +400,15 @@ To run the script, use this command:
 | --help | Show help information.
 |===
 
+=== Using Custom Filters ===
+
+For advanced targeting of action triggers to specific subsets of users, items, or other
+objects, you can use custom JSON filters. This allows you to exclude certain patrons, 
+limit notifications to specific item types, and implement other complex filtering scenarios.
+
+For detailed information on creating and using JSON filters, see 
+xref:admin:json_filters.adoc[Action Trigger JSON Filters].
+
 Examples:
 
 * Run all pending events that have no granularity set.

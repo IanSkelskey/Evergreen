@@ -1,0 +1,430 @@
+= Action Trigger JSON Filters
+:toc:
+
+== Introduction
+
+indexterm:[action triggers, JSON filters, filtering]
+
+Action Trigger JSON filters allow administrators to target specific subsets of
+objects that match complex criteria when creating events. This powerful
+functionality helps you fine-tune which patrons, items, or other objects are
+included in notifications and other triggered actions.
+
+[IMPORTANT]
+====
+JSON filters can *only* be used with passive hooks (like `checkout.due`) that are processed by scheduled cron jobs. They cannot be used with active hooks (like `hold.available`) that are triggered directly by user actions within the system. 
+
+This is because passive hooks run periodically to scan for matching objects, while active hooks are triggered immediately when events occur in the system.
+====
+
+== Filter File Location
+
+Filters are defined in a JSON file, typically located at:
+
+[source,bash]
+----
+/openils/conf/action_trigger_filters.json
+----
+
+You can specify a custom filter file location when running the action trigger
+script using the `--custom-filters` option:
+
+[source,bash]
+----
+/openils/bin/action_trigger_runner.pl --process-hooks --custom-filters=/path/to/custom_filters.json
+----
+
+== Basic Filter Structure
+
+The filter file uses JSON structure where:
+
+* The top-level keys are hook names (e.g., "checkout.due")
+* Each hook contains settings including a "filter" definition
+* The "filter" contains JSON query conditions to apply
+
+A basic filter file structure looks like:
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-or": [
+                { "stop_fines": ["MAXFINES"] },
+                { "stop_fines": null }
+            ]
+        }
+    }
+}
+----
+
+== Filter Options
+
+The filter supports the following options:
+
+* `context_org`: Defines the organizational context for the filter
+* `filter`: Contains the filtering conditions using JSON query syntax
+
+== JSON Query Syntax
+
+Filters use Evergreen's JSON query syntax for constructing conditions:
+
+=== Basic Comparisons
+
+Simple equality:
+[source,json]
+----
+{ "field_name": "value" }
+----
+
+Comparison operators:
+[source,json]
+----
+{ "field_name": { ">": 100 } }
+{ "field_name": { "<=": 50 } }
+{ "field_name": { "<>": "some value" } }
+----
+
+NULL checking:
+[source,json]
+----
+{ "field_name": null }          // IS NULL
+{ "field_name": { "<>": null } } // IS NOT NULL
+----
+
+=== Logical Operators
+
+AND (implicit between conditions):
+[source,json]
+----
+{
+    "field1": "value1",
+    "field2": "value2"
+}
+----
+
+OR:
+[source,json]
+----
+{
+    "-or": [
+        { "field1": "value1" },
+        { "field2": "value2" }
+    ]
+}
+----
+
+NOT:
+[source,json]
+----
+{
+    "-not": {
+        "field_name": "value"
+    }
+}
+----
+
+=== Subqueries with EXISTS and NOT EXISTS
+
+Use `-exists` for filtering based on related data:
+
+[source,json]
+----
+{
+    "-exists": {
+        "select": { "table_alias": ["column"] },
+        "from": "table_class",
+        "where": {
+            "condition_field": { "=": { "+parent_table": "field" } }
+        }
+    }
+}
+----
+
+For NOT EXISTS, use `-not-exists` instead.
+
+== Common Filter Examples
+
+=== Exclude Patrons with Specific Standing Penalty
+
+This filter excludes patrons who have been marked as deceased:
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-not-exists": {
+                "select": { "csp": ["id"] },
+                "from": "csp",
+                "where": {
+                    "usr": { "=": { "+circ": "usr" } },
+                    "standing_penalty": 35  // Code for PATRON_DECEASED
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Patrons with No Email Address
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-exists": {
+                "select": { "au": ["id"] },
+                "from": "au",
+                "where": {
+                    "id": { "=": { "+circ": "usr" } },
+                    "email": { "<>": null }
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Patrons with Invalid Mailing Address
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib", 
+        "filter": {
+            "checkin_time": null,
+            "-exists": {
+                "select": { "au": ["id"] },
+                "from": "au",
+                "where": {
+                    "id": { "=": { "+circ": "usr" } },
+                    "-exists": {
+                        "select": { "aua": ["id"] },
+                        "from": "aua",
+                        "where": {
+                            "valid": "t",
+                            "usr": { "=": { "+au": "id" } },
+                            "address_type": 1  // Mailing address type
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Inactive Patrons
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-exists": {
+                "select": { "au": ["id"] },
+                "from": "au",
+                "where": {
+                    "id": { "=": { "+circ": "usr" } },
+                    "active": "t"
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Patrons in Specific Permission Groups
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-exists": {
+                "select": { "au": ["id"] },
+                "from": "au",
+                "where": {
+                    "id": { "=": { "+circ": "usr" } },
+                    "-not": {
+                        "profile": [29, 30, 31]  // List of group IDs to exclude
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Items with Specific Circulation Modifier
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-exists": {
+                "select": { "acp": ["id"] },
+                "from": "acp",
+                "where": {
+                    "id": { "=": { "+circ": "target_copy" } },
+                    "-not": {
+                        "circ_modifier": ["EQUIPMENT", "MULTIMEDIA"]
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+=== Exclude Items from Specific Circulation Libraries
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-not": {
+                "circ_lib": [1, 2, 3]  // List of org unit IDs to exclude
+            }
+        }
+    }
+}
+----
+
+=== Exclude Recent Notifications
+
+This filter excludes patrons who received the same type of notification in the last 12 hours:
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {
+            "checkin_time": null,
+            "-not-exists": {
+                "select": { "atev": ["id"] },
+                "from": "atev",
+                "where": {
+                    "target": { "=": { "+circ": "id" } },
+                    "event_def": 19,  // ID of the event definition
+                    "state": "complete",
+                    "update_time": { ">": ["age", "12 hours"] }
+                }
+            }
+        }
+    }
+}
+----
+
+== Complex Filter Examples
+
+=== Combining Multiple Conditions
+
+This example filters checkout.due events to:
+1. Only include open circulations (not checked in)
+2. Only include circulations with certain stop_fines values
+3. Exclude patrons in profile group 29
+
+[source,json]
+----
+{
+    "checkout.due": {
+        "context_org": "circ_lib",
+        "filter": {  
+            "checkin_time": null,
+            "-or": [
+                { "stop_fines": ["MAXFINES"] },  
+                { "stop_fines": null }
+            ],  
+            "-exists": {
+                "select": {"au": ["id"]},
+                "from": "au",
+                "where": { 
+                    "-not": {
+                        "profile": [29]
+                    },
+                    "id": { "=": {"+circ": "usr"} }
+                }
+            }
+        }
+    }
+}
+----
+
+=== Targeting Specific Categories of Notifications
+
+This example filters action.hold_request.cancel events to only include specific shelf locations:
+
+[source,json]
+----
+{
+    "action.hold_request.cancel": {
+        "context_org": "request_lib",
+        "filter": {
+            "-exists": {
+                "select": {"acp": ["id"]},
+                "from": "acp",
+                "where": {
+                    "id": {"=": {"+ahr": "current_copy"}},
+                    "-exists": {
+                        "select": {"acpl": ["id"]},
+                        "from": "acpl",
+                        "where": {
+                            "id": {"=": {"+acp": "location"}},
+                            "name": {"in": ["RESERVES", "REFERENCE", "COURSE RESERVES"]}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+== Troubleshooting
+
+=== Multiple -exists Clauses
+
+If you're using both custom filters with `-exists` clauses and the opt-in features (which also use `-exists`), there might be conflicts. Be aware that:
+
+1. The filter's `-exists` clause may be overwritten by an opt-in feature's `-exists` clause
+2. To resolve this, combine both conditions under a single `-exists` clause using additional AND conditions
+
+=== Testing Filters
+
+To test your filters:
+
+1. Create a small test filter file with your conditions
+2. Run the action_trigger_runner with debug and verbose options:
++
+[source,bash]
+----
+/openils/bin/action_trigger_runner.pl --process-hooks --custom-filters=/path/to/test_filters.json --debug-stdout --verbose
+----
+
+3. Review the output to see which objects match your filter criteria
+
+== Further Reading
+
+For more detailed information on JSON query syntax, see the 
+https://wiki.evergreen-ils.org/doku.php?id=documentation:tutorials:json_query[JSON Query Tutorial].

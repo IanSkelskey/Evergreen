@@ -9,6 +9,7 @@
 ** xref:local_admin:item_alerts_administration.adoc[Item Alerts Administration]
 ** xref:local_admin:multiple_holds_admin.adoc[Placing Multiple Holds]
 ** xref:admin:actiontriggers.adoc[Notifications / Action Triggers]
+*** xref:admin:json_filters.adoc[Action Trigger JSON Filters]
 ** xref:local_admin:openathens.adoc[OpenAthens]
 ** xref:local_admin:negative_balances.adoc[Patron with Negative Balances]
 ** xref:admin:staff_client-recent_searches.adoc[Recent Staff Searches]
