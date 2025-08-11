@@ -29,6 +29,7 @@
         autocapitalize="off"
         wrap="off"
         [attr.aria-label]="'Code editor for ' + language() + '. Tab key is used for indentation when text is selected, otherwise it navigates between fields.'"
+        i18n-aria-label
       ></textarea>
       
       <!-- Highlighted code display -->
@@ -50,9 +51,9 @@
         class="action-button load-button" 
         (click)="onLoadClick()" 
         title="Load code from file" i18n-title
-        aria-label="Load code from file">
+        aria-label="Load code from file" i18n-aria-label>
         <i class="material-icons">upload_file</i>
-        <span class="button-text">Load</span>
+        <span class="button-text" i18n>Load</span>
       </button>
       
       <button 
@@ -60,19 +61,19 @@
         class="action-button save-button" 
         (click)="onSaveClick()" 
         title="Save code to file" i18n-title
-        aria-label="Save code">
+        aria-label="Save code" i18n-aria-label>
         <i class="material-icons">save</i>
-        <span class="button-text">Save</span>
+        <span class="button-text" i18n>Save</span>
       </button>
     </div>
     <div class="status-right">
-      <span class="cursor-position">Ln {{cursorLine()}}, Col {{cursorColumn()}}</span>
+      <span class="cursor-position" i18n>Ln {{cursorLine()}}, Col {{cursorColumn()}}</span>
       <span class="separator">|</span>
       <span class="language-indicator">{{ language() }}</span>
     </div>
   </div>
   
-  <div class="sr-only" aria-live="polite">
+  <div class="sr-only" aria-live="polite" i18n>
     Press Tab to navigate between form fields. To indent code, select text first then press Tab.
   </div>
 </div>

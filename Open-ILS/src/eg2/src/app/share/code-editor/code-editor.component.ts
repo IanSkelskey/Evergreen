@@ -10,7 +10,7 @@ export class CodeEditorComponent implements OnInit, OnChanges {
     // Inputs
     code = input<string>('');
     language = input<string>('javascript');
-    placeholder = input<string>('Enter your code here...');
+    placeholder = input<string>($localize`Enter your code here...`);
     showLineNumbers = input<boolean>(true);
     defaultFilename = input<string | null>(null); // New input for default filename
 
@@ -287,7 +287,6 @@ export class CodeEditorComponent implements OnInit, OnChanges {
 
         // If a default filename was provided, use it
         if (this.defaultFilename()) {
-            // Fix: replace non-null assertion with nullish coalescing operator
             const customName = this.defaultFilename() ?? 'code';
             // If custom filename already has an extension, use it as-is
             if (customName.includes('.')) {
