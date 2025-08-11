@@ -17,6 +17,17 @@ JSON filters can *only* be used with passive hooks (like `checkout.due`) that ar
 This is because passive hooks run periodically to scan for matching objects, while active hooks are triggered immediately when events occur in the system.
 ====
 
+== How JSON Filters Work
+
+When the action trigger runner executes with `--process-hooks`, it:
+
+. Reads the JSON filters file
+. For each hook defined in the file, combines the filter conditions with conditions from the event definition
+. Executes the query to find matching objects
+. Creates events for objects that meet all conditions
+
+The combination of JSON filter conditions and event definition conditions (like processing delay and opt-in settings) creates a complete set of criteria for identifying which objects should trigger events.
+
 == Filter File Location
 
 Filters are defined in a JSON file, typically located at:
@@ -407,22 +418,31 @@ This example filters action.hold_request.cancel events to only include specific 
 
 If you're using both custom filters with `-exists` clauses and the opt-in features (which also use `-exists`), there might be conflicts. Be aware that:
 
-1. The filter's `-exists` clause may be overwritten by an opt-in feature's `-exists` clause
-2. To resolve this, combine both conditions under a single `-exists` clause using additional AND conditions
+. The filter's `-exists` clause may be overwritten by an opt-in feature's `-exists` clause
+. To resolve this, combine both conditions under a single `-exists` clause using additional AND conditions
 
 === Testing Filters
 
 To test your filters:
 
-1. Create a small test filter file with your conditions
-2. Run the action_trigger_runner with debug and verbose options:
+. Create a small test filter file with your conditions
+. Run the action_trigger_runner with debug and verbose options:
 +
 [source,bash]
 ----
 /openils/bin/action_trigger_runner.pl --process-hooks --custom-filters=/path/to/test_filters.json --debug-stdout --verbose
 ----
 
-3. Review the output to see which objects match your filter criteria
+. Review the output to see which objects match your filter criteria
+
+=== Choosing Between JSON Filters and Opt-In Settings
+
+For some use cases, you may need to decide between using JSON filters or the opt-in settings feature:
+
+* *JSON Filters*: Best for complex conditions involving multiple tables or when standard opt-in settings won't work
+* *Opt-In Settings*: Easier to use for simple user preference filtering, and work with both passive and active hooks
+
+If you need to filter based on the existence of a user setting (rather than its specific value), JSON filters with an `-exists` clause may be more appropriate than trying to use the opt-in setting feature, which expects Boolean values.
 
 == Further Reading
 
