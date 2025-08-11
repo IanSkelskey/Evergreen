@@ -8,8 +8,6 @@
 /* Locally served material icon fonts  */
 @import '~material-design-icons-iconfont/dist/material-design-icons.css';
 
-@import './assets/css/highlight-theme.css';
-
 :root {
   /* Spacing options, based on bootstrap's spacing utility
      classes, see
