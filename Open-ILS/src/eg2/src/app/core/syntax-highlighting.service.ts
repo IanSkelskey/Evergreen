@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import hljs from 'highlight.js';
-import { registerCustomLanguages } from './language-grammars';
+import { registerCustomLanguages } from '../share/code-editor/language-grammars';
 
 export interface HighlightedCode {
     html: string;

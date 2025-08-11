@@ -1,5 +1,5 @@
 import { Component, input, output, ElementRef, ViewChild, OnInit, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
-import { SyntaxHighlightingService, HighlightedCode } from './syntax-highlighting.service';
+import { SyntaxHighlightingService, HighlightedCode } from '@eg/core/syntax-highlighting.service';
 
 @Component({
     selector: 'eg-code-editor',

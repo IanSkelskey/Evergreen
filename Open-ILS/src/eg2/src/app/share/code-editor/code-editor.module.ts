@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CodeEditorComponent } from './code-editor.component';
-import { SyntaxHighlightingService } from './syntax-highlighting.service';
+import { SyntaxHighlightingService } from '@eg/core/syntax-highlighting.service';
 
 @NgModule({
     declarations: [
