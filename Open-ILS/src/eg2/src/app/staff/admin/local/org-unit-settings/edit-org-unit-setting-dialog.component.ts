@@ -27,10 +27,23 @@ export class EditOuSettingDialogComponent extends DialogComponent {
         }
     }
 
+    // Check if a setting should use CSS editor
+    isCssEditor(): boolean {
+        return this.entry.dataType === 'string' &&
+               this.entry.label &&
+               this.entry.label.toLowerCase().includes('css');
+    }
+
     inputType() {
         if (this.entry.name === 'lib.timezone') {
             return 'timezone';
         }
+
+        // Add special case for CSS settings
+        if (this.isCssEditor()) {
+            return 'css-editor';
+        }
+
         return this.entry.dataType;
     }
 

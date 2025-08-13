@@ -1,0 +1,131 @@
+/*!
+  Theme: Evergreen
+  Description: Dynamic syntax highlighting theme for code editors, inspired by Evergreen's color palette.
+  Author: Ian Skelskey
+  Maintainer: @IanSkelskey
+  Updated: 07/24/2025
+*/
+
+/* Base styles */
+.hljs {
+  color: var(--bs-body-color);
+  background: transparent;
+}
+
+/* Keywords and template syntax */
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: var(--danger-color);
+}
+
+/* Entity names and functions */
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: var(--hljs-entity, #7C3AED);
+}
+
+/* Constants and identifiers */
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: var(--hljs-constant, var(--bs-blue-800));
+}
+
+/* Strings and regular expressions */
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  color: var(--hljs-string, var(--eg-green-700));
+}
+
+/* Built-in functions and symbols */
+.hljs-built_in,
+.hljs-symbol {
+  color: var(--hljs-variable, var(--bs-orange-600));
+}
+
+/* Comments and formulas */
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  color: var(--bs-text-highlight);
+}
+
+/* Tags and pseudo-selectors */
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  color: var(--evergreen);
+}
+
+/* Substitutions */
+.hljs-subst {
+  color: var(--bs-body-color);
+}
+
+/* Section headers */
+.hljs-section {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+/* List bullets */
+.hljs-bullet {
+  color: var(--hljs-bullet, var(--bs-yellow-625));
+}
+
+/* Text formatting */
+.hljs-emphasis {
+  color: var(--bs-body-color);
+  font-style: italic;
+}
+
+.hljs-strong {
+  color: var(--bs-body-color);
+  font-weight: bold;
+}
+
+/* Diff highlighting */
+.hljs-addition {
+  color: var(--evergreen);
+  background-color: var(--form-success-bg);
+}
+
+.hljs-deletion {
+  color: var(--danger-color);
+  background-color: var(--badge-danger-bg);
+}
+
+/* Ignored elements */
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+}
+
+/* Dark Mode Overrides */
+:root[data-bs-theme="dark"] {
+  --hljs-constant: var(--bs-blue-300);
+  --hljs-entity: var(--eg-purple);
+  --hljs-string: var(--eg-green-200);
+  --hljs-variable: var(--bs-orange-100);
+  --hljs-bullet: var(--bs-yellow-200);
+}

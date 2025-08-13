@@ -35,7 +35,8 @@
               "src/styles.css",
               "src/assets/css/styles-colors.css",
               "src/assets/css/light.css",
-              "src/assets/css/dark.css"
+              "src/assets/css/dark.css",
+              "src/assets/css/highlight-theme.css"
             ],
             "scripts": [
               "src/assets/js/marcrecord.js"
@@ -43,7 +44,8 @@
             "allowedCommonJsDependencies": [
               "file-saver",
               "moment",
-              "moment-timezone"
+              "moment-timezone",
+              "highlight.js"
             ],
             "aot": false,
             "vendorChunk": true,
