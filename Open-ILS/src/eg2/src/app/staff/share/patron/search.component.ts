@@ -10,7 +10,7 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {Pager} from '@eg/share/util/pager';
-import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketItemTransferDialogComponent} from '@eg/staff/share/buckets/item-transfer-dialog.component';
 import {PatronMergeDialogComponent} from './merge-dialog.component';
 import {FormatService} from '@eg/core/format.service';
 import {LocaleService} from '@eg/core/locale.service';
@@ -55,9 +55,10 @@ export interface PatronSearch {
 })
 
 export class PatronSearchComponent implements OnInit, AfterViewInit {
-
     @ViewChild('searchGrid') searchGrid: GridComponent;
-    @ViewChild('addToBucket') addToBucket: BucketDialogComponent;
+    @ViewChild('addToBucket', { static: false }) 
+    addToBucket: BucketItemTransferDialogComponent;
+    
     @ViewChild('mergeDialog') mergeDialog: PatronMergeDialogComponent;
 
     startWithFired = false;
@@ -356,8 +357,16 @@ export class PatronSearchComponent implements OnInit, AfterViewInit {
     }
 
     addSelectedToBucket(rows: IdlObject[]) {
+        if (!this.addToBucket) {
+            console.error('Bucket dialog component not initialized');
+            return;
+        }
         this.addToBucket.itemIds = rows.map(r => r.id());
-        this.addToBucket.open().subscribe();
+        this.addToBucket.bucketClass = 'user';
+        this.addToBucket.bucketType = 'staff_client';
+        this.addToBucket.dialogTitle = 'Add Patrons to Bucket';
+        this.addToBucket.dialogIcon = 'people';
+        this.addToBucket.open({size: 'lg'}).subscribe();
     }
 
     mergePatrons(rows: IdlObject[]) {

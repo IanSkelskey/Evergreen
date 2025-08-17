@@ -1,0 +1,91 @@
+#catalog-search-input {
+  max-width: 30ch;
+}
+
+/* Use consistent tab styling that matches patron buckets */
+.nav-tabs .nav-link {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: var(--bs-gray-300);
+}
+
+/* Consistent styling for material icons */
+.material-icons {
+  font-size: 1rem;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.nav-tabs .material-icons {
+  margin-right: 0.25rem;
+}
+
+.tab-count {
+  margin-left: 0.25rem;
+  opacity: 0.8;
+}
+
+/* Better horizontal space usage for forms */
+.retrieve-form {
+  width: auto;
+  min-width: 220px;
+  max-width: 300px;
+}
+
+/* Favorite button styling */
+.btn.user-favorite {
+  padding: 0.1rem;
+  vertical-align: top;
+}
+
+.btn.user-favorite.text-warning {
+  -webkit-text-stroke: 1px var(--star-stroke);
+}
+
+.btn.user-favorite .material-icons {
+  font-size: 1.2rem;
+  margin-right: 0;
+}
+
+/* Row action buttons styling */
+.btn.bucket-action {
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.bucket-destroy {
+  color: #dc3545;
+}
+
+/* New styles for the bucket name links */
+.bucket-name-link {
+  color: var(--bs-primary);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.bucket-name-link:hover {
+  text-decoration: underline;
+}
+
+/* Subtle hover effect for dark mode */
+@media (prefers-color-scheme: dark) {
+  .nav-tabs .nav-link:hover {
+    background-color: rgba(255,255,255,0.04);
+    border-color: var(--bs-gray-700, #444);
+  }
+  
+  /* Make active tab blend in with background and remove bottom border */
+  .nav-tabs .nav-link.active {
+    background-color: var(--bs-body-bg, #212529);
+    border-color: var(--bs-gray-400, #444) var(--bs-gray-700, #444) transparent var(--bs-gray-700, #444);
+    border-bottom: 1px solid transparent !important;
+    color: var(--bs-nav-link-color, #fff);
+  }
+}

@@ -1,4 +1,3 @@
-
 <eg-string key="catalog.record.toast.conjoined"
   i18n-text text="Conjoined Record Target Set"></eg-string>
 <eg-string key="catalog.record.toast.overlay"
@@ -14,8 +13,8 @@
 <eg-string key="catalog.record.toast.clearAddedContentCacheFailed"
   i18n-text text="Failed to Clear Added Content Cache"></eg-string>
 
-<eg-bucket-dialog #recordBucketDialog bucketClass="biblio" [itemIds]="[recId]">
-</eg-bucket-dialog>
+<eg-bucket-item-transfer-dialog #recordBucketDialog bucketClass="biblio" [itemIds]="[recId]">
+</eg-bucket-item-transfer-dialog>
 
 <eg-add-to-carousel-dialog #recordCarouselDialog [recordIds]="[recId]">
 </eg-add-to-carousel-dialog>

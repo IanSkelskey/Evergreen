@@ -1,0 +1,204 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title d-flex align-items-center">
+      <span class="material-icons bucket-icon me-2" aria-hidden="true">edit_note</span>
+      <span i18n>Batch Edit Patrons in Bucket</span>
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()" [disabled]="isProcessing"></button>
+  </div>
+  
+  <div class="modal-body">
+    <form [formGroup]="editForm">
+      <div class="alert alert-info" role="alert" i18n>
+        <span class="material-icons me-2">info</span>
+        Modify fields below to change values for all patrons in this bucket. Only the fields you modify will be updated.
+      </div>
+      
+      <!-- Edit set name -->
+      <div class="form-group mb-3">
+        <label for="edit-name" class="form-label required" i18n>Name for edit set</label>
+        <input type="text" class="form-control" id="edit-name" 
+          formControlName="editName" placeholder="Name for this edit set" i18n-placeholder>
+        <div *ngIf="editForm.get('editName').invalid && editForm.get('editName').touched" 
+            class="text-danger small mt-1" i18n>
+          Please provide a name for this edit set
+        </div>
+      </div>
+      
+      <hr class="my-3">
+      
+      <div class="row mb-4">
+        <!-- Home Library -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label class="form-label" i18n>Home Library</label>
+            <eg-org-select
+                [initialOrgId]="homeOu?.id()"
+                (onChange)="editForm.get('homeOu').setValue($event); homeOu = $event"
+                [limitPerms]="['UPDATE_USER']"
+                [applyDefault]="false"
+                [disableOrgs]="disableHomeOrg"
+                [applyOrgId]="homeOu?.id() || null"
+                [placeholder]="'Select Home Library'">
+            </eg-org-select>
+            <button class="btn btn-sm btn-outline-secondary mt-2" 
+                    (click)="unsetField('homeOu')" 
+                    [disabled]="!editForm.get('homeOu').value" i18n>
+              <span class="material-icons small">undo</span>
+              Unset
+            </button>
+          </div>
+        </div>
+        
+        <!-- Main Profile -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label class="form-label" i18n>Main Profile</label>
+            <div ngbDropdown class="d-inline-block w-100">
+              <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center" 
+                      id="profileDropdown" 
+                      ngbDropdownToggle>
+                <span>{{ editForm.get('profile').value?.name() || 'Select Profile' }}</span>
+              </button>
+              <div ngbDropdownMenu aria-labelledby="profileDropdown" class="w-100 dropdown-scrollable">
+                <button ngbDropdownItem 
+                        *ngFor="let grp of profiles" 
+                        (click)="editForm.get('profile').setValue(grp)"
+                        [style.paddingLeft]="getDepthPadding(grp)"
+                        [disabled]="grp?.cannot_use">
+                  {{ grp.name() }}
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary mt-2" 
+                    (click)="unsetField('profile')" 
+                    [disabled]="!editForm.get('profile').value" i18n>
+              <span class="material-icons small">undo</span>
+              Unset
+            </button>
+          </div>
+        </div>
+        
+        <!-- Internet Access Level -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label class="form-label" i18n>Internet Access Level</label>
+            <div ngbDropdown class="d-inline-block w-100">
+              <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center" 
+                      id="netAccessDropdown" 
+                      ngbDropdownToggle>
+                <span>{{ editForm.get('netAccessLevel').value?.name() || 'Select Access Level' }}</span>
+              </button>
+              <div ngbDropdownMenu aria-labelledby="netAccessDropdown" class="w-100">
+                <button ngbDropdownItem 
+                        *ngFor="let level of netAccessLevels" 
+                        (click)="editForm.get('netAccessLevel').setValue(level)">
+                  {{ level.name() }}
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary mt-2" 
+                    (click)="unsetField('netAccessLevel')" 
+                    [disabled]="!editForm.get('netAccessLevel').value" i18n>
+              <span class="material-icons small">undo</span>
+              Unset
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-4">
+        <!-- Barred Flag -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label for="edit-barred" class="form-label" i18n>Barred Flag</label>
+            <select class="form-select" id="edit-barred" formControlName="barred">
+              <option value="" i18n>Unchanged</option>
+              <option value="t" i18n>True (Barred)</option>
+              <option value="f" i18n>False (Not Barred)</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Active Flag -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label for="edit-active" class="form-label" i18n>Active Flag</label>
+            <select class="form-select" id="edit-active" formControlName="active">
+              <option value="" i18n>Unchanged</option>
+              <option value="t" i18n>True (Active)</option>
+              <option value="f" i18n>False (Inactive)</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Juvenile Flag -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label for="edit-juvenile" class="form-label" i18n>Juvenile Flag</label>
+            <select class="form-select" id="edit-juvenile" formControlName="juvenile">
+              <option value="" i18n>Unchanged</option>
+              <option value="t" i18n>True (Juvenile)</option>
+              <option value="f" i18n>False (Not Juvenile)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-4">
+        <!-- Expire Date -->
+        <div class="col-md-4 mb-3">
+          <div class="form-group">
+            <label for="edit-expire-date" class="form-label" i18n>Privilege Expiration Date</label>
+            <input type="date" class="form-control" id="edit-expire-date" formControlName="expireDate">
+            <button class="btn btn-sm btn-outline-secondary mt-2" 
+                    (click)="unsetField('expireDate')" 
+                    [disabled]="!editForm.get('expireDate').value" i18n>
+              <span class="material-icons small">undo</span>
+              Unset
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Permission warning -->
+      <div *ngIf="!hasUpdatePerm" class="alert alert-warning mt-3" i18n>
+        <span class="material-icons me-2">warning</span>
+        You do not have the UPDATE_USER permission required to modify patron records.
+      </div>
+      
+      <!-- Processing status -->
+      <div *ngIf="isProcessing" class="progress-container mt-4">
+        <p class="mb-2"><strong i18n>Processing:</strong> {{progressStage}}</p>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" 
+               role="progressbar"
+               [style.width.%]="(progressValue / progressMax) * 100"
+               [attr.aria-valuenow]="progressValue" 
+               [attr.aria-valuemin]="0" 
+               [attr.aria-valuemax]="progressMax">
+            {{ progressValue }} / {{ progressMax }}
+          </div>
+        </div>
+        <div *ngIf="progressError" class="alert alert-danger mt-2">
+          {{progressError}}
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" 
+            (click)="close()" 
+            [disabled]="isProcessing" i18n>Cancel</button>
+    <button type="button" class="btn btn-success" 
+            (click)="batchEdit()" 
+            [disabled]="!editForm.valid || !hasModifiedFields() || isProcessing || !hasUpdatePerm" i18n>
+      <span class="material-icons" *ngIf="!isProcessing">edit</span>
+      <span class="spinner-border spinner-border-sm" role="status" *ngIf="isProcessing"></span>
+      Apply Changes
+    </button>
+  </div>
+</ng-template>

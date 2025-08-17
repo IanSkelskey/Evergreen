@@ -1,0 +1,68 @@
+<eg-progress-dialog #progressDialog></eg-progress-dialog>
+
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title d-flex align-items-center">
+      <span class="material-icons bucket-icon me-2 text-danger" aria-hidden="true">delete_forever</span>
+      <span i18n>Delete All Patrons in Bucket</span>
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="close()" [disabled]="isProcessing"></button>
+  </div>
+  
+  <div class="modal-body">
+    <form [formGroup]="deleteForm">
+      <div class="alert alert-warning" role="alert" i18n>
+        <span class="material-icons me-2">warning</span>
+        This operation will mark all patrons in the bucket as deleted. This is a potentially destructive operation.
+      </div>
+      
+      <!-- Delete set name -->
+      <div class="form-group mb-3">
+        <label for="delete-name" class="form-label required" i18n>Name for delete set</label>
+        <input type="text" class="form-control" id="delete-name" 
+          formControlName="deleteName" placeholder="Name for this delete set" i18n-placeholder>
+        <div *ngIf="deleteForm.get('deleteName').invalid && deleteForm.get('deleteName').touched" 
+            class="text-danger small mt-1" i18n>
+          Please provide a name for this delete set
+        </div>
+      </div>
+      
+      <!-- Permission warning -->
+      <div *ngIf="!hasDeletePerm" class="alert alert-warning mt-3" i18n>
+        <span class="material-icons me-2">warning</span>
+        You do not have the UPDATE_USER and DELETE_USER permissions required to delete patron records.
+      </div>
+      
+      <!-- Processing status -->
+      <div *ngIf="isProcessing" class="progress-container mt-4">
+        <p class="mb-2"><strong i18n>Processing:</strong> {{progressStage}}</p>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" 
+               role="progressbar"
+               [style.width.%]="(progressValue / progressMax) * 100"
+               [attr.aria-valuenow]="progressValue" 
+               [attr.aria-valuemin]="0" 
+               [attr.aria-valuemax]="progressMax">
+            {{ progressValue }} / {{ progressMax }}
+          </div>
+        </div>
+        <div *ngIf="progressError" class="alert alert-danger mt-2">
+          {{progressError}}
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" 
+            (click)="close()" 
+            [disabled]="isProcessing" i18n>Cancel</button>
+    <button type="button" class="btn btn-danger" 
+            (click)="deleteAllPatrons()" 
+            [disabled]="!deleteForm.valid || isProcessing || !hasDeletePerm" i18n>
+      <span class="material-icons" *ngIf="!isProcessing">delete_forever</span>
+      <span class="spinner-border spinner-border-sm" role="status" *ngIf="isProcessing"></span>
+      Delete All Patrons
+    </button>
+  </div>
+</ng-template>

@@ -1,0 +1,12 @@
+/* Use shared bucket styles from buckets.css */
+
+/* Apply shared class in template and use this minimal override */
+.quick-add-controls {
+  /* Any specific overrides needed beyond bucket-quick-add class */
+}
+
+/* Any specific styles that can't be covered by shared styles */
+.quick-add-stats {
+  display: flex;
+  flex-direction: column;
+}
