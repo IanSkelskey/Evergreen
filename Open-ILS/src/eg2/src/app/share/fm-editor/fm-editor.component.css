@@ -48,3 +48,25 @@ field name in a section that should have special row styling. */
   padding-top: var(--section-padding);
 }
 
+/* Styles for code editor integration */
+.code-editor-wrapper {
+  width: 100%;
+  min-height: 200px;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+/* When code editor is used, make the input group flex container */
+.input-group:has(.code-editor-wrapper) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Style for the translation button when code editor is used */
+.input-group:has(.code-editor-wrapper) .input-group-text {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+

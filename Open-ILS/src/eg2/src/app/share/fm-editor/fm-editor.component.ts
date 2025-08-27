@@ -96,6 +96,16 @@ export interface FmFieldOptions {
     // minimum and maximum permitted values for int fields
     min?: number;
     max?: number;
+
+    // for text fields, <input type="text"> might not always be the best choice
+    inputFieldType?: string; // <input type=""> or <textarea>
+    inputMode?: string; // <input inputmode="">
+    textareaRows?: number;
+
+    // Code editor support
+    useCodeEditor?: boolean;
+    codeLanguage?: string;
+    codeEditorHeight?: string; // Height of the code editor (default: '300px')
 }
 
 @Component({
@@ -603,6 +613,13 @@ export class FmRecordEditorComponent
         }
         if (fieldOptions.max) {
             field.max = Number(fieldOptions.max);
+        }
+
+        // Add code editor options
+        if (fieldOptions.useCodeEditor) {
+            field.useCodeEditor = fieldOptions.useCodeEditor;
+            field.codeLanguage = fieldOptions.codeLanguage || 'plaintext';
+            field.codeEditorHeight = fieldOptions.codeEditorHeight || '300px';
         }
 
         return promise || Promise.resolve();

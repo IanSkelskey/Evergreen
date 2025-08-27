@@ -1,0 +1,79 @@
+<div class="code-editor-container" [attr.data-language]="language()">
+  <div class="editor-main">
+    <!-- Line numbers -->
+    @if (effectiveShowLineNumbers()) {
+      <div class="line-numbers">
+        @for (lineNum of lineNumbers(); track lineNum) {
+          <span class="line-number">{{ lineNum }}</span>
+        }
+      </div>
+    }
+    
+    <!-- Code area wrapper -->
+    <div class="code-area">
+      <!-- Code input (invisible textarea) -->
+      <textarea
+        #codeTextarea
+        class="code-input"
+        [value]="code()"
+        (input)="onCodeChange($event)"
+        (scroll)="onScroll($event)"
+        (keydown)="onKeyDown($event)"
+        (click)="onCursorMove($event)"
+        (keyup)="onCursorMove($event)"
+        (mouseup)="onCursorMove($event)"
+        [placeholder]="placeholder()"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        wrap="off"
+        [attr.aria-label]="'Code editor for ' + language() + '. Tab key is used for indentation when text is selected, otherwise it navigates between fields.'"
+        i18n-aria-label
+      ></textarea>
+      
+      <!-- Highlighted code display -->
+      <pre 
+        class="code-display" 
+        [innerHTML]="highlightedCode().html"
+        [attr.data-language]="language()"
+        tabindex="-1"
+      ></pre>
+    </div>
+  </div>
+  
+  <!-- Status bar -->
+  <div class="status-bar">
+    <!-- Add load and save buttons to the left side -->
+    <div class="status-left">
+      <button 
+        type="button"
+        class="action-button load-button" 
+        (click)="onLoadClick()" 
+        title="Load code from file" i18n-title
+        aria-label="Load code from file" i18n-aria-label>
+        <i class="material-icons">upload_file</i>
+        <span class="button-text" i18n>Load</span>
+      </button>
+      
+      <button 
+        type="button"
+        class="action-button save-button" 
+        (click)="onSaveClick()" 
+        title="Save code to file" i18n-title
+        aria-label="Save code" i18n-aria-label>
+        <i class="material-icons">save</i>
+        <span class="button-text" i18n>Save</span>
+      </button>
+    </div>
+    <div class="status-right">
+      <span class="cursor-position" i18n>Ln {{cursorLine()}}, Col {{cursorColumn()}}</span>
+      <span class="separator">|</span>
+      <span class="language-indicator">{{ language() }}</span>
+    </div>
+  </div>
+  
+  <div class="sr-only" aria-live="polite" i18n>
+    Press Tab to navigate between form fields. To indent code, select text first then press Tab.
+  </div>
+</div>

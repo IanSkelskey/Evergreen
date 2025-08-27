@@ -13,7 +13,8 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    templateUrl: './trigger-edit.component.html'
+    templateUrl: './trigger-edit.component.html',
+    standalone: false
 })
 
 export class EditEventDefinitionComponent implements OnInit {

@@ -152,14 +152,37 @@
 
                 <ng-container *ngSwitchCase="'text'">
                   <div class="input-group">
-                  <input
-                    class="form-control"
-                    id="{{idPrefix}}-{{field.name}}" name="{{field.name}}"
-                    [attr.aria-describedby]="field.helpText ? idPrefix+'-'+field.name+'-help' : null"
-                    type="text" pattern="[\s\S]*\S[\s\S]*"
-                    [required]="field.isRequired()"
-                    [ngModel]="record[field.name]()"
-                    (ngModelChange)="record[field.name]($event)"/>
+                    <!-- Regular input field -->
+                    <input *ngIf="!field.useCodeEditor && field.inputFieldType !== 'textarea'"
+                      class="form-control"
+                      id="{{idPrefix}}-{{field.name}}" name="{{field.name}}"
+                      [attr.aria-describedby]="field.helpText ? idPrefix+'-'+field.name+'-help' : null"
+                      [type]="field.inputFieldType || 'text'" pattern="[\s\S]*\S[\s\S]*"
+                      [required]="field.isRequired()"
+                      [ngModel]="record[field.name]()"
+                      (ngModelChange)="record[field.name]($event)"/>
+                      
+                    <!-- Textarea -->
+                    <textarea *ngIf="!field.useCodeEditor && field.inputFieldType === 'textarea'" 
+                      class="form-control" [rows]="field.textareaRows || 5"
+                      id="{{idPrefix}}-{{field.name}}" name="{{field.name}}"
+                      pattern="[\s\S]*\S[\s\S]*"
+                      [required]="field.isRequired()"
+                      [ngModel]="record[field.name]()"
+                      (ngModelChange)="record[field.name]($event)"></textarea>
+                      
+                    <!-- Code Editor -->
+                    <div *ngIf="field.useCodeEditor" class="code-editor-wrapper" [style.height]="field.codeEditorHeight">
+                      <eg-code-editor
+                        id="{{idPrefix}}-{{field.name}}-editor"
+                        [code]="record[field.name]() || ''"
+                        [language]="field.codeLanguage"
+                        [showLineNumbers]="true"
+                        (codeChange)="record[field.name]($event)">
+                      </eg-code-editor>
+                    </div>
+                      
+                    <!-- Translation button -->
                     <button type="button" *ngIf="field.i18n && !field.readOnly" 
                       [ngClass]="(field.i18n && !field.readOnly) ? 'input-group-text' : null"
                       (click)="openTranslator(field.name)"
