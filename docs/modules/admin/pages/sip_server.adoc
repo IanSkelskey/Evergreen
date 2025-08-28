@@ -29,19 +29,25 @@ This is a rough intro to installing the +SIP+ server for Evergreen.
 
 Current +SIP+ server code lives at in the Evergreen git repository:
 
-   cd /opt 
-   git clone git://git.evergreen-ils.org/SIPServer.git SIPServer 
+[source,bash]
+----
+cd /opt
+git clone git://git.evergreen-ils.org/SIPServer.git SIPServer
+----
 
 
 === Configuring the Server ===
 
 indexterm:[configuration files, oils_sip.xml]
 
-. Type the following commands from the command prompt: 
-
-   $ sudo su opensrf 
-   $ cd /openils/conf 
-   $ cp oils_sip.xml.example oils_sip.xml 
+. Type the following commands from the command prompt:
++
+[source,bash]
+----
+$ sudo su opensrf
+$ cd /openils/conf
+$ cp oils_sip.xml.example oils_sip.xml
+----
 
 . Edit oils_sip.xml. Change the commented out <server-params> section to this: 
 
@@ -84,10 +90,13 @@ and make subsequent hold-related action requests, like holds cancellation.
 
 indexterm:[configuration files, oils_sip.xml]
 
-. Type the following commands from the command prompt: 
-
-  $ sudo su opensrf 
-  $ cd /openils/conf
+. Type the following commands from the command prompt:
++
+[source,bash]
+----
+$ sudo su opensrf
+$ cd /openils/conf
+----
 
 . In the +<accounts>+ section, add +SIP+ client login information. Make sure that all +<logins>+ use the same 
 institution attribute, and make sure the institution is listed in +<institutions>+. All attributes in the 
@@ -164,11 +173,11 @@ somewhere.
 To start the +SIP+ server type the following commands from the command prompt: 
 
 
-   $ sudo su opensrf 
-
-   $ oils_ctl.sh -a [start|stop|restart]_sip 
-
-indexterm:[SIP]
+[source,bash]
+----
+$ sudo su opensrf
+$ oils_ctl.sh -a [start|stop|restart]_sip
+----
 
 
 === Logging-SIP ===
@@ -180,31 +189,42 @@ indexterm:[syslog]
 
 It is useful to log +SIP+ requests to a separate file especially during initial setup by modifying your syslog config file. 
 
-. Edit syslog.conf. 
-
-   $ sudo vi /etc/syslog.conf  # maybe /etc/rsyslog.conf
-
+. Edit syslog.conf.
++
+[source,bash]
+----
+$ sudo vi /etc/syslog.conf  # maybe /etc/rsyslog.conf
+----
 
 . Add this: 
 
    local6.*                -/var/log/SIP_evergreen.log 
  
-. Syslog expects the logfile to exist so create the file. 
+. Syslog expects the logfile to exist so create the file.
++
+[source,bash]
+----
+$ sudo touch /var/log/SIP_evergreen.log
+----
 
-   $ sudo touch /var/log/SIP_evergreen.log 
-
-. Restart sysklogd. 
-
-   $ sudo /etc/init.d/sysklogd restart 
+. Restart sysklogd.
++
+[source,bash]
+----
+$ sudo /etc/init.d/sysklogd restart
+----
 
 
 ==== Syslog-NG ====
 
 indexterm:[syslog-NG]
 
-. Edit logging config. 
-
-   sudo vi /etc/syslog-ng/syslog-ng.conf 
+. Edit logging config.
++
+[source,bash]
+----
+sudo vi /etc/syslog-ng/syslog-ng.conf
+----
 
 . Add: 
 
@@ -213,29 +233,38 @@ indexterm:[syslog-NG]
    destination eg_sip { file("var/log/SIP_evergreen.log"); }; 
    log { source(s_all); filter(f_eg_sip); destination(eg_sip); }; 
 
-. Syslog-ng expects the logfile to exist so create the file. 
+. Syslog-ng expects the logfile to exist so create the file.
++
+[source,bash]
+----
+$ sudo touch /var/log/SIP_evergreen.log
+----
 
-   $ sudo touch /var/log/SIP_evergreen.log
-
-. Restart syslog-ng 
-
-   $ sudo /etc/init.d/syslog-ng restart 
-
-
-indexterm:[SIP]
+. Restart syslog-ng
++
+[source,bash]
+----
+$ sudo /etc/init.d/syslog-ng restart
+----
 
 
 === Testing Your SIP Connection ===
 
-* In the root directory of the SIPServer code: 
-
-   $ cd SIPServer/t 
+* In the root directory of the SIPServer code:
++
+[source,bash]
+----
+$ cd SIPServer/t
+----
 
 * Edit SIPtest.pm, change the $instid, $server, $username, and $password variables. This will be 
 enough to test connectivity. To run all tests, you'll need to change all the variables in the _Configuration_ section. 
 
-   $ PERL5LIB=../ perl 00sc_status.t 
-+
+[source,bash]
+----
+$ PERL5LIB=../ perl 00sc_status.t
+----
+
 This should produce something like:
 +
 
@@ -266,15 +295,10 @@ Comments because we don't want to indent these numbered bullets!
 
 . Start by testing your ability to log into the SIP server:
 +
-[NOTE]
-======================
-We are using 6001 here which is associated with +SIP2+ as per our configuration. 
-======================
-+
-   $ telnet $server 6001 
-   Connected to $server. 
-   Escape character is '^]'. 
-   9300CN$username|CO$password|CP$instid
+[source,bash]
+----
+$ telnet $server 6001
+----
 +
 If successful, the SIP server returns a +941+ result. A result of +940+,
 however, indicates an unsuccessful login attempt. Check the +<accounts>+
@@ -350,6 +374,7 @@ ssh -f -N -L 6001:localhost:6001 my_sip_user@my_sip_server.com
 ----
 +
 .. If you want to constantly poll to make sure that the connection is still running, you can do something like this as a cron job or scheduled task on the SIP client machine:
++
 [source,bash]
 ----
 #!/bin/bash
