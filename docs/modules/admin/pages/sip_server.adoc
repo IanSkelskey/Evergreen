@@ -49,14 +49,17 @@ $ cd /openils/conf
 $ cp oils_sip.xml.example oils_sip.xml
 ----
 
-. Edit oils_sip.xml. Change the commented out <server-params> section to this: 
-
-   <server-params
-      min_spare_servers='1' 
-      max_spare_servers='2' 
-      min_servers='3'
-      max_servers='25' 
-		/>
+. Edit oils_sip.xml. Change the commented out <server-params> section to this:
++
+[source,xml]
+----
+<server-params
+  min_spare_servers='1'
+  max_spare_servers='2'
+  min_servers='3'
+  max_servers='25'
+/>
+----
 
 . max_servers will directly correspond to the number of allowed +SIP+ clients. Set the number accordingly, but 
 bear in mind that too many connections can exhaust memory. On a 4G RAM/4 CPU server (that is also running 
