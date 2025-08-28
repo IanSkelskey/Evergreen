@@ -111,42 +111,44 @@ permissions:
 +
 // OR use SQL like: 
 +
-   
-   INSERT INTO permission.grp_tree (name,parent,description,application_perm) 
-   VALUES ('SIP', 1, 'SIP2 Client Systems', 'group_application.user.sip_client'); 
-  
-   INSERT INTO 
-     permission.grp_perm_map (grp, perm, depth, grantable) 
-   SELECT 
-     g.id, p.id, 0, FALSE 
-   FROM 
-     permission.grp_tree g, 
-     permission.perm_list p 
-   WHERE 
-     g.name = 'SIP' AND 
-     p.code IN ( 
-       'COPY_CHECKIN', 
-       'COPY_CHECKOUT', 
-       'RENEW_CIRC', 
-       'VIEW_CIRCULATIONS', 
-       'VIEW_COPY_CHECKOUT_HISTORY', 
-       'VIEW_PERMIT_CHECKOUT', 
-       'VIEW_USER', 
-       'VIEW_USER_FINES_SUMMARY', 
-       'VIEW_USER_TRANSACTIONS',
-       'CANCEL_HOLDS'
-    ); 
+[source,sql]
+----
+INSERT INTO permission.grp_tree (name,parent,description,application_perm) 
+VALUES ('SIP', 1, 'SIP2 Client Systems', 'group_application.user.sip_client'); 
+
+INSERT INTO 
+  permission.grp_perm_map (grp, perm, depth, grantable) 
+SELECT 
+  g.id, p.id, 0, FALSE 
+FROM 
+  permission.grp_tree g, 
+  permission.perm_list p 
+WHERE 
+  g.name = 'SIP' AND 
+  p.code IN ( 
+    'COPY_CHECKIN', 
+    'COPY_CHECKOUT', 
+    'RENEW_CIRC', 
+    'VIEW_CIRCULATIONS', 
+    'VIEW_COPY_CHECKOUT_HISTORY', 
+    'VIEW_PERMIT_CHECKOUT', 
+    'VIEW_USER', 
+    'VIEW_USER_FINES_SUMMARY', 
+    'VIEW_USER_TRANSACTIONS',
+    'CANCEL_HOLDS'
+  );
+----
 +
 Verify:
 +
-    
-    SELECT * 
-    FROM permission.grp_perm_map pgpm 
-        INNER JOIN permission.perm_list ppl ON pgpm.perm = ppl.id 
-        INNER JOIN permission.grp_tree pgt ON pgt.id = pgpm.grp 
-    WHERE pgt.name = 'SIP';
-    
- 
+[source,sql]
+----
+SELECT * 
+FROM permission.grp_perm_map pgpm 
+  INNER JOIN permission.perm_list ppl ON pgpm.perm = ppl.id 
+  INNER JOIN permission.grp_tree pgt ON pgt.id = pgpm.grp 
+WHERE pgt.name = 'SIP';
+----
     
 . For each account created in the +<login>+ section of oils_sip.xml, create a user (via the staff client user 
 editor) that has the same username and password and put that user into the +SIP+ group. 
