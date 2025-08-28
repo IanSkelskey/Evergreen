@@ -160,6 +160,36 @@ Don't be confused by the different branches that can show up in the same respons
 Evergreen supports the Hold message for the purpose of canceling
 holds.  It does not currently support creating hold requests via SIP2.
 
+SIP2 hold cancellation example:
+
+SIP2: Request Sent::
+[source,txt]
+----
+15-20250824    190033AOBR1|AA99999376864|ABCONC40000613|AJHorn concertos|BON|AY3AZE79C
+----
+
+Brief breakdown:
+
+- 15: Hold request (Evergreen uses this message only for cancellations)
+- -: Hold action indicator (treated as a cancel request by Evergreen)
+- 20250824    190033: Transaction date/time (YYYYMMDDZZZZHHMMSS; ZZZZ = 4 blanks for local time)
+- AO BR1: Institution ID / SIP location
+- AA 99999376864: Patron identifier (e.g., barcode)
+- AB CONC40000613: Item identifier (e.g., barcode)
+- AJ Horn concertos: Title identifier (optional, informational; not required to cancel)
+- BO N: Optional flag (ignored by Evergreen for cancellation)
+- AY 3: Sequence number
+- AZ E79C: Checksum
+
+Behavior in Evergreen:
+
+- The server cancels the matching hold for the patron (AA) and item (AB) if one exists.
+
+[NOTE]
+===================
+SIP accounts must have the CANCEL_HOLDS permission to cancel holds.
+===================
+
 
 [#sip_17-18_item_information]
 

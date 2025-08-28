@@ -107,8 +107,9 @@ permissions:
      VIEW_USER 
      VIEW_USER_FINES_SUMMARY 
      VIEW_USER_TRANSACTIONS 
+     CANCEL_HOLDS
 +
-OR use SQL like: 
+// OR use SQL like: 
 +
    
    INSERT INTO permission.grp_tree (name,parent,description,application_perm) 
@@ -132,7 +133,8 @@ OR use SQL like:
        'VIEW_PERMIT_CHECKOUT', 
        'VIEW_USER', 
        'VIEW_USER_FINES_SUMMARY', 
-       'VIEW_USER_TRANSACTIONS' 
+       'VIEW_USER_TRANSACTIONS',
+       'CANCEL_HOLDS'
     ); 
 +
 Verify:
