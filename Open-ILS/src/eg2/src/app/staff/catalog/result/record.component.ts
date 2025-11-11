@@ -81,12 +81,12 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
     }
 
     async loadBuckets() {
-        await this.bucketService.loadFavoriteRecordBucketFlags(this.auth.user().id());
-        this.favoriteBucketIds = this.bucketService.getFavoriteRecordBucketIds();
-        this.recentBucketIds = this.bucketService.recentRecordBucketIds();
-        const favoriteBuckets = await this.bucketService.retrieveRecordBuckets(this.favoriteBucketIds);
+        await this.bucketService.loadFavoriteBucketFlags('biblio_record_entry', this.auth.user().id());
+        this.favoriteBucketIds = this.bucketService.getFavoriteBucketIds('biblio_record_entry');
+        this.recentBucketIds = this.bucketService.recentBucketIds('biblio_record_entry');
+        const favoriteBuckets = await this.bucketService.retrieveBuckets('biblio_record_entry', this.favoriteBucketIds);
         this.favoriteBuckets$.next(favoriteBuckets);
-        const recentBuckets = await this.bucketService.retrieveRecordBuckets(this.recentBucketIds);
+        const recentBuckets = await this.bucketService.retrieveBuckets('biblio_record_entry', this.recentBucketIds);
         this.recentBuckets$.next(recentBuckets);
     }
 
@@ -175,11 +175,11 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
 
     async toggleRecordInBucket(bibId: number, bucketId: number) {
         const bibIds = new Array(bibId);
-        const inBucket = await this.bucketService.checkForBibInRecordBuckets(bibId, new Array(bucketId));
+        const inBucket = await this.bucketService.checkForItemInBuckets('biblio_record_entry', bibId, new Array(bucketId));
         if (inBucket) {
-            await this.bucketService.removeBibsFromRecordBucket(bucketId, bibIds);
+            await this.bucketService.removeItemsFromBucket('biblio_record_entry', bucketId, bibIds);
         } else {
-            await this.bucketService.addBibsToRecordBucket(bucketId, bibIds);
+            await this.bucketService.addItemsToBucket('biblio_record_entry', bucketId, bibIds);
         }
     }
 
@@ -207,9 +207,9 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
 
     async addRecordToBucket(bibId: number, bucketId: number): Promise<any> {
         console.debug('addRecordToBucket, invoked');
-        this.bucketService.logRecordBucket(bucketId);
+        this.bucketService.logBucket('biblio_record_entry', bucketId);
         let msg = '';
-        const result = await this.bucketService.addBibsToRecordBucket(bucketId, [bibId]);
+        const result = await this.bucketService.addItemsToBucket('biblio_record_entry', bucketId, [bibId]);
         // eslint-disable-next-line eqeqeq
         if (result.textcode == 'DATABASE_UPDATE_FAILED') {
             msg = $localize`Error adding to bucket`;
@@ -225,7 +225,7 @@ export class ResultRecordComponent implements OnInit, OnDestroy {
     }
 
     async recordInBucket(bibId: number, bucketId: number): Promise<any> {
-        return await this.bucketService.checkForBibInRecordBuckets(bibId, new Array(bucketId));
+        return await this.bucketService.checkForItemInBuckets('biblio_record_entry', bibId, new Array(bucketId));
     }
 
     getHoldingsSummaries(): HoldingsSummary[] {

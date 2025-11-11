@@ -10,7 +10,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {BucketService, BucketType} from '@eg/staff/share/buckets/bucket.service';
 
 /**
  * Dialog for adding bib records to new and existing record buckets.
@@ -179,8 +179,11 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
                 if (this.showExistingBuckets) { // aka, in a "add to bucket" context
                     this.addToBucket(bktId);
                 } else {
-                    this.bucketService.logRecordBucket(bktId);
-                    this.bucketService.requestBibBucketsRefresh();
+                    const btype: BucketType = (this.bucketClass === 'user')
+                        ? 'user'
+                        : 'biblio_record_entry';
+                    this.bucketService.logBucket(btype, bktId);
+                    this.bucketService.requestBucketsRefresh(btype);
                     this.close({success: true, bucket: bktId}); // we're done
                 }
             }
@@ -197,7 +200,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     // Add the record(s) to the bucket with provided ID.
     addRecordToBucket(bucketId: number) {
-        this.bucketService.logRecordBucket(bucketId);
+        this.bucketService.logBucket('biblio_record_entry', bucketId);
         const items = [];
         this.itemIds.forEach(itemId => {
             const item = this.idl.create(this.bucketFmClass + 'i');
@@ -225,7 +228,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     addBibQueueToBucket(bucketId: number) {
         const bucket = this.buckets.filter(b => b.id() === bucketId)[0];
         if (!bucket) { return; }
-        this.bucketService.logRecordBucket(bucketId);
+        this.bucketService.logBucket('biblio_record_entry', bucketId);
 
         this.net.request(
             'open-ils.vandelay',

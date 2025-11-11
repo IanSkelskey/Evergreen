@@ -48,3 +48,33 @@
 #### New Permissions
 - `ADMIN_CONTAINER_USER_ORG_SHARE` - For managing user bucket org share mappings
 - `ADMIN_CONTAINER_USER_USER_SHARE` - For managing user bucket user share mappings
+
+## Commit 2 - November 11, 2025
+### Generalize bucket service and fix add-to-bucket UI feedback
+
+#### Angular Service Refactor (`bucket.service.ts`)
+- Introduced generic bucket handling via `BucketType` for `biblio_record_entry` and `user` buckets.
+- Replaced record-bucket-specific APIs with generic ones:
+  - `retrieveBucketItems()`, `retrieveBuckets()`, `getBucketCountStats()`
+  - `addItemsToBucket()`, `removeItemsFromBucket()`
+  - `logBucket()`, `recentBucketIds()`
+  - Favorite flag helpers: `loadFavoriteBucketFlags()`, `isFavoriteBucket()`, `addFavoriteBucketFlag()`, `removeFavoriteBucketFlag()`, `getFavoriteBucketIds()`
+  - `checkForItemInBuckets()` replaces bib-only check.
+- Added refresh Subjects and helpers for both bib and user buckets.
+- Fixed `pcrud.create()` result handling by collecting emissions with `rxjs/operators#toArray()` before mapping IDs, eliminating runtime error `TypeError: l.map is not a function`.
+
+#### Component Updates
+- `facets.component.ts` and `record.component.ts`: migrated to generic bucket service methods and IDs; bucket lists now refresh without page reload after add/remove.
+- `bucket-dialog.component.ts`: detects bucket type, uses generic logging/refresh and item-add APIs; imports `BucketType`.
+- `bucket-share-dialog.component.ts`: supports `containerType` input (`biblio` or `user`) and selects correct sharing APIs for user/org shares and retrieval.
+
+#### New Module
+- Added `BucketCommonModule` to centralize bucket dialogs (`BucketTransferDialogComponent`, `BucketShareDialogComponent`, `BucketUserShareComponent`, `BucketActionSummaryDialogComponent`). Imported where needed.
+
+#### Bug Fixes / Behavior Changes
+- Fixes lack of UI feedback when adding a record to a bucket from Catalog Facets; success toasts and in-place bucket refresh now occur.
+- Removes console error on add: `core.mjs ERROR TypeError: l.map is not a function`.
+
+#### Developer Notes (API changes)
+- Deprecated record-bucket-specific service methods in favor of generic counterparts listed above. Update call sites accordingly.
+

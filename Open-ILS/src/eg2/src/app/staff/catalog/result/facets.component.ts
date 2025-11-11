@@ -73,19 +73,19 @@ export class ResultFacetsComponent implements OnInit {
     }
 
     async loadBuckets() {
-        await this.bucketService.loadFavoriteRecordBucketFlags(this.auth.user().id());
-        this.favoriteBucketIds = this.bucketService.getFavoriteRecordBucketIds();
-        this.recentBucketIds = this.bucketService.recentRecordBucketIds();
-        const favoriteBuckets = await this.bucketService.retrieveRecordBuckets(this.favoriteBucketIds);
+        await this.bucketService.loadFavoriteBucketFlags('biblio_record_entry', this.auth.user().id());
+        this.favoriteBucketIds = this.bucketService.getFavoriteBucketIds('biblio_record_entry');
+        this.recentBucketIds = this.bucketService.recentBucketIds('biblio_record_entry');
+        const favoriteBuckets = await this.bucketService.retrieveBuckets('biblio_record_entry', this.favoriteBucketIds);
         this.favoriteBuckets$.next(favoriteBuckets);
-        const recentBuckets = await this.bucketService.retrieveRecordBuckets(this.recentBucketIds);
+        const recentBuckets = await this.bucketService.retrieveBuckets('biblio_record_entry', this.recentBucketIds);
         this.recentBuckets$.next(recentBuckets);
         await this.basket.getRecordIds(); // prime the service if nobody else has
     }
 
     addBasketToBucket(bucketId: number, clearBasket?: boolean) {
         this.basket.getRecordIds().then( basket_records => {
-            this.bucketService.addBibsToRecordBucket(bucketId, basket_records)
+            this.bucketService.addItemsToBucket('biblio_record_entry', bucketId, basket_records)
                 .then(resp => {
                     const evt = this.evt.parse(resp);
                     if (evt) {

@@ -32,6 +32,7 @@ export class BucketShareDialogComponent
 
     activeTabId = 1; // User Sharing Tab
 
+    @Input() containerType = 'biblio'; // 'biblio' for record buckets, 'user' for user buckets
     cellTextGeneratorViewPermGrid: GridCellTextGenerator;
     cellTextGeneratorEditPermGrid: GridCellTextGenerator;
     dataSourceViewPermGrid: GridDataSource = new GridDataSource();
@@ -119,7 +120,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.containerType,
                 this.containerObjects.map(o => o.id),
                 'VIEW_CONTAINER'
             )
@@ -157,7 +158,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.containerType,
                 this.containerObjects.map(o => o.id),
                 'UPDATE_CONTAINER'
             )
@@ -414,9 +415,12 @@ export class BucketShareDialogComponent
 
     updateUserSharesViewPermGrid$ = (selectedUserIds: number[]) => {
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
+        const apiMethod = this.containerType === 'user' 
+            ? 'open-ils.actor.container.update_user_bucket_user_share_mapping'
+            : 'open-ils.actor.container.update_record_bucket_user_share_mapping';
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            apiMethod,
             this.auth.token(),
             this.containerObjects.map(o => o.id),
             selectedUserIds,
@@ -449,9 +453,12 @@ export class BucketShareDialogComponent
 
     updateUserSharesEditPermGrid$ = (selectedUserIds: number[]) => {
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
+        const apiMethod = this.containerType === 'user'
+            ? 'open-ils.actor.container.update_user_bucket_user_share_mapping'
+            : 'open-ils.actor.container.update_record_bucket_user_share_mapping';
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            apiMethod,
             this.auth.token(),
             this.containerObjects.map(o => o.id),
             selectedUserIds,
@@ -592,10 +599,13 @@ export class BucketShareDialogComponent
     }
 
     async populateCheckedNodes(): Promise<void> {
+        const apiMethod = this.containerType === 'user'
+            ? 'open-ils.actor.container.retrieve_user_bucket_shared_org_ids'
+            : 'open-ils.actor.container.retrieve_record_bucket_shared_org_ids';
         this._original_orgs = (await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
-                'open-ils.actor.container.retrieve_record_bucket_shared_org_ids', // hard-coded to record buckets for now
+                apiMethod,
                 this.auth.token(),
                 this.containerObjects.map( o => o.id ),
             )
@@ -610,9 +620,12 @@ export class BucketShareDialogComponent
     }
 
     updateOrgShares$ = (checkedNodes) => {
+        const apiMethod = this.containerType === 'user'
+            ? 'open-ils.actor.container.update_user_bucket_org_share_mapping'
+            : 'open-ils.actor.container.update_record_bucket_org_share_mapping';
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_org_share_mapping', // hard-coded to record buckets for now
+            apiMethod,
             this.auth.token(),
             this.containerObjects.map( o => o.id ),
             checkedNodes.map( n => n.id )

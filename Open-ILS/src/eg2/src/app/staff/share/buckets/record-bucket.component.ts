@@ -126,7 +126,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                 this.jumpToBucketContent(bucket.id);
             }
         );
-        await this.bucketService.loadFavoriteRecordBucketFlags(this.auth.user().id());
+        await this.bucketService.loadFavoriteBucketFlags('biblio_record_entry', this.auth.user().id());
         this.initInProgress = false; console.warn('initInProgress = false');
         this.updateCounts();
     }
@@ -212,7 +212,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                 bucketIdQuery: async (pager, sort, justCount) => {
                     const translatedSort = this.pcrud.translateFlatSortComplex('cbreb', sort);
                     console.debug('translatedSort', translatedSort);
-                    this.favoriteIds = this.bucketService.getFavoriteRecordBucketIds();
+                    this.favoriteIds = this.bucketService.getFavoriteBucketIds('biblio_record_entry');
                     let result: BucketQueryResult;
                     if (this.favoriteIds.length) {
                         const response  = await lastValueFrom(
@@ -253,7 +253,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     // We can see how it plays out in testing and practice.
                     const translatedSort = this.pcrud.translateFlatSortComplex('cbreb', sort);
                     console.debug('translatedSort', translatedSort);
-                    const recentBucketIds = this.bucketService.recentRecordBucketIds();
+                    const recentBucketIds = this.bucketService.recentBucketIds('biblio_record_entry');
                     let result: BucketQueryResult;
                     if (recentBucketIds.length) {
                         const response  = await lastValueFrom(
@@ -421,7 +421,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                     const query = this.buildRetrieveByIdsQuery(response.bucketIds);
 
                     // Pre-fetch all count stats
-                    return this.bucketService.getRecordBucketCountStats(response.bucketIds).pipe(
+                    return this.bucketService.getBucketCountStats('biblio_record_entry', response.bucketIds).pipe(
                         switchMap(countStats => {
                             return this.flatData.getRows(this.grid.context, query, new Pager(), sort).pipe(
                                 map(row => {
@@ -431,7 +431,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                                         org_share_count: countStats[row.id]?.org_share_count || 0,
                                         usr_view_share_count: countStats[row.id]?.usr_view_share_count || 0,
                                         usr_edit_share_count: countStats[row.id]?.usr_update_share_count || 0,
-                                        favorite: this.bucketService.isFavoriteRecordBucket(row.id)
+                                        favorite: this.bucketService.isFavoriteBucket('biblio_record_entry', row.id)
                                     };
                                 })
                             );
@@ -526,6 +526,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         }
 
         console.debug('rows', rows);
+        this.transferDialog.containerType = 'biblio';
         this.transferDialog.containerObjects = rows;
 
         try {
@@ -558,6 +559,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         }
 
         console.debug('rows', rows);
+        this.shareBucketDialog.containerType = 'biblio';
         this.shareBucketDialog.containerObjects = rows;
         this.shareBucketDialog.containerObjects = rows;
         this.shareBucketDialog.loadAouTree();
@@ -851,11 +853,11 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         }
 
         for (const row of rows) {
-            if (!this.bucketService.isFavoriteRecordBucket(row.id)) {
+            if (!this.bucketService.isFavoriteBucket('biblio_record_entry', row.id)) {
                 console.debug('row is not a favorite', row);
                 try {
                     /* eslint-disable no-await-in-loop */
-                    await this.bucketService.addFavoriteRecordBucketFlag(row.id, this.auth.user().id());
+                    await this.bucketService.addFavoriteBucketFlag('biblio_record_entry', row.id, this.auth.user().id());
                     row.favorite = true;
                     console.debug('row is now a favorite', row);
                 } catch (error) {
@@ -880,11 +882,11 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         }
 
         for (const row of rows) {
-            if (this.bucketService.isFavoriteRecordBucket(row.id)) {
+            if (this.bucketService.isFavoriteBucket('biblio_record_entry', row.id)) {
                 console.debug('row is a favorite', row);
                 try {
                     /* eslint-disable no-await-in-loop */
-                    await this.bucketService.removeFavoriteRecordBucketFlag(row.id);
+                    await this.bucketService.removeFavoriteBucketFlag('biblio_record_entry', row.id);
                     row.favorite = false;
                     console.debug('row is no longer a favorite', row);
                 } catch (error) {
