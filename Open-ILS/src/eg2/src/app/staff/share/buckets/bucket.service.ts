@@ -7,6 +7,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService,IdlObject} from '@eg/core/idl.service';
+import {EventService} from '@eg/core/event.service';
 
 export type BucketType = 'biblio_record_entry' | 'user';
 
@@ -61,6 +62,7 @@ export class BucketService {
         private auth: AuthService,
         private pcrud: PcrudService,
         private idl: IdlService,
+        private evt: EventService,
     ) {}
 
     private getConfig(bucketType: BucketType): BucketTypeConfig {
@@ -138,25 +140,45 @@ export class BucketService {
     async addItemsToBucket(bucketType: BucketType, bucketId: number, itemIds: number[]): Promise<any> {
         this.logBucket(bucketType, bucketId);
         const config = this.getConfig(bucketType);
-        const items = [];
+        const items: any[] = [];
         itemIds.forEach(itemId => {
             const item = this.idl.create(config.bucketItemClass);
             item.bucket(bucketId);
             item[config.targetField](itemId);
             items.push(item);
         });
-        // pcrud.create emits each created item separately; collect into an array
+
+        // user bucket items may lack pcrud create support; use actor API instead
+        if (bucketType === 'user') {
+            const resp = await lastValueFrom(this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.container.item.create',
+                this.auth.token(), 'user', items
+            ));
+            const evt = this.evt.parse(resp);
+            if (evt) { throw new Error(evt.toString()); }
+            return itemIds; // return list of IDs added
+        }
+
         const createdItems = await lastValueFrom(this.pcrud.create(items).pipe(toArray()));
         return createdItems.map(i => i.id());
     }
 
     async removeItemsFromBucket(bucketType: BucketType, bucketId: number, itemIds: number[]): Promise<any> {
         const config = this.getConfig(bucketType);
-        const query: any = {
-            bucket: bucketId
-        };
-        query[config.targetField] = itemIds;
+        if (bucketType === 'user') {
+            const resp = await lastValueFrom(this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.container.item.delete.batch',
+                this.auth.token(), 'user', bucketId, itemIds
+            ));
+            const evt = this.evt.parse(resp);
+            if (evt) { throw new Error(evt.toString()); }
+            return true;
+        }
 
+        const query: any = { bucket: bucketId };
+        query[config.targetField] = itemIds;
         return this.pcrud.search(
             config.bucketItemClass, query, {}, {atomic: true}
         ).toPromise().then(entries => this.pcrud.remove(entries).toPromise());

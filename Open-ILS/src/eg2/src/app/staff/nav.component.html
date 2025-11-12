@@ -373,6 +373,15 @@
             <span class="material-icons" aria-hidden="true">check_circle</span>
             <span i18n>Verify Credentials</span>
           </a>
+          <a class="dropdown-item" ngbDropdownItem
+           routerLinkActive="active" 
+            ariaCurrentWhenActive="page" routerLink="/staff/circ/user-buckets"
+            (click)="isMenuCollapsed = true" 
+            (keydown.space)="isMenuCollapsed = true" 
+            (keydown.enter)="isMenuCollapsed = true">
+            <span class="material-icons" aria-hidden="true">list</span>
+            <span i18n>User Buckets</span>
+          </a>
         </div>
       </div>
     </div>

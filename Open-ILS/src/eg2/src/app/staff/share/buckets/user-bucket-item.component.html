@@ -1,0 +1,85 @@
+<eg-title i18n-prefix prefix="Users in a Bucket">
+</eg-title>
+
+<eg-staff-banner bannerText="Users in a Bucket" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-patron-search-dialog #patronSearch>
+</eg-patron-search-dialog>
+
+<ng-template #barcodeTemplate let-r="row">
+  <a routerLink="/staff/circ/patron/{{r['target_user.id']}}/edit">{{r['target_user.card.barcode']}}</a>
+  
+</ng-template>
+
+<eg-grid #grid idlClass="cubi"
+  persistKey="staff.user_bucket.content"
+  [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+  (rowSelectionChange)="gridSelectionChange($event)"
+  [sortable]="true" [filterable]="true" [allowNamedFilterSets]="false"
+  ignoreFields="target_user"
+  [pageSize]="50">
+
+  <eg-grid-toolbar-action label="Add Users to Bucket" i18n-label (onClick)="addUsersToBucket()"></eg-grid-toolbar-action>
+  <eg-grid-toolbar-action label="Remove Users from Bucket" i18n-label [disabled]="noSelectedRows" (onClick)="removeUsersFromBucket($event)"></eg-grid-toolbar-action>
+
+  <eg-grid-column path="id" [index]="true" [hidden]="true" [required]="true"></eg-grid-column>
+  <!-- Visible columns to match legacy: Barcode, First, Middle, Last, Home Library, Balance Owed -->
+  <!-- Barcode / card -->
+  <eg-grid-column path="target_user.card.barcode" label="Barcode" i18n-label [cellTemplate]="barcodeTemplate"></eg-grid-column>
+
+  <!-- Core identity (visible) -->
+  <eg-grid-column path="target_user.first_given_name" label="First Name" i18n-label [required]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.second_given_name" label="Middle Name" i18n-label></eg-grid-column>
+  <eg-grid-column path="target_user.family_name" label="Last Name" i18n-label [required]="true"></eg-grid-column>
+
+  <!-- Home library (visible by name) -->
+  <eg-grid-column path="target_user.home_ou.name" label="Home Library" i18n-label></eg-grid-column>
+
+  <!-- Financial summary (visible) -->
+  <eg-grid-column path="target_user.money_summary.balance_owed" label="Balance Owed" i18n-label></eg-grid-column>
+
+  <!-- Hidden core identifiers / extras -->
+  <eg-grid-column path="target_user.id" label="User ID" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.usrname" label="Username" i18n-label [hidden]="true"></eg-grid-column>
+  
+  <!-- Optional name extras (hidden) -->
+  <eg-grid-column path="target_user.middle_name" label="Middle (Alt)" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.prefix" label="Prefix" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.suffix" label="Suffix" i18n-label [hidden]="true"></eg-grid-column>
+
+  <!-- Contact info -->
+  <eg-grid-column path="target_user.email" label="Email" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.day_phone" label="Day Phone" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.evening_phone" label="Evening Phone" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.other_phone" label="Other Phone" i18n-label [hidden]="true"></eg-grid-column>
+
+  <!-- Dates -->
+  <eg-grid-column path="target_user.create_date" label="Created" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.expire_date" label="Expires" i18n-label [hidden]="true"></eg-grid-column>
+
+  <!-- Home library -->
+  <eg-grid-column path="target_user.home_ou" label="Home OU" i18n-label [hidden]="true"></eg-grid-column>
+
+  <!-- Financial summary -->
+  
+
+  <!-- Mailing Address -->
+  <eg-grid-column path="target_user.mailing_address.street1" label="Mail Street 1" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.mailing_address.street2" label="Mail Street 2" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.mailing_address.city" label="Mail City" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.mailing_address.county" label="Mail County" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.mailing_address.state" label="Mail State" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.mailing_address.post_code" label="Mail Postal Code" i18n-label [hidden]="true"></eg-grid-column>
+
+  <!-- Billing Address -->
+  <eg-grid-column path="target_user.billing_address.street1" label="Bill Street 1" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.billing_address.street2" label="Bill Street 2" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.billing_address.city" label="Bill City" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.billing_address.county" label="Bill County" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.billing_address.state" label="Bill State" i18n-label [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="target_user.billing_address.post_code" label="Bill Postal Code" i18n-label [hidden]="true"></eg-grid-column>
+
+  <eg-grid-column path="bucket" [hidden]="true" [required]="true"></eg-grid-column>
+
+</eg-grid>

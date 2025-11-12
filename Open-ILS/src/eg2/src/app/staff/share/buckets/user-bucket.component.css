@@ -1,0 +1,2 @@
+.user-favorite { padding: 0.1rem; }
+.user-favorite.text-warning { -webkit-text-stroke: 1px var(--star-stroke); }
