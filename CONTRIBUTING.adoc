@@ -1,1 +1,220 @@
-# Evergreen ILS Contribution Guide
+= Contributing to the Evergreen Community
+:icons: font
+
+This guide provides essential information for contributing code and documentation to the Evergreen open-source community.
+
+== Overview
+
+As part of the Evergreen community, team members regularly contribute bug fixes, enhancements, and documentation improvements. This collaborative approach strengthens the entire Evergreen ecosystem while ensuring our local improvements benefit all users.
+
+Before contributing:
+
+* **Read the community guidelines**: link:https://wiki.evergreen-ils.org/doku.php?id=contributing[Contributing to Evergreen,window="_blank"]
+* **Join the mailing lists**: Subscribe to link:http://evergreen-ils.org/communicate/mailing-lists/[Evergreen mailing lists,window="_blank"] and observe community culture
+* **Check existing work**: Review link:https://bugs.launchpad.net/evergreen[Launchpad,window="_blank"] for duplicate efforts
+
+== Documentation Contributions (GitHub - Recommended)
+
+The Evergreen community prefers documentation contributions through GitHub pull requests for easier review and collaboration.
+
+=== Setup and Workflow
+
+1. **Fork and clone**:
++
+[source,bash]
+----
+# Fork https://github.com/evergreen-library-system/Evergreen on GitHub
+git clone https://github.com/yourusername/Evergreen.git
+cd Evergreen
+git checkout -b docs-your-feature-name
+----
+
+2. **Make changes and submit**:
++
+[source,bash]
+----
+# Edit files in docs/modules/ using AsciiDoc format
+git add .
+git commit -m "Docs: Descriptive commit message"
+git push origin docs-your-feature-name
+# Create pull request on GitHub
+----
+
+3. **For simple typos**: Use GitHub's web interface to edit files directly and create pull requests
+
+== Code Contributions (Traditional Git Workflow)
+
+Code contributions follow the established Evergreen git workflow with Launchpad integration.
+
+=== Initial Setup
+
+1. **Generate SSH key** (if needed):
++
+[source,bash]
+----
+ssh-keygen  # Accept defaults, optionally set passphrase
+----
+
+2. **Request access**: Email your **public SSH key** (`~/.ssh/id_rsa.pub`) to link:mailto:gitadmin@evergreen-ils.org[gitadmin@evergreen-ils.org,window="_blank"]
++
+[IMPORTANT]
+====
+Send only your **public** key (`.pub` file), never your private key!
+====
+
+3. **Configure Git**:
++
+[source,bash]
+----
+git config user.email "your.email@biblio.org"
+git config user.name "Your Name"
+git config commit.template commit-template
+----
+
+4. **Clone and setup remotes**:
++
+[source,bash]
+----
+git clone git://git.evergreen-ils.org/Evergreen.git
+cd Evergreen
+git remote add working git://git.evergreen-ils.org/working/Evergreen.git
+git remote set-url --push working git@git.evergreen-ils.org:working/Evergreen.git
+git fetch --all
+----
+
+=== Code Workflow
+
+1. **Create branch** using Launchpad bug number:
++
+[source,bash]
+----
+git checkout -b lp1901615-fix-circulation-renewal origin/main
+----
++
+[NOTE]
+====
+Branch names must follow: `lp#######-brief-description`
+====
+
+2. **Develop and commit** with sign-offs:
++
+[source,bash]
+----
+git commit -as  # Sign-off required for all contributions
+----
+
+3. **Push to working repository**:
++
+[source,bash]
+----
+git push working lp1901615-fix-circulation-renewal:user/yourusername/lp1901615-fix-circulation-renewal
+----
+
+4. **Link to Launchpad**: Add `pullrequest` tag with branch link to the bug
+
+=== Feature Development
+
+For significant changes:
+
+1. **Propose** on the development mailing list first
+2. **Create design document** in the link:http://evergreen-ils.org/dokuwiki/doku.php?idx=dev%3Aproposal[dev:proposal namespace,window="_blank"]
+3. **Wait for feedback** before implementing
+4. **Follow standard workflow** once approved
+
+== Commit Standards and Quality
+
+=== Commit Messages
+
+Include:
+
+* **Clear subject** (< 80 characters)
+* **Launchpad number** (LP#12345) when applicable  
+* **Signed-off line** (`git commit -s`)
+* **Release note** for user-facing changes:
++
+[source]
+----
+LP#12345: Fix circulation issue with renewals
+
+This resolves an issue where auto-renewals would fail
+for items with specific loan periods.
+
+Release-Note: Fixes auto-renewal failures for certain loan periods
+Signed-off-by: Your Name <your.email@biblio.org>
+----
+
+=== Quality Requirements
+
+* **pgTAP tests** for database changes
+* **Perl tests** for bug fixes when feasible
+* **Angular linting** for staff client: `cd Open-ILS/src/eg2 && npx ng lint`
+* **Documentation updates** for new features
+
+== Branch Management and Collaboration
+
+[source,bash]
+----
+# User branches (only you can push)
+git push working feature:user/yourusername/lp1234567-feature-name
+
+# Collaborative branches (others can contribute)  
+git push working feature:collab/yourusername/lp1234567-feature-name
+
+# Test others' work
+git checkout -b local-test working/user/otherperson/lp9876543-their-feature
+
+# Add sign-offs when testing
+git cherry-pick -s commit-hash
+----
+
+== Using Launchpad
+
+=== Bug Reports
+
+Search link:https://bugs.launchpad.net/evergreen[existing bugs,window="_blank"] first, then create detailed reports with:
+* Evergreen version
+* Reproduction steps  
+* Expected vs. actual behavior
+* System information (PostgreSQL, browser, etc.)
+
+=== Linking Contributions
+
+* Add `pullrequest` tag to bugs with code changes
+* Include working repository branch link
+* Respond promptly to community feedback
+
+== Troubleshooting
+
+=== Access Problems
+
+If you can't push to working repositories:
+
+1. Verify SSH key was sent to gitadmin@evergreen-ils.org
+2. Confirm SSH URL usage (not git://) for pushing  
+3. Contact git administrators for username verification
+
+== Resources and Support
+
+=== Documentation
+* **Contributing guide**: link:https://wiki.evergreen-ils.org/doku.php?id=contributing[wiki.evergreen-ils.org,window="_blank"]
+* **Git workflow**: link:https://wiki.evergreen-ils.org/doku.php?id=dev:git[Evergreen Git Guide,window="_blank"]  
+* **Documentation process**: link:https://wiki.evergreen-ils.org/doku.php?id=evergreen-docs:how-to-contribute-documentation[Documentation Guide,window="_blank"]
+* **Developer's Certificate**: link:http://git.evergreen-ils.org/?p=Evergreen.git;a=blob;f=DCO-1.1.txt;hb=HEAD[DCO 1.1,window="_blank"]
+
+=== Community Support
+* **Technical questions**: open-ils-dev mailing list
+* **General questions**: open-ils-general mailing list
+* **Real-time chat**: #evergreen IRC channel on Libera.chat (accessible via link:https://web.libera.chat/#evergreen[web gateway,window="_blank"] or IRC clients like Pidgin) - useful for quick questions and community meetings
+* **Git access**: link:mailto:gitadmin@evergreen-ils.org[gitadmin@evergreen-ils.org,window="_blank"]
+* **Documentation help**: link:mailto:evergreen-documentation@list.evergreen-ils.org[evergreen-documentation@list.evergreen-ils.org,window="_blank"]
+* **Get involved**: link:https://evergreen-ils.org/involvement/[evergreen-ils.org/involvement,window="_blank"]
+* **IRC quick start**: link:https://wiki.evergreen-ils.org/doku.php?id=community:irc-quick-start[IRC Guide,window="_blank"]
+
+== Best Practices
+
+* Follow community coding standards and existing patterns
+* Write clear commit messages explaining problems and solutions
+* Test thoroughly on development systems before submitting
+* Be responsive to community feedback
+* Test on multiple environments when possible
+* Include comprehensive documentation for new features
