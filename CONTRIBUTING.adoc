@@ -172,6 +172,7 @@ git cherry-pick -s commit-hash
 === Bug Reports
 
 Search link:https://bugs.launchpad.net/evergreen[existing bugs,window="_blank"] first, then create detailed reports with:
+
 * Evergreen version
 * Reproduction steps  
 * Expected vs. actual behavior
