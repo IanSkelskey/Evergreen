@@ -20,8 +20,8 @@ As part of the Evergreen community, team members regularly contribute bug fixes,
 Before contributing:
 
 * **Read the community guidelines**: link:https://wiki.evergreen-ils.org/doku.php?id=contributing[Contributing to Evergreen,window="_blank"]
-* **Get connected**: See *Resources and Support → Community Support* for mailing lists, chat, and involvement links
-* **Check existing work**: See *Using Launchpad → Bug Reports* for searching existing bugs before filing new reports
+* **Get connected**: See <<resources-and-support,Resources and Support>> → <<community-support,Community Support>> for mailing lists, chat, and involvement links
+* **Check existing work**: See <<using-launchpad,Using Launchpad>> → <<bug-reports,Bug Reports>> for searching existing bugs before filing new reports
 
 == Documentation Contributions (GitHub - Recommended)
 
@@ -107,7 +107,7 @@ git checkout -b lp1901615-fix-circulation-renewal origin/main
 Branch names must follow: `lp#######-brief-description`
 ====
 
-2. **Develop and commit**: Follow the guidance in *Commit Standards and Quality* for message format and required sign-offs.
+2. **Develop and commit**: Follow the guidance in <<commit-standards,Commit Standards and Quality>> for message format and required sign-offs.
 
 3. **Push to working repository**:
 +
@@ -169,7 +169,7 @@ git push working feature:collab/yourusername/lp1234567-feature-name
 # Test others' work
 git checkout -b local-test working/user/otherperson/lp9876543-their-feature
 
-# Add sign-offs when testing (see Commit Standards and Quality)
+# Add sign-offs when testing (see <<commit-standards,Commit Standards and Quality>>)
 ----
 
 == Using Launchpad
