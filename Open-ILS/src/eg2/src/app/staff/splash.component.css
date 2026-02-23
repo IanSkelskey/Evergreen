@@ -7,7 +7,7 @@
   --splash-card-radius: 0.75rem;
   --splash-card-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.06);
   --splash-link-radius: 0.6rem;
-  --splash-icon-size: 44px;
+  --splash-icon-size: 32px;
 }
 [data-bs-theme="dark"] :host {
   --splash-card-header: var(--bs-gray-400);

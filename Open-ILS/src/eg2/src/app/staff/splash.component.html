@@ -20,7 +20,7 @@
         <div class="card-body">
           <div class="list-group">
             <ng-container *ngFor="let entry of portalEntries[i]">
-              <div class="list-group-item border-0 p-2" *ngIf="entry.entry_type() === 'menuitem'">
+              <div class="list-group-item border-0 p-1" *ngIf="entry.entry_type() === 'menuitem'">
                 <a class="splash-link" href="{{entry.target_url()}}" [attr.target]="entry.url_newtab() === 't' ? '_blank' : null" i18n>
                   <img class="splash-icon" src="{{entry.image_url()}}" alt="" role="presentation" loading="lazy" decoding="async"/>
                   <span class="splash-link-text">{{entry.label()}}</span>
@@ -43,13 +43,13 @@
                   </span>
                 </div>
               </div>
-              <div class="list-group-item border-0 p-2" *ngIf="entry.entry_type() === 'link'">
+              <div class="list-group-item border-0 p-1" *ngIf="entry.entry_type() === 'link'">
                 <a class="splash-link" [attr.target]="entry.url_newtab() === 't' ? '_blank' : '_top'" href="{{entry.target_url()}}" i18n>
                   <img class="splash-icon" src="{{entry.image_url()}}" alt="" role="presentation" loading="lazy" decoding="async"/>
                   <span class="splash-link-text">{{entry.label()}}</span>
                 </a>
               </div>
-              <div class="list-group-item border-0 p-2" *ngIf="entry.entry_type() === 'text'">
+              <div class="list-group-item border-0 p-1" *ngIf="entry.entry_type() === 'text'">
                 <h3 class="text-center" *ngIf="entry.label()" i18n>{{entry.label()}}</h3>
                 <div class="row">
                   <div class="col-3 col-sm-2" *ngIf="entry.image_url()">
