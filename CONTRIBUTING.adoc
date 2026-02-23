@@ -3,9 +3,9 @@
 :toc:
 :toc-placement!:
 
-toc::[]
-
 This guide provides essential information for contributing code and documentation to the Evergreen open-source community.
+
+toc::[]
 
 == Overview
 
