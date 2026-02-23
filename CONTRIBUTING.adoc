@@ -1,7 +1,7 @@
 = Contributing to the Evergreen Community
 :icons: font
-
 :toc:
+:toc-placement!:
 
 toc::[]
 
@@ -175,7 +175,7 @@ git cherry-pick -s commit-hash
 
 === Bug Reports
 
-image::https://img.shields.io/badge/Report%20Bugs-Launchpad-e95420[Report bugs on Launchpad,link="https://bugs.launchpad.net/evergreen"]
+image::https://img.shields.io/badge/Report%20Bugs-Launchpad-e95420[Report bugs on Launchpad,link="https://bugs.launchpad.net/evergreen",window="_blank"]
 
 Search link:https://bugs.launchpad.net/evergreen[existing bugs,window="_blank"] first, then create detailed reports with:
 
