@@ -3,11 +3,11 @@
 :toc:
 :toc-placement!:
 ifdef::env-github[]
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-:caution-caption: :fire:
-:warning-caption: :warning:
+:tip-caption: :bulb: TIP
+:note-caption: :information_source: NOTE
+:important-caption: :heavy_exclamation_mark: IMPORTANT
+:caution-caption: :fire: CAUTION
+:warning-caption: :warning: WARNING
 endif::[]
 
 This guide provides essential information for contributing code and documentation to the Evergreen open-source community.
