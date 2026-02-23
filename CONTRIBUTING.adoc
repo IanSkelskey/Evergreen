@@ -20,8 +20,8 @@ As part of the Evergreen community, team members regularly contribute bug fixes,
 Before contributing:
 
 * **Read the community guidelines**: link:https://wiki.evergreen-ils.org/doku.php?id=contributing[Contributing to Evergreen,window="_blank"]
-* **Join the mailing lists**: Subscribe to link:http://evergreen-ils.org/communicate/mailing-lists/[Evergreen mailing lists,window="_blank"] and observe community culture
-* **Check existing work**: Review link:https://bugs.launchpad.net/evergreen[Launchpad,window="_blank"] for duplicate efforts
+* **Get connected**: See *Resources and Support → Community Support* for mailing lists, chat, and involvement links
+* **Check existing work**: See *Using Launchpad → Bug Reports* for searching existing bugs before filing new reports
 
 == Documentation Contributions (GitHub - Recommended)
 
@@ -81,14 +81,15 @@ git config user.name "Your Name"
 git config commit.template commit-template
 ----
 
-4. **Clone and setup remotes**:
-+
+
+4. **Clone and setup remotes** (quick):
+
 [source,bash]
 ----
+# Clone the main repository and add the Launchpad 'working' remote for pushes
 git clone git://git.evergreen-ils.org/Evergreen.git
 cd Evergreen
 git remote add working git://git.evergreen-ils.org/working/Evergreen.git
-git remote set-url --push working git@git.evergreen-ils.org:working/Evergreen.git
 git fetch --all
 ----
 
@@ -106,12 +107,7 @@ git checkout -b lp1901615-fix-circulation-renewal origin/main
 Branch names must follow: `lp#######-brief-description`
 ====
 
-2. **Develop and commit** with sign-offs:
-+
-[source,bash]
-----
-git commit -as  # Sign-off required for all contributions
-----
+2. **Develop and commit**: Follow the guidance in *Commit Standards and Quality* for message format and required sign-offs.
 
 3. **Push to working repository**:
 +
@@ -173,8 +169,7 @@ git push working feature:collab/yourusername/lp1234567-feature-name
 # Test others' work
 git checkout -b local-test working/user/otherperson/lp9876543-their-feature
 
-# Add sign-offs when testing
-git cherry-pick -s commit-hash
+# Add sign-offs when testing (see Commit Standards and Quality)
 ----
 
 == Using Launchpad
