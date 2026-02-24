@@ -107,7 +107,7 @@ git checkout -b lp1901615-fix-circulation-renewal origin/main
 Branch names must follow: `lp#######-brief-description`
 ====
 
-2. **Develop and commit**: Follow the guidance in <<commit-standards,Commit Standards and Quality>> for message format and required sign-offs.
+2. **Develop and commit**: Follow the guidance in <<commit-standards-and-quality,Commit Standards and Quality>> for message format and required sign-offs.
 
 3. **Push to working repository**:
 +
