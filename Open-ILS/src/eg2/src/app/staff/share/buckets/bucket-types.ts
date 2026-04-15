@@ -1,6 +1,8 @@
+export type ContainerType = 'biblio' | 'user' | 'copy' | 'callnumber';
+
 export interface BucketTypeConfig {
     /** Short container type: 'biblio', 'user', 'copy', 'callnumber' */
-    containerType: string;
+    containerType: ContainerType;
     /** Container item type for item-level APIs: 'biblio_record_entry', 'user', 'copy', 'call_number' */
     containerItemType: string;
     /** IDL class for the bucket: 'cbreb', 'cub', 'ccb', 'ccnb' */

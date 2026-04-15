@@ -65,6 +65,10 @@ export class RecordBucketService extends BaseBucketService {
         return this.getBucketCountStats(bucketIds);
     }
 
+    async retrieveRecordBuckets(bucketIds: number[]): Promise<any[]> {
+        return this.retrieveBuckets(bucketIds);
+    }
+
     requestBibBucketsRefresh() {
         this.requestBucketsRefresh();
     }
