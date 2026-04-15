@@ -1,0 +1,607 @@
+import {OnInit, OnDestroy, ViewChild, Input, Directive} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
+import {ChangeDetectorRef} from '@angular/core';
+import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY,
+    map, switchMap, takeUntil, take, catchError} from 'rxjs';
+import {AuthService} from '@eg/core/auth.service';
+import {IdlService} from '@eg/core/idl.service';
+import {NetService} from '@eg/core/net.service';
+import {EventService} from '@eg/core/event.service';
+import {PcrudService} from '@eg/core/pcrud.service';
+import {GridComponent} from '@eg/share/grid/grid.component';
+import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
+import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
+import {Pager} from '@eg/share/util/pager';
+import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
+import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-transfer-dialog.component';
+import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
+import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
+import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
+import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
+import {BaseBucketService} from './base-bucket.service';
+import {BucketTypeConfig} from './bucket-types';
+
+export interface BucketQueryResult {
+    bucketIds: number[];
+    count: number;
+}
+
+export interface BucketView {
+    label: string | null;
+    sort_key: number | null;
+    count: number | null;
+    bucketIdQuery: (pager: Pager, sort: GridColumnSort[], justCount: Boolean) => Promise<BucketQueryResult>;
+}
+
+@Directive()
+export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
+
+    abstract get config(): BucketTypeConfig;
+    abstract get bucketService(): BaseBucketService;
+
+    @Input() userId: Number;
+
+    protected initInProgress = true;
+    countInProgress = false;
+    protected destroy$ = new Subject<void>();
+    views: {[key: string]: BucketView};
+
+    @ViewChild('grid', { static: true }) grid: GridComponent;
+    @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
+    @ViewChild('deleteDialog', { static: true }) deleteDialog: ConfirmDialogComponent;
+    @ViewChild('deleteFail', { static: true }) deleteFail: AlertDialogComponent;
+    @ViewChild('retrieveByIdFail', { static: true }) retrieveByIdFail: AlertDialogComponent;
+    @ViewChild('results', { static: true }) results: BucketActionSummaryDialogComponent;
+    @ViewChild('transferDialog', { static: true }) transferDialog: BucketTransferDialogComponent;
+    @ViewChild('shareBucketDialog', { static: true }) shareBucketDialog: BucketShareDialogComponent;
+    @ViewChild('newBucketDialog', { static: true }) newBucketDialog: BucketDialogComponent;
+
+    cellTextGenerator: GridCellTextGenerator;
+    currentView = 'user';
+    dataSource: GridDataSource;
+    bucketIdToRetrieve: number;
+    jumpToContentsOnRetrieveById = false;
+    noSelectedRows: boolean;
+    oneSelectedRow: boolean;
+    favoriteIds: number[] = [];
+    containerDeletionResultMap = {};
+
+    constructor(
+        protected router: Router,
+        protected route: ActivatedRoute,
+        protected cdr: ChangeDetectorRef,
+        protected auth: AuthService,
+        protected idl: IdlService,
+        protected pcrud: PcrudService,
+        protected net: NetService,
+        protected evt: EventService,
+        protected flatData: GridFlatDataService,
+    ) {}
+
+    async ngOnInit() {
+        this.initInProgress = true;
+
+        this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
+            if (segments.length > 0) {
+                const datasource = this.mapUrlToDatasource(segments[0].path);
+                if (datasource === 'retrieved_by_id') {
+                    this.bucketIdToRetrieve = parseInt(segments[0].path, 10);
+                }
+                this.switchTo(datasource);
+            } else {
+                this.switchTo('user');
+            }
+        });
+
+        this.cellTextGenerator = {
+            name: row => row.name,
+            favorite: row => row.favorite,
+            'row-actions': row => null
+        };
+
+        this.initViews();
+        this.initDataSource();
+        this.gridSelectionChange([]);
+        this.grid.onRowActivate.subscribe(
+            (bucket: any) => this.jumpToBucketContent(bucket.id)
+        );
+
+        if (this.config.flagClass) {
+            await this.bucketService.loadFavoriteBucketFlags(this.auth.user().id());
+        }
+
+        this.initInProgress = false;
+        this.updateCounts();
+    }
+
+    /**
+     * Helper to create a standard view with the common bucketIdQuery pattern.
+     * queryFn returns the pcrud query object, or null to indicate empty results.
+     */
+    protected createStandardView(
+        viewKey: string, label: string, sortKey: number,
+        queryFn: () => any
+    ): BucketView {
+        const bc = this.config.bucketClass;
+        return {
+            label,
+            sort_key: sortKey,
+            count: -1,
+            bucketIdQuery: async (pager, sort, justCount) => {
+                const translatedSort = this.pcrud.translateFlatSortComplex(bc, sort);
+                const query = queryFn();
+                if (!query) {
+                    return { bucketIds: [], count: -1 };
+                }
+                const response = await lastValueFrom(
+                    this.search_or_count(justCount, bc, query,
+                        {
+                            ...(pager?.limit && { limit: pager.limit }),
+                            ...(pager?.offset && { offset: pager.offset }),
+                            ...(translatedSort && translatedSort),
+                        },
+                        { idlist: true, atomic: true }
+                    )
+                );
+                if (justCount) {
+                    const result = { bucketIds: [], count: response as number };
+                    this.views[viewKey].count = result.count;
+                    return result;
+                } else {
+                    const ids = response as number[];
+                    return { bucketIds: ids, count: ids.length };
+                }
+            }
+        };
+    }
+
+    initViews() {
+        const bc = this.config.bucketClass;
+        const sc = this.config.shareClass;
+        const userId = () => this.userId || this.auth.user().id();
+
+        this.views = {
+            user: this.createStandardView('user', $localize`My buckets`, 1,
+                () => ({ owner: userId() })),
+
+            all: this.createStandardView('all', $localize`Visible to me`, 10,
+                () => ({ owner: { '!=': userId() }, pub: 't' })),
+
+            recent: this.createStandardView('recent', $localize`Recent`, 3,
+                () => {
+                    const ids = this.bucketService.recentBucketIds();
+                    return ids.length ? { id: ids } : null;
+                }),
+
+            retrieved_by_id: {
+                label: null,
+                sort_key: null,
+                count: null,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    if (!this.bucketIdToRetrieve) {
+                        return { bucketIds: [], count: 0 };
+                    }
+                    const fleshedBucket = await this.bucketService.checkBucketAccess(this.bucketIdToRetrieve);
+                    if (fleshedBucket) {
+                        return { bucketIds: [this.bucketIdToRetrieve], count: 1 };
+                    } else {
+                        this.retrieveByIdFail.dialogBody =
+                            $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`;
+                        this.retrieveByIdFail.open();
+                        return { bucketIds: [], count: 0 };
+                    }
+                }
+            }
+        };
+
+        if (this.config.flagClass) {
+            this.views['favorites'] = this.createStandardView('favorites', $localize`Favorites`, 2,
+                () => {
+                    this.favoriteIds = this.bucketService.getFavoriteBucketIds();
+                    return this.favoriteIds.length ? { id: this.favoriteIds } : null;
+                });
+        }
+
+        if (sc) {
+            this.views['shared_with_others'] = this.createStandardView('shared_with_others', $localize`Shared with others`, 4,
+                () => ({ owner: { '=': userId() }, '-or': [
+                    {'-exists': {from: sc, where: {bucket: {'=': {['+' + bc]: 'id'}}}}},
+                    {'-exists': {from: 'puopm', where: {
+                        object_type: bc,
+                        ['+' + bc]: {id: {'=': {transform: 'text', value: {'+puopm': 'object_id'}}}}}
+                    }}
+                ]}));
+
+            this.views['shared_with_user'] = this.createStandardView('shared_with_user', $localize`Shared with me`, 5,
+                () => ({ owner: { '!=': userId() }, pub: 'f' }));
+        }
+    }
+
+    search_or_count(justCount, hint, query, pcrudOps, pcrudReqOps): Observable<number | any[]> {
+        if (!justCount) {
+            const query_filters = this.extractGridFilters();
+            if (query_filters.length > 0) {
+                query['-and'] = query_filters;
+            }
+        }
+        return this.pcrud.search(hint, {...query, btype: { '!=': 'temp' }}, pcrudOps, {...pcrudReqOps, count_only: justCount});
+    }
+
+    async updateCounts() {
+        if (this.initInProgress) { return; }
+        if (this.countInProgress) { return; }
+
+        this.countInProgress = true;
+
+        const viewKeys = this.getViewKeys();
+        viewKeys.forEach(v => { this.views[v].count = -1; });
+
+        Promise.all(
+            viewKeys.map(v => this.views[v].bucketIdQuery(null, [], true))
+        ).catch(
+            error => console.error('Error updating counts:', error)
+        ).finally(() => {
+            this.countInProgress = false;
+        });
+    }
+
+    getViewKeys(): string[] {
+        const viewEntries = Object.entries(this.views)
+            .filter(([key, view]) => key && view.label !== null)
+            .map(([key, view]) => ({ key, sort_key: view.sort_key }))
+            .sort((a, b) => a.sort_key - b.sort_key);
+        return viewEntries.map(entry => entry.key);
+    }
+
+    isCurrentView(view: string): boolean {
+        return this.currentView === view || (!this.currentView && view === 'user');
+    }
+
+    gridSelectionChange(keys: string[]) {
+        this.updateSelectionState(keys);
+    }
+
+    updateSelectionState(keys: string[]) {
+        this.noSelectedRows = (keys.length === 0);
+        this.oneSelectedRow = (keys.length === 1);
+    }
+
+    initDataSource() {
+        this.dataSource = new GridDataSource();
+        this.dataSource.getRows = (pager: Pager, sort: any[]): Observable<any> => {
+            return from(this.views[this.currentView].bucketIdQuery(pager, sort, false)).pipe(
+                switchMap(response => {
+                    if (response.bucketIds.length === 0) {
+                        return EMPTY;
+                    }
+                    const query = this.buildRetrieveByIdsQuery(response.bucketIds);
+
+                    return this.bucketService.getBucketCountStats(response.bucketIds).pipe(
+                        switchMap(countStats => {
+                            return this.flatData.getRows(this.grid.context, query, new Pager(), sort).pipe(
+                                map(row => {
+                                    return {
+                                        ...row,
+                                        item_count: countStats[row.id]?.item_count || 0,
+                                        org_share_count: countStats[row.id]?.org_share_count || 0,
+                                        usr_view_share_count: countStats[row.id]?.usr_view_share_count || 0,
+                                        usr_edit_share_count: countStats[row.id]?.usr_update_share_count || 0,
+                                        favorite: this.bucketService.isFavoriteBucket(row.id)
+                                    };
+                                })
+                            );
+                        })
+                    );
+                }),
+                catchError((error: unknown) => {
+                    console.error('Error in getRows:', error);
+                    return EMPTY;
+                })
+            );
+        };
+    }
+
+    mapUrlToDatasource(url: string): string {
+        const mapping = {
+            'admin': 'admin',
+            'all': 'all',
+            'user': 'user',
+            'favorites': 'favorites',
+            'recent': 'recent',
+            'shared-with-others': 'shared_with_others',
+            'shared-with-user': 'shared_with_user'
+        };
+        return mapping[url] || 'retrieved_by_id';
+    }
+
+    mapDatasourceToUrl(datasource: string): string {
+        const mapping = {
+            'admin': 'admin',
+            'all': 'all',
+            'user': 'user',
+            'favorites': 'favorites',
+            'recent': 'recent',
+            'shared_with_others': 'shared-with-others',
+            'shared_with_user': 'shared-with-user',
+            'retrieved_by_id': this.bucketIdToRetrieve
+        };
+        return mapping[datasource] || 'user';
+    }
+
+    switchTo(source: string) {
+        this.currentView = source;
+        this.router.navigate([this.mapDatasourceToUrl(source)], { relativeTo: this.route.parent });
+    }
+
+    extractGridFilters() {
+        let query_filters = [];
+        Object.keys(this.dataSource.filters).forEach(key => {
+            query_filters = query_filters.concat(this.dataSource.filters[key]);
+        });
+        return query_filters;
+    }
+
+    buildRetrieveByIdsQuery(bucketIds: number[]) {
+        const query: any = {};
+        query['id'] = bucketIds.length === 0 ? [-1] : bucketIds.map(b => this.idl.pkeyValue(b));
+
+        const query_filters = this.extractGridFilters();
+        if (query_filters.length > 0) {
+            query['-and'] = query_filters;
+        }
+
+        return query;
+    }
+
+    retrieveBucketById() {
+        if (!this.bucketIdToRetrieve) { return; }
+        if (this.jumpToContentsOnRetrieveById) {
+            this.jumpToBucketContent(this.bucketIdToRetrieve);
+        } else {
+            this.switchTo('retrieved_by_id');
+        }
+    }
+
+    async testReferencedBucket(bucketId: number, callback: Function) {
+        const fleshedBucket = await this.bucketService.checkBucketAccess(bucketId);
+        if (fleshedBucket) {
+            callback(fleshedBucket);
+        } else {
+            this.retrieveByIdFail.dialogBody =
+                $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`;
+            this.retrieveByIdFail.open();
+        }
+    }
+
+    jumpToBucketContent(bucketId: number) {
+        this.testReferencedBucket(bucketId, () => {
+            this.router.navigate(['bucket', bucketId], { relativeTo: this.route.parent });
+        });
+    }
+
+    openEditBucketDialog = async (rows: any[]) => {
+        if (!rows.length) { return; }
+        const bucket = rows[0];
+        this.editDialog.mode = 'update';
+        this.editDialog.recordId = bucket.id;
+        this.editDialog.open().subscribe(ok => this.grid.reload());
+    };
+
+    openNewBucketDialog = async (rows: any[]) => {
+        this.newBucketDialog.bucketClass = this.config.containerType;
+
+        try {
+            const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(
+                catchError((error: unknown) => {
+                    console.debug('Error in dialog observable; this can happen if we close() with no arguments:', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
+
+            await lastValueFrom(dialogObservable, { defaultValue: null });
+            this.grid.reload();
+            this.updateCounts();
+        } catch (error) {
+            console.error('Error in new bucket dialog:', error);
+        }
+    };
+
+    openDeleteBucketDialog = async (rows: any[]) => {
+        if (!rows || rows.length === 0) { return; }
+
+        const performDelete = async (override = false): Promise<number> => {
+            const method = override
+                ? 'open-ils.actor.containers.full_delete.override'
+                : 'open-ils.actor.containers.full_delete';
+
+            return new Promise((resolve, reject) => {
+                this.net.request(
+                    'open-ils.actor',
+                    method,
+                    this.auth.token(),
+                    this.config.containerType,
+                    rows.map(r => r.id)
+                ).pipe(
+                    take(1),
+                    takeUntil(this.destroy$)
+                ).subscribe({
+                    next: (response) => {
+                        const evt = this.evt.parse(response);
+                        if (evt) {
+                            console.error(evt.toString());
+                            this.deleteFail.dialogBody = evt.toString();
+                            this.deleteFail.open();
+                            resolve(0);
+                        } else {
+                            let carousels = 0;
+                            Object.entries(response).forEach(([id, result2]) => {
+                                let pass_or_fail = $localize`Deleted`;
+                                const evt2 = this.evt.parse(result2);
+                                if (evt2) {
+                                    pass_or_fail = evt2.toString();
+                                    if (evt2.textcode === 'BUCKET_LINKED_TO_CAROUSEL') {
+                                        carousels++;
+                                    }
+                                }
+                                this.containerDeletionResultMap[id] = pass_or_fail;
+                            });
+                            resolve(carousels);
+                        }
+                    },
+                    error: (error: unknown) => {
+                        console.error(error);
+                        this.deleteFail.dialogBody = error.toString();
+                        this.deleteFail.open();
+                        reject(error);
+                    },
+                    complete: () => {
+                        this.grid.reload();
+                        this.updateCounts();
+                    }
+                });
+            });
+        };
+
+        try {
+            this.deleteDialog.dialogBody = rows.map(r => r.id || '').join(', ');
+            const deleteConfirmed = await firstValueFrom(this.deleteDialog.open().pipe(
+                defaultIfEmpty(false),
+                catchError(() => EMPTY)
+            ));
+
+            if (!deleteConfirmed) { return; }
+
+            this.containerDeletionResultMap = {};
+            let carouselsCount = await performDelete();
+
+            await firstValueFrom(this.results.open(rows, this.containerDeletionResultMap).pipe(
+                defaultIfEmpty(null),
+                catchError(() => EMPTY)
+            ));
+
+            if (carouselsCount > 0) {
+                if (await this.confirmDeleteOverride(rows)) {
+                    await performDelete(true);
+                    await firstValueFrom(this.results.open(rows, this.containerDeletionResultMap).pipe(
+                        defaultIfEmpty(null),
+                        catchError(() => EMPTY)
+                    ));
+                }
+            }
+
+            this.grid.reload();
+            this.updateCounts();
+        } catch (error) {
+            console.error('openDeleteBucketDialog error:', error);
+        }
+    };
+
+    openTransferDialog = async (rows: any[]) => {
+        if (!rows || rows.length === 0) { return; }
+
+        this.transferDialog.containerObjects = rows;
+
+        try {
+            const dialogRef$ = this.transferDialog.open({size: 'lg'}).pipe(
+                take(1),
+                catchError((error: unknown) => {
+                    console.debug('openTransferDialog, error', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
+
+            await firstValueFrom(dialogRef$);
+
+            setTimeout(() => {
+                this.grid.reload();
+                this.updateCounts();
+            }, 1000);
+        } catch (error) {
+            console.error('openTransferDialog error', error);
+        }
+    };
+
+    openShareBucketDialog = async (rows: any[]) => {
+        if (!rows || rows.length === 0) { return; }
+
+        this.shareBucketDialog.containerObjects = rows;
+        this.shareBucketDialog.loadAouTree();
+        this.shareBucketDialog.populateCheckedNodes();
+        await this.shareBucketDialog.loadAuGridViewPermGrid();
+        await this.shareBucketDialog.loadAuGridEditPermGrid();
+
+        try {
+            const dialogRef$ = this.shareBucketDialog.open({size: 'lg'}).pipe(
+                take(1),
+                catchError((error: unknown) => {
+                    console.debug('openShareBucketDialog, error', error);
+                    return EMPTY;
+                }),
+                takeUntil(this.destroy$),
+            );
+
+            await firstValueFrom(dialogRef$);
+
+            setTimeout(() => {
+                this.grid.reload();
+                this.updateCounts();
+            }, 1000);
+        } catch (error) {
+            console.error('openShareBucketDialog error', error);
+        }
+    };
+
+    favoriteBucket = async (rows: any[]) => {
+        if (!rows || rows.length === 0) { return; }
+
+        for (const row of rows) {
+            if (!this.bucketService.isFavoriteBucket(row.id)) {
+                try {
+                    /* eslint-disable no-await-in-loop */
+                    await this.bucketService.addFavoriteBucketFlag(row.id, this.auth.user().id());
+                    row.favorite = true;
+                } catch (error) {
+                    console.error(`Error adding favorite for bucket ${row.id}:`, error);
+                }
+            }
+        }
+
+        setTimeout(() => {
+            this.grid.reload();
+            this.updateCounts();
+        }, 1000);
+    };
+
+    unFavoriteBucket = async (rows: any[]) => {
+        if (!rows || rows.length === 0) { return; }
+
+        for (const row of rows) {
+            if (this.bucketService.isFavoriteBucket(row.id)) {
+                try {
+                    /* eslint-disable no-await-in-loop */
+                    await this.bucketService.removeFavoriteBucketFlag(row.id);
+                    row.favorite = false;
+                } catch (error) {
+                    console.error(`Error removing favorite for bucket ${row.id}:`, error);
+                }
+            }
+        }
+
+        setTimeout(() => {
+            this.grid.reload();
+            this.updateCounts();
+        }, 1000);
+    };
+
+    protected async confirmDeleteOverride(rows: any[]): Promise<boolean> {
+        return false;
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+}
