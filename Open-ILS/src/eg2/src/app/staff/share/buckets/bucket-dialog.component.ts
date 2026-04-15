@@ -10,10 +10,10 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
 
 /**
- * Dialog for adding bib records to new and existing record buckets.
+ * Dialog for adding items to new and existing buckets.
  */
 
 @Component({
@@ -54,7 +54,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         private toast: ToastService,
         private idl: IdlService,
         private net: NetService,
-        private bucketService: BucketService,
+        private recordBucketService: RecordBucketService,
         private evt: EventService,
         private auth: AuthService) {
         super(modal); // required for subclassing
@@ -179,8 +179,10 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
                 if (this.showExistingBuckets) { // aka, in a "add to bucket" context
                     this.addToBucket(bktId);
                 } else {
-                    this.bucketService.logRecordBucket(bktId);
-                    this.bucketService.requestBibBucketsRefresh();
+                    if (this.bucketClass === 'biblio') {
+                        this.recordBucketService.logRecordBucket(bktId);
+                        this.recordBucketService.requestBibBucketsRefresh();
+                    }
                     this.close({success: true, bucket: bktId}); // we're done
                 }
             }
@@ -197,7 +199,9 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     // Add the record(s) to the bucket with provided ID.
     addRecordToBucket(bucketId: number) {
-        this.bucketService.logRecordBucket(bucketId);
+        if (this.bucketClass === 'biblio') {
+            this.recordBucketService.logRecordBucket(bucketId);
+        }
         const items = [];
         this.itemIds.forEach(itemId => {
             const item = this.idl.create(this.bucketFmClass + 'i');
@@ -216,7 +220,9 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
                 this.toast.danger(evt.toString());
             } else {
                 this.toast.success(this.successString.text);
-                this.bucketService.requestBibBucketsRefresh();
+                if (this.bucketClass === 'biblio') {
+                    this.recordBucketService.requestBibBucketsRefresh();
+                }
                 this.close({success: true, bucket: bucketId}); // we're done
             }
         });
@@ -225,7 +231,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     addBibQueueToBucket(bucketId: number) {
         const bucket = this.buckets.filter(b => b.id() === bucketId)[0];
         if (!bucket) { return; }
-        this.bucketService.logRecordBucket(bucketId);
+        this.recordBucketService.logRecordBucket(bucketId);
 
         this.net.request(
             'open-ils.vandelay',
@@ -236,7 +242,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
             if (evt) {
                 this.toast.danger(evt.toString());
             } else {
-                this.bucketService.requestBibBucketsRefresh();
+                this.recordBucketService.requestBibBucketsRefresh();
                 this.close({success: true, bucket: bucketId}); // we're done
             }
         });

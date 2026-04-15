@@ -7,8 +7,8 @@ import {StoreService} from '@eg/core/store.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService,IdlObject} from '@eg/core/idl.service';
 
-@Injectable()
-export class BucketService {
+@Injectable({providedIn: 'root'})
+export class RecordBucketService {
     maxRecentRecordBuckets = 10;
     private favoriteRecordBucketFlags: {[bucketId: number]: IdlObject} = {};
 

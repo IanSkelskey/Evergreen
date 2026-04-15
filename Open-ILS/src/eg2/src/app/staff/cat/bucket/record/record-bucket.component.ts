@@ -8,7 +8,7 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import {RecordBucketService} from './record-bucket.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator, GridColumnSort} from '@eg/share/grid/grid';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
@@ -18,11 +18,12 @@ import {BucketTransferDialogComponent} from '@eg/staff/share/buckets/bucket-tran
 import {BucketShareDialogComponent} from '@eg/staff/share/buckets/bucket-share-dialog.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {BucketActionSummaryDialogComponent} from '@eg/staff/share/buckets/bucket-action-summary-dialog.component';
+import {RecordBucketExportDialogComponent} from './record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from './record-bucket-item-upload-dialog.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+
 
 /**
  * Record bucket grid interface
@@ -92,7 +93,7 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         private net: NetService,
         private evt: EventService,
         private flatData: GridFlatDataService,
-        private bucketService: BucketService,
+        private bucketService: RecordBucketService,
     ) {}
 
     async ngOnInit() {

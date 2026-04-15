@@ -15,8 +15,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {RecordBucketExportDialogComponent} from '@eg/staff/share/buckets/record-bucket-export-dialog.component';
-import {RecordBucketItemUploadDialogComponent} from '@eg/staff/share/buckets/record-bucket-item-upload-dialog.component';
+import {RecordBucketExportDialogComponent} from './record-bucket-export-dialog.component';
+import {RecordBucketItemUploadDialogComponent} from './record-bucket-item-upload-dialog.component';
 import {HoldTransferViaBibsDialogComponent} from '@eg/staff/share/holds/transfer-via-bibs-dialog.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 
