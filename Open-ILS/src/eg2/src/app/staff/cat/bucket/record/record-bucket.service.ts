@@ -235,4 +235,49 @@ export class RecordBucketService {
             return [];
         }
     }
+
+    /**
+     * Check whether the current user can access the given bucket.
+     * Allows access if: (1) user owns the bucket, (2) bucket is public,
+     * or (3) bucket is explicitly shared with the user (org or user level).
+     * Returns the bucket on success, or null if access is denied.
+     */
+    async checkBucketAccess(bucketId: number): Promise<IdlObject | null> {
+        try {
+            // Retrieve the bucket with owner fleshed
+            const bucket = await lastValueFrom(
+                this.pcrud.retrieve('cbreb', bucketId, {
+                    flesh: 1,
+                    flesh_fields: { cbreb: ['owner'] }
+                })
+            );
+
+            if (!bucket) { return null; }
+
+            const userId = this.auth.user().id();
+
+            // Owner can always access
+            if (bucket.owner().id() === userId) { return bucket; }
+
+            // Public buckets are accessible
+            if (bucket.pub() === 't') { return bucket; }
+
+            // Check if the bucket is shared with this user
+            const sharedBucketIds: number[] = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.retrieve_biblio_record_entry_buckets_shared_with_user',
+                    this.auth.token()
+                )
+            );
+
+            if (Array.isArray(sharedBucketIds) && sharedBucketIds.includes(bucketId)) {
+                return bucket;
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
+    }
 }

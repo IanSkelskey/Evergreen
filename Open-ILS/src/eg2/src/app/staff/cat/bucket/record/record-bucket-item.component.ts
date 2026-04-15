@@ -1,6 +1,6 @@
 import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {firstValueFrom, lastValueFrom, EMPTY, take, map, switchMap, catchError} from 'rxjs';
+import {from, firstValueFrom, lastValueFrom, EMPTY, take, map, switchMap, catchError} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
 import {IdlObject,IdlService} from '@eg/core/idl.service';
@@ -17,6 +17,7 @@ import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {RecordBucketExportDialogComponent} from './record-bucket-export-dialog.component';
 import {RecordBucketItemUploadDialogComponent} from './record-bucket-item-upload-dialog.component';
+import {RecordBucketService} from './record-bucket.service';
 import {HoldTransferViaBibsDialogComponent} from '@eg/staff/share/holds/transfer-via-bibs-dialog.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 
@@ -51,6 +52,7 @@ export class RecordBucketItemComponent implements OnInit {
     catSearchQuery: string;
     bucket: IdlObject;
     returnTo: string;
+    accessDenied = false;
 
     constructor(
         private router: Router,
@@ -62,7 +64,8 @@ export class RecordBucketItemComponent implements OnInit {
         private store: StoreService,
         private pcrud: PcrudService,
         private broadcaster: BroadcastService,
-        private flatData: GridFlatDataService
+        private flatData: GridFlatDataService,
+        private recordBucketService: RecordBucketService
     ) {}
 
     ngOnInit() {
@@ -76,19 +79,23 @@ export class RecordBucketItemComponent implements OnInit {
         this.route.paramMap.pipe(
             switchMap((params: ParamMap) => {
                 this.bucketId = +params.get('id');
-                this.store.setLocalItem('eg.cat.last_record_bucket_retrieved', this.bucketId);
-                this.initDataSource(this.bucketId);
-                this.gridSelectionChange([]);
-
-                return this.pcrud.retrieve('cbreb', this.bucketId);
+                this.accessDenied = false;
+                return from(this.recordBucketService.checkBucketAccess(this.bucketId));
             })
         ).subscribe({
-            next: bucket => {
-                console.debug('bucket', bucket);
-                this.bucket = bucket;
+            next: fleshedBucket => {
+                if (fleshedBucket) {
+                    this.bucket = fleshedBucket;
+                    this.store.setLocalItem('eg.cat.last_record_bucket_retrieved', this.bucketId);
+                    this.initDataSource(this.bucketId);
+                    this.gridSelectionChange([]);
+                } else {
+                    this.accessDenied = true;
+                }
             },
             error: (err: unknown) => {
-                console.error('Error retrieving bucket', err);
+                console.error('Error checking bucket access', err);
+                this.accessDenied = true;
             }
         });
 

@@ -354,9 +354,18 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
                 sort_key: null,
                 count: null,
                 bucketIdQuery: async (pager, sort, justCount) => {
-                    const bucketIds = this.bucketIdToRetrieve ? [ this.bucketIdToRetrieve ] : [];
-                    console.debug('Retrieve By Id', bucketIds);
-                    return { bucketIds: bucketIds, count: bucketIds.length };
+                    if (!this.bucketIdToRetrieve) {
+                        return { bucketIds: [], count: 0 };
+                    }
+                    const fleshedBucket = await this.bucketService.checkBucketAccess(this.bucketIdToRetrieve);
+                    if (fleshedBucket) {
+                        return { bucketIds: [this.bucketIdToRetrieve], count: 1 };
+                    } else {
+                        this.retrieveByIdFail.dialogBody =
+                            $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`;
+                        this.retrieveByIdFail.open();
+                        return { bucketIds: [], count: 0 };
+                    }
                 }
             }
         };
@@ -731,26 +740,15 @@ export class RecordBucketComponent implements OnInit, OnDestroy {
         }
     }
 
-    testReferencedBucket(bucketId: number, /* old-school */ callback: Function) {
-        this.pcrud.search('cbreb', { id: bucketId }).subscribe({
-            next: (response) => {
-                const evt = this.evt.parse(response);
-                if (evt) {
-                    console.error(evt.toString());
-                    this.retrieveByIdFail.dialogBody = evt.toString();
-                    this.retrieveByIdFail.open();
-                } else {
-                    callback(response);
-                }
-            },
-            error: (response: unknown) => {
-                console.error(response);
-                this.retrieveByIdFail.open();
-            },
-            complete: () => {
-                console.debug('testReferencedBucket complete');
-            }
-        });
+    async testReferencedBucket(bucketId: number, callback: Function) {
+        const fleshedBucket = await this.bucketService.checkBucketAccess(bucketId);
+        if (fleshedBucket) {
+            callback(fleshedBucket);
+        } else {
+            this.retrieveByIdFail.dialogBody =
+                $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`;
+            this.retrieveByIdFail.open();
+        }
     }
 
     jumpToBucketContent(bucketId: number) {
