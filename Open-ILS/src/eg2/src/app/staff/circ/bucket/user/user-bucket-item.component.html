@@ -1,0 +1,114 @@
+<eg-title i18n-prefix prefix="Users in a Bucket">
+</eg-title>
+
+<eg-staff-banner bannerText="" i18n-bannerText
+    [bannerTemplateRef]="accessDenied ? accessDeniedBannerTemplate : (bucket ? bannerTemplate : null)">
+</eg-staff-banner>
+
+<ng-template #bannerTemplate>
+    <h1 id="staff-banner" tabindex="0" i18n>Users in a Bucket:
+        #{{bucket?.id()}} {{bucket?.name()}}
+    </h1>
+</ng-template>
+
+<ng-template #accessDeniedBannerTemplate>
+    <h1 id="staff-banner" tabindex="0" i18n>Bucket Not Available</h1>
+</ng-template>
+
+<div *ngIf="accessDenied" class="alert alert-warning mt-3">
+    <p i18n>This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.</p>
+    <a routerLink="/staff/circ/bucket/user" class="btn btn-sm btn-outline-dark" i18n>Return to Buckets</a>
+</div>
+
+<div [hidden]="accessDenied">
+
+<eg-bucket-dialog #addToBucketDialog>
+</eg-bucket-dialog>
+
+<ng-template #patronNameTemplate let-r="row">
+  <ng-container *ngIf="r['target_user.family_name']">
+    <a routerLink="/staff/circ/patron/{{r['target_user.id']}}/checkout">{{r['target_user.family_name']}}, {{r['target_user.first_given_name']}}</a>
+  </ng-container>
+</ng-template>
+
+<eg-confirm-dialog #confirmDialog></eg-confirm-dialog>
+<eg-alert-dialog #alertDialog></eg-alert-dialog>
+
+<div class="row row-cols-auto justify-content-between mb-3">
+    <div class="col">
+        <ul class="list-unstyled hstack eg-grid-filter-links">
+            <li>
+                <a class="btn btn-sm btn-link" routerLink="/staff/circ/bucket/user/{{returnTo}}" i18n>&larr; Return to Buckets</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col">
+        <form class="input-group">
+            <input type="text" class="form-control"
+                [(ngModel)]="patronSearchQuery"
+                name='patron-search-input'
+                id='patron-search-input'
+                egAutofocus
+                i18n-placeholder placeholder="Search for patrons..."
+                i18n-aria-label aria-label="Search for patrons...">
+            <button class="input-group-text"
+                (click)="searchPatrons()" type="submit" i18n>
+                Search Patrons
+            </button>
+        </form>
+    </div>
+</div>
+
+<eg-grid #grid idlClass="cubi"
+    persistKey="circ.user_bucket.content"
+    [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
+    (rowSelectionChange)="gridSelectionChange($event)"
+    [sortable]="true" [filterable]="true" [allowNamedFilterSets]="false"
+    ignoreFields="target_user">
+
+    <eg-grid-toolbar-button
+        label="Open Selected in New Tabs" i18n-label
+        [disabled]="noSelectedRows"
+        (onClick)="openPatronInNewTab($event)">
+    </eg-grid-toolbar-button>
+
+    <eg-grid-toolbar-action
+        label="Remove Selected Users from Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        group="Bucket Actions"
+        (onClick)="removeFromBucket($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action
+        label="Add Selected Users to a Different Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        group="Bucket Actions"
+        (onClick)="openAddToBucketDialog($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-toolbar-action
+        label="Move Selected Users to a Different Bucket" i18n-label
+        [disabled]="noSelectedRows"
+        group="Bucket Actions"
+        (onClick)="moveToBucket($event)">
+    </eg-grid-toolbar-action>
+
+    <eg-grid-column path="id" [index]="true" [hidden]="true" [required]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.family_name" i18n-label label="Last Name" [required]="true" [cellTemplate]="patronNameTemplate"></eg-grid-column>
+    <eg-grid-column path="target_user.first_given_name" i18n-label label="First Name" [required]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.second_given_name" i18n-label label="Middle Name" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.usrname" i18n-label label="Username" [required]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.card.barcode" i18n-label label="Barcode" [required]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.id" i18n-label label="User ID" [required]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.home_ou" i18n-label label="Home Library" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.email" i18n-label label="Email" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.active" i18n-label label="Active" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.barred" i18n-label label="Barred" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="target_user.expire_date" i18n-label label="Expiration Date" [hidden]="true"></eg-grid-column>
+    <eg-grid-column path="bucket" [hidden]="true" [required]="true"></eg-grid-column>
+    <eg-grid-column path="pos" [hidden]="true" [required]="true"></eg-grid-column>
+    <eg-grid-column path="create_time" i18n-label label="Date Added to Bucket" [hidden]="true" [required]="true"></eg-grid-column>
+
+</eg-grid>
+
+</div>

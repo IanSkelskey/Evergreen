@@ -38,3 +38,17 @@ export const RECORD_BUCKET_CONFIG: BucketTypeConfig = {
     countStatsApi: 'open-ils.actor.container.biblio_record_entry.count_stats.authoritative',
     sharedWithUserApi: 'open-ils.actor.container.retrieve_biblio_record_entry_buckets_shared_with_user',
 };
+
+export const USER_BUCKET_CONFIG: BucketTypeConfig = {
+    containerType: 'user',
+    containerItemType: 'user',
+    bucketClass: 'cub',
+    bucketItemClass: 'cubi',
+    targetField: 'target_user',
+    flagClass: 'cubuf',
+    shareClass: 'cubs',
+    bucketFleshFields: ['owner', 'owning_lib'],
+    storageKey: 'eg.user_bucket_log',
+    countStatsApi: 'open-ils.actor.container.user.count_stats.authoritative',
+    sharedWithUserApi: 'open-ils.actor.container.retrieve_user_buckets_shared_with_user',
+};

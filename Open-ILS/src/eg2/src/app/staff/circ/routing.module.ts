@@ -21,6 +21,10 @@ const routes: Routes = [{
     path: 'renew',
     loadChildren: () =>
         import('./renew/renew.module').then(m => m.RenewModule)
+}, {
+    path: 'bucket/user',
+    loadChildren: () =>
+        import('./bucket/user/user-bucket.module').then(m => m.UserBucketModule)
 }];
 
 @NgModule({

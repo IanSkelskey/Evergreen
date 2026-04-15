@@ -63,7 +63,7 @@ $htypes{'user'} = "au";
 $jtypes{'biblio'} = "cbreb";
 #$jtypes{'callnumber'} = "ccnb";
 #$jtypes{'copy'} = "ccb";
-#$jtypes{'user'} = "cub";
+$jtypes{'user'} = "cub";
 
 $table{'biblio'} = "biblio.record_entry";
 $table{'callnumber'} = "asset.call_number";
@@ -150,6 +150,26 @@ __PACKAGE__->register_method(
 __PACKAGE__->register_method(
     method  => "get_bucket_ids_shared_with_user",
     api_name    => "open-ils.actor.container.retrieve_biblio_record_entry_buckets_shared_with_user.count"
+);
+
+__PACKAGE__->register_method(
+    method  => "get_bucket_ids_shared_with_user",
+    api_name    => "open-ils.actor.container.retrieve_user_buckets_shared_with_user",
+    signature => {
+        desc => q/
+            Returns a list of user buckets being shared with the requestor, either directly or indirectly.
+        /,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+        ],
+        return => {
+            desc => 'An array of bucket IDs for user buckets being shared with requestor, either directly or indirectly.'
+        }
+    }
+);
+__PACKAGE__->register_method(
+    method  => "get_bucket_ids_shared_with_user",
+    api_name    => "open-ils.actor.container.retrieve_user_buckets_shared_with_user.count"
 );
 
 sub get_bucket_ids_shared_with_others {
@@ -253,6 +273,16 @@ sub get_bucket_ids_shared_with_user {
         };
         $bucket_user_share_retrieve_method = 'search_permission_usr_object_perm_map';
         $object_class_for_user_object_perms = 'cbreb';
+    } elsif ($self->api_name =~ 'user_buckets') {
+        $json_query = {
+            select => { cubs => ['bucket'], cub => ['id'] },
+            from => { cubs => { cub => { type => 'inner' } } },
+            where => { '+cubs' => { share_org => $all_ou_ids },
+                '+cub' => { owner => { '!=' => $user_id } } },
+            distinct => 1
+        };
+        $bucket_user_share_retrieve_method = 'search_permission_usr_object_perm_map';
+        $object_class_for_user_object_perms = 'cub';
     }
 
     # Get buckets shared with any of these orgs not owned by user
