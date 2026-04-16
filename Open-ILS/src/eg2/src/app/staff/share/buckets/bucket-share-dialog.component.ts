@@ -19,6 +19,7 @@ import {Pager} from '@eg/share/util/pager';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {ContainerType} from './bucket-types';
 
 @Component({
     selector: 'eg-bucket-share-dialog',
@@ -40,6 +41,7 @@ export class BucketShareDialogComponent
     @Input() usersEditPermGrid: IdlObject[] = [];
     @Input() shareTree: Tree;
     @Input() containerObjects: any[];
+    @Input() containerType: ContainerType = 'biblio';
 
     @ViewChild('fail', { static: true }) fail: AlertDialogComponent;
     @ViewChild('confirm', { static: true }) confirm: ConfirmDialogComponent;
@@ -119,7 +121,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.containerType,
                 this.containerObjects.map(o => o.id),
                 'VIEW_CONTAINER'
             )
@@ -157,7 +159,7 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
+                this.containerType,
                 this.containerObjects.map(o => o.id),
                 'UPDATE_CONTAINER'
             )

@@ -11,6 +11,7 @@ import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {BucketActionSummaryDialogComponent} from './bucket-action-summary-dialog.component';
+import {ContainerType} from './bucket-types';
 
 @Component({
     selector: 'eg-bucket-transfer-dialog',
@@ -24,7 +25,7 @@ export class BucketTransferDialogComponent
 
     @Input() patronId: number;
     destinationPatronId: number;
-    @Input() containerType = 'biblio';
+    @Input() containerType: ContainerType = 'biblio';
     @Input() containerObjects: any[];
     @Output() transferRequestCompleted: EventEmitter<boolean>;
     containerTransferResultMap = {};
@@ -135,4 +136,3 @@ export class BucketTransferDialogComponent
         );
     }
 }
-

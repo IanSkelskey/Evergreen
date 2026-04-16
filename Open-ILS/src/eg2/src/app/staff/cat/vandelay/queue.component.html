@@ -75,7 +75,7 @@
           </li>
           <li class="list-group-item">
             <div class="d-flex">
-              <eg-bucket-dialog #bucketDialog bucketClass="biblio" [fromBibQueue]="queueId">
+              <eg-bucket-dialog #bucketDialog containerType="biblio" [fromBibQueue]="queueId">
               </eg-bucket-dialog>
               <div class="flex-1">
                 <button type="button" class="btn btn-link p-0" (click)="bucketDialog.open({size:'lg'})" i18n>
@@ -154,4 +154,3 @@ because there are a lot of them.
   <eg-grid-column name="imported_as" i18n-label label="Imported As" 
     [cellTemplate]="importedAsTmpl"></eg-grid-column>
 </eg-grid>
-
