@@ -91,22 +91,19 @@
 <eg-bucket-transfer-dialog #transferDialog></eg-bucket-transfer-dialog>
 <eg-bucket-share-dialog #shareBucketDialog></eg-bucket-share-dialog>
 
+<eg-bucket-jump-to #jumpTo (jump)="jumpToBucketContent($event)"></eg-bucket-jump-to>
+
 <eg-grid #grid idlClass="cbreb"
     persistKey="catalog.record_buckets"
     [dataSource]="dataSource" [cellTextGenerator]="cellTextGenerator"
     (rowSelectionChange)="gridSelectionChange($event)"
     showDeclaredFieldsOnly="true"
     [sortable]="true" [filterable]="true" [allowNamedFilterSets]="false">
-<!--
+
     <eg-grid-toolbar-button
-        label="Add New" i18n-label
-        (onClick)="openNewBucketDialog($event)">
-    </eg-grid-toolbar-button>
--->
-    <eg-grid-toolbar-button
-        [adjacentPreceedingTemplateRef]="retrieveByIdTemplate"
-        label="Search" i18n-label class="input-group-text"
-        (onClick)="retrieveBucketById()">
+        [adjacentPreceedingTemplateRef]="jumpTo.templateRef"
+        label="Go" i18n-label class="input-group-text"
+        (onClick)="jumpTo.go()">
     </eg-grid-toolbar-button>
 <!--
     <eg-grid-toolbar-button
@@ -204,12 +201,6 @@
     <span class="material-icons" title="Not favorite" i18n-title aria-hidden="true">star_outlined</span>
     <span class="visually-hidden" i18n="Bucket favorites column star icon alt text">Not favorite</span>
   </button>
-</ng-template>
-
-<ng-template #retrieveByIdTemplate>
-    <label for="bucketIdInput" class="input-group-text" i18n>Bucket ID:</label>
-    <input id="bucketIdInput" class="form-control" type="text" inputmode="numeric" 
-    [(ngModel)]="bucketIdToRetrieve" (keydown.enter)="retrieveBucketById()" />
 </ng-template>
 
 <ng-template #nameTemplate let-r="row">

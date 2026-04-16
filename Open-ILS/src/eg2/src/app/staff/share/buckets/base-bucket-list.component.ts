@@ -61,8 +61,6 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     cellTextGenerator: GridCellTextGenerator;
     currentView = 'user';
     dataSource: GridDataSource;
-    bucketIdToRetrieve: number;
-    jumpToContentsOnRetrieveById = false;
     noSelectedRows: boolean;
     oneSelectedRow: boolean;
     favoriteIds: number[] = [];
@@ -86,8 +84,10 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
         this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
             if (segments.length > 0) {
                 const datasource = this.mapUrlToDatasource(segments[0].path);
-                if (datasource === 'retrieved_by_id') {
-                    this.bucketIdToRetrieve = parseInt(segments[0].path, 10);
+                if (datasource === 'user' && /^\d+$/.test(segments[0].path)) {
+                    // Numeric URL segment — jump directly to bucket content
+                    this.jumpToBucketContent(parseInt(segments[0].path, 10));
+                    return;
                 }
                 this.switchTo(datasource);
             } else {
@@ -189,26 +189,6 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                         return { bucketIds: [], count: ids.length, useGridPager: true };
                     }
                     return { bucketIds: ids, count: ids.length, useGridPager: true };
-                }
-            },
-
-            retrieved_by_id: {
-                label: null,
-                sort_key: null,
-                count: null,
-                bucketIdQuery: async (pager, sort, justCount) => {
-                    if (!this.bucketIdToRetrieve) {
-                        return { bucketIds: [], count: 0 };
-                    }
-                    const fleshedBucket = await this.bucketService.checkBucketAccess(this.bucketIdToRetrieve);
-                    if (fleshedBucket) {
-                        return { bucketIds: [this.bucketIdToRetrieve], count: 1 };
-                    } else {
-                        this.retrieveByIdFail.dialogBody =
-                            $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`;
-                        this.retrieveByIdFail.open();
-                        return { bucketIds: [], count: 0 };
-                    }
                 }
             }
         };
@@ -365,7 +345,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             'shared-with-others': 'shared_with_others',
             'shared-with-user': 'shared_with_user'
         };
-        return mapping[url] || 'retrieved_by_id';
+        return mapping[url] || 'user';
     }
 
     mapDatasourceToUrl(datasource: string): string {
@@ -376,8 +356,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             'favorites': 'favorites',
             'recent': 'recent',
             'shared_with_others': 'shared-with-others',
-            'shared_with_user': 'shared-with-user',
-            'retrieved_by_id': this.bucketIdToRetrieve
+            'shared_with_user': 'shared-with-user'
         };
         return mapping[datasource] || 'user';
     }
@@ -405,15 +384,6 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
         }
 
         return query;
-    }
-
-    retrieveBucketById() {
-        if (!this.bucketIdToRetrieve) { return; }
-        if (this.jumpToContentsOnRetrieveById) {
-            this.jumpToBucketContent(this.bucketIdToRetrieve);
-        } else {
-            this.switchTo('retrieved_by_id');
-        }
     }
 
     async testReferencedBucket(bucketId: number, callback: Function) {
