@@ -170,36 +170,12 @@ export abstract class BaseBucketService {
 
     async checkBucketAccess(bucketId: number): Promise<IdlObject | null> {
         try {
-            const bucket = await lastValueFrom(
+            return await lastValueFrom(
                 this.pcrud.retrieve(this.config.bucketClass, bucketId, {
                     flesh: 1,
-                    flesh_fields: { [this.config.bucketClass]: ['owner'] }
+                    flesh_fields: { [this.config.bucketClass]: this.config.bucketFleshFields }
                 })
             );
-
-            if (!bucket) { return null; }
-
-            const userId = this.auth.user().id();
-
-            if (bucket.owner().id() === userId) { return bucket; }
-
-            if (bucket.pub() === 't') { return bucket; }
-
-            if (this.config.sharedWithUserApi) {
-                const sharedBucketIds: number[] = await lastValueFrom(
-                    this.net.request(
-                        'open-ils.actor',
-                        this.config.sharedWithUserApi,
-                        this.auth.token()
-                    )
-                );
-
-                if (Array.isArray(sharedBucketIds) && sharedBucketIds.includes(bucketId)) {
-                    return bucket;
-                }
-            }
-
-            return null;
         } catch {
             return null;
         }

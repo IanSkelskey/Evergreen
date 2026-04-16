@@ -735,6 +735,24 @@ sub bucket_create {
 
 __PACKAGE__->register_method(
     method  => "update_record_bucket_org_share_mapping",
+    api_name    => "open-ils.actor.container.update_org_share_mapping",
+    signature => {
+        desc => q/
+            Sets the org share mappings for the specified container class, bucket ids, and org ids.
+        /,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Container class (biblio or user)', type => 'string'},
+            {desc => 'Bucket Ids to work with.', type => 'array'},
+            {desc => 'Org Ids to share with.', type => 'array'},
+        ],
+        return => {
+            desc => '1 for success, otherwise exception'
+        }
+    }
+);
+__PACKAGE__->register_method(
+    method  => "update_record_bucket_org_share_mapping",
     api_name    => "open-ils.actor.container.update_record_bucket_org_share_mapping",
     signature => {
         desc => q/
@@ -752,9 +770,17 @@ __PACKAGE__->register_method(
 );
 
 sub update_record_bucket_org_share_mapping {
-    my( $self, $client, $authtoken, $bucket_ids, $org_ids ) = @_;
+    my ($self, $client, $authtoken, @args) = @_;
     my $e = new_editor(xact=>1, authtoken=>$authtoken);
     return $e->die_event unless $e->checkauth;
+
+    my ($container_class, $bucket_ids, $org_ids);
+    if ($self->api_name =~ /update_record_bucket_org_share_mapping/) {
+        ($bucket_ids, $org_ids) = @args;
+        $container_class = 'biblio';
+    } else {
+        ($container_class, $bucket_ids, $org_ids) = @args;
+    }
 
     my $bucket_retrieve_method;
     my $bucket_share_retrieve_method;
@@ -763,13 +789,22 @@ sub update_record_bucket_org_share_mapping {
     my $share_perm;
     my $fm_type;
 
-    if ($self->api_name =~ 'update_record_bucket_org_share_mapping') {
+    if ($container_class eq 'biblio') {
         $bucket_retrieve_method = 'search_container_biblio_record_entry_bucket';
         $bucket_share_retrieve_method = 'search_container_biblio_record_entry_bucket_shares';
         $bucket_share_delete_method = 'delete_container_biblio_record_entry_bucket_shares';
         $bucket_share_create_method = 'create_container_biblio_record_entry_bucket_shares';
         $share_perm = 'ADMIN_CONTAINER_BIBLIO_RECORD_ENTRY_ORG_SHARE';
         $fm_type = 'Fieldmapper::container::biblio_record_entry_bucket_shares';
+    } elsif ($container_class eq 'user') {
+        $bucket_retrieve_method = 'search_container_user_bucket';
+        $bucket_share_retrieve_method = 'search_container_user_bucket_shares';
+        $bucket_share_delete_method = 'delete_container_user_bucket_shares';
+        $bucket_share_create_method = 'create_container_user_bucket_shares';
+        $share_perm = 'ADMIN_CONTAINER_USER_ORG_SHARE';
+        $fm_type = 'Fieldmapper::container::user_bucket_shares';
+    } else {
+        return OpenILS::Event->new('BAD_PARAMS', note => "Invalid container class: $container_class");
     }
 
     # Fetch buckets
@@ -830,6 +865,23 @@ sub update_record_bucket_org_share_mapping {
 
 __PACKAGE__->register_method(
     method  => "retrieve_org_ids_from_record_bucket_org_share_mapping",
+    api_name    => "open-ils.actor.container.retrieve_shared_org_ids",
+    signature => {
+        desc => q/
+            Retrieves org ids for the set of orgs referenced in org share mappings for the specified container buckets.
+        /,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Container class (biblio or user)', type => 'string'},
+            {desc => 'Bucket Ids to work with.', type => 'array'},
+        ],
+        return => {
+            desc => 'An array of org ids, otherwise exception'
+        }
+    }
+);
+__PACKAGE__->register_method(
+    method  => "retrieve_org_ids_from_record_bucket_org_share_mapping",
     api_name    => "open-ils.actor.container.retrieve_record_bucket_shared_org_ids",
     signature => {
         desc => q/
@@ -846,13 +898,25 @@ __PACKAGE__->register_method(
 );
 
 sub retrieve_org_ids_from_record_bucket_org_share_mapping {
-    my( $self, $client, $authtoken, $bucket_ids ) = @_;
+    my ($self, $client, $authtoken, @args) = @_;
     my $e = new_editor(xact=>1, authtoken=>$authtoken);
     return $e->die_event unless $e->checkauth;
 
+    my ($container_class, $bucket_ids);
+    if ($self->api_name =~ /retrieve_record_bucket_shared_org_ids/) {
+        ($bucket_ids) = @args;
+        $container_class = 'biblio';
+    } else {
+        ($container_class, $bucket_ids) = @args;
+    }
+
     my $bucket_share_retrieve_method;
-    if ($self->api_name =~ 'retrieve_record_bucket_shared_org_ids') {
+    if ($container_class eq 'biblio') {
         $bucket_share_retrieve_method = 'search_container_biblio_record_entry_bucket_shares';
+    } elsif ($container_class eq 'user') {
+        $bucket_share_retrieve_method = 'search_container_user_bucket_shares';
+    } else {
+        return OpenILS::Event->new('BAD_PARAMS', note => "Invalid container class: $container_class");
     }
 
     # Fetch mappings shares table
@@ -2278,6 +2342,23 @@ sub list_container_user_shares {
 
 __PACKAGE__->register_method(
     method  => "update_container_user_shares",
+    api_name    => "open-ils.actor.container.update_user_share_mapping",
+    signature => {
+        desc => "Update user shares for multiple containers of a given class (removes all existing shares and (re-)adds new ones).",
+        params => [
+            {desc => "Authentication token", type => "string"},
+            {desc => "Container class (biblio or user)", type => "string"},
+            {desc => "Array of Container IDs", type => "array"},
+            {desc => "Array of User IDs to share with", type => "array"},
+            {desc => "Optional permission code to work with. Defaults to VIEW_CONTAINER", type => "string"},
+        ],
+        return => {
+            desc => "1 on success, Event on error",
+        }
+    }
+);
+__PACKAGE__->register_method(
+    method  => "update_container_user_shares",
     api_name    => "open-ils.actor.container.update_record_bucket_user_share_mapping",
     signature => {
         desc => "Update user shares for multiple containers (removes all existing shares and (re-)adds new ones.",
@@ -2294,9 +2375,17 @@ __PACKAGE__->register_method(
 );
 
 sub update_container_user_shares {
-    my($self, $conn, $auth, $container_ids, $user_ids, $perm_code) = @_;
+    my($self, $conn, $auth, @args) = @_;
     my $e = new_editor(xact=>1, authtoken=>$auth);
     return $e->die_event unless $e->checkauth;
+
+    my ($container_class, $container_ids, $user_ids, $perm_code);
+    if ($self->api_name =~ /update_record_bucket_user_share_mapping/) {
+        ($container_ids, $user_ids, $perm_code) = @args;
+        $container_class = 'biblio';
+    } else {
+        ($container_class, $container_ids, $user_ids, $perm_code) = @args;
+    }
 
     if (!$perm_code) {
         $perm_code = 'VIEW_CONTAINER';
@@ -2306,10 +2395,16 @@ sub update_container_user_shares {
     my $retrieve_method;
     my $admin_perm;
     my $object_type;
-    if ($self->api_name =~ 'update_record_bucket_user_share_mapping') {
+    if ($container_class eq 'biblio') {
         $retrieve_method = 'retrieve_container_biblio_record_entry_bucket';
         $admin_perm = 'ADMIN_CONTAINER_BIBLIO_RECORD_ENTRY_USER_SHARE';
         $object_type = 'cbreb';
+    } elsif ($container_class eq 'user') {
+        $retrieve_method = 'retrieve_container_user_bucket';
+        $admin_perm = 'ADMIN_CONTAINER_USER_USER_SHARE';
+        $object_type = 'cub';
+    } else {
+        return OpenILS::Event->new('BAD_PARAMS', note => "Invalid container class: $container_class");
     }
 
     foreach my $container_id (@$container_ids) {
@@ -2346,5 +2441,3 @@ sub update_container_user_shares {
 }
 
 1;
-
-

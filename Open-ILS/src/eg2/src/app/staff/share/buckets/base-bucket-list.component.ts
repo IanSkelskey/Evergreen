@@ -501,6 +501,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     openTransferDialog = async (rows: any[]) => {
         if (!rows || rows.length === 0) { return; }
 
+        this.transferDialog.containerType = this.config.containerType;
         this.transferDialog.containerObjects = rows;
 
         try {
@@ -527,9 +528,10 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     openShareBucketDialog = async (rows: any[]) => {
         if (!rows || rows.length === 0) { return; }
 
+        this.shareBucketDialog.containerType = this.config.containerType;
         this.shareBucketDialog.containerObjects = rows;
-        this.shareBucketDialog.loadAouTree();
-        this.shareBucketDialog.populateCheckedNodes();
+        await this.shareBucketDialog.loadAouTree();
+        await this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();
         await this.shareBucketDialog.loadAuGridEditPermGrid();
 

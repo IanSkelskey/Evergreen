@@ -19,6 +19,7 @@ import {Pager} from '@eg/share/util/pager';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {ContainerType} from './bucket-types';
 
 @Component({
     selector: 'eg-bucket-share-dialog',
@@ -40,6 +41,7 @@ export class BucketShareDialogComponent
     @Input() usersEditPermGrid: IdlObject[] = [];
     @Input() shareTree: Tree;
     @Input() containerObjects: any[];
+    @Input() containerType: ContainerType = 'biblio';
 
     @ViewChild('fail', { static: true }) fail: AlertDialogComponent;
     @ViewChild('confirm', { static: true }) confirm: ConfirmDialogComponent;
@@ -110,6 +112,10 @@ export class BucketShareDialogComponent
         this.userShareEditPermGrid = that;
     };
 
+    private get containerIds(): number[] {
+        return (this.containerObjects || []).map(container => container.id);
+    }
+
     async loadAuGridViewPermGrid(): Promise<any> {
         this.usersViewPermGrid = [];
         this.users_touchedViewPermGrid = false;
@@ -119,8 +125,8 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
-                this.containerObjects.map(o => o.id),
+                this.containerType,
+                this.containerIds,
                 'VIEW_CONTAINER'
             )
         );
@@ -157,8 +163,8 @@ export class BucketShareDialogComponent
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
-                'biblio',
-                this.containerObjects.map(o => o.id),
+                this.containerType,
+                this.containerIds,
                 'UPDATE_CONTAINER'
             )
         );
@@ -416,9 +422,10 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            'open-ils.actor.container.update_user_share_mapping',
             this.auth.token(),
-            this.containerObjects.map(o => o.id),
+            this.containerType,
+            this.containerIds,
             selectedUserIds,
             'VIEW_CONTAINER'
         ).pipe(
@@ -451,9 +458,10 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            'open-ils.actor.container.update_user_share_mapping',
             this.auth.token(),
-            this.containerObjects.map(o => o.id),
+            this.containerType,
+            this.containerIds,
             selectedUserIds,
             'UPDATE_CONTAINER'
         ).pipe(
@@ -511,7 +519,7 @@ export class BucketShareDialogComponent
                 label: orgNode.name() + '--' + orgNode.shortname(),
                 callerData: {orgId: orgNode.id()},
                 expanded: expand,
-                stateFlagLabel: $localize`Select for record bucket sharing.`
+                stateFlagLabel: $localize`Select for bucket sharing.`
             });
 
             // Tree node labels are "name -- shortname".  Sorting
@@ -595,9 +603,10 @@ export class BucketShareDialogComponent
         this._original_orgs = (await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
-                'open-ils.actor.container.retrieve_record_bucket_shared_org_ids', // hard-coded to record buckets for now
+                'open-ils.actor.container.retrieve_shared_org_ids',
                 this.auth.token(),
-                this.containerObjects.map( o => o.id ),
+                this.containerType,
+                this.containerIds,
             )
         )).sort((a,b) => { return a - b; });
         console.debug('populating this._original_orgs', this._original_orgs );
@@ -612,9 +621,10 @@ export class BucketShareDialogComponent
     updateOrgShares$ = (checkedNodes) => {
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_org_share_mapping', // hard-coded to record buckets for now
+            'open-ils.actor.container.update_org_share_mapping',
             this.auth.token(),
-            this.containerObjects.map( o => o.id ),
+            this.containerType,
+            this.containerIds,
             checkedNodes.map( n => n.id )
         ).pipe(
             tap({
