@@ -1,4 +1,4 @@
-import {Subject, Observable, of, lastValueFrom} from 'rxjs';
+import {Subject, Observable, of, lastValueFrom, toArray} from 'rxjs';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
@@ -29,13 +29,18 @@ export abstract class BaseBucketService {
 
     async addItemsToBucket(bucketId: number, targetIds: number[]): Promise<any> {
         this.logBucket(bucketId);
+        if (targetIds.length === 0) {
+            return [];
+        }
         const items = targetIds.map(targetId => {
             const item = this.idl.create(this.config.bucketItemIdlClass);
             item.bucket(bucketId);
             item[this.config.targetField](targetId);
             return item;
         });
-        return this.pcrud.create(items).toPromise().then(l => l.map(i => i.id()));
+        return lastValueFrom(
+            this.pcrud.create(items).pipe(toArray())
+        ).then(createdItems => createdItems.map(item => item.id()));
     }
 
     async removeItemsFromBucket(bucketId: number, targetIds: number[]): Promise<any> {
