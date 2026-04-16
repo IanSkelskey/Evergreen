@@ -27,6 +27,44 @@ export abstract class BaseBucketService {
         this.bucketsRefreshRequested.next();
     }
 
+    async retrieveBucketsSharedWithUser(): Promise<number[]> {
+        if (!this.config.sharedWithUserApi) {
+            return [];
+        }
+
+        const response = await lastValueFrom(
+            this.net.request(
+                'open-ils.actor',
+                this.config.sharedWithUserApi,
+                this.auth.token()
+            )
+        );
+
+        if (!Array.isArray(response)) {
+            return [];
+        }
+
+        return response
+            .map(id => Number(id))
+            .filter(id => Number.isInteger(id));
+    }
+
+    async countBucketsSharedWithUser(): Promise<number> {
+        if (!this.config.sharedWithUserApi) {
+            return 0;
+        }
+
+        const response = await lastValueFrom(
+            this.net.request(
+                'open-ils.actor',
+                `${this.config.sharedWithUserApi}.count`,
+                this.auth.token()
+            )
+        );
+
+        return Number(response) || 0;
+    }
+
     async addItemsToBucket(bucketId: number, targetIds: number[]): Promise<any> {
         this.logBucket(bucketId);
         if (targetIds.length === 0) {
@@ -107,9 +145,13 @@ export abstract class BaseBucketService {
         );
     }
 
+    private recentStorageKey(): string {
+        return `${this.config.storageKey}.${this.auth.user().id()}`;
+    }
+
     async logBucket(bucketId: number) {
         const log: number[] =
-            this.store.getLocalItem(this.config.storageKey) || [];
+            this.store.getLocalItem(this.recentStorageKey()) || [];
 
         if (!log.includes(bucketId)) {
             log.unshift(bucketId);
@@ -118,12 +160,12 @@ export abstract class BaseBucketService {
                 log.pop();
             }
 
-            this.store.setLocalItem(this.config.storageKey, log);
+            this.store.setLocalItem(this.recentStorageKey(), log);
         }
     }
 
     recentBucketIds(): number[] {
-        return this.store.getLocalItem(this.config.storageKey) || [];
+        return this.store.getLocalItem(this.recentStorageKey()) || [];
     }
 
     async loadFavoriteBucketFlags(userId: number) {
@@ -173,14 +215,38 @@ export abstract class BaseBucketService {
         return Object.keys(this.favoriteBucketFlags).map(Number);
     }
 
+    async filterAccessibleIds(bucketIds: number[]): Promise<number[]> {
+        if (bucketIds.length === 0) { return []; }
+        const response = await lastValueFrom(
+            this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.container.filter_accessible',
+                this.auth.token(),
+                this.config.containerType,
+                bucketIds
+            )
+        );
+        if (!Array.isArray(response)) { return []; }
+        return response.map(id => Number(id)).filter(id => Number.isInteger(id));
+    }
+
     async checkBucketAccess(bucketId: number): Promise<IdlObject | null> {
         try {
-            return await lastValueFrom(
-                this.pcrud.retrieve(this.config.bucketIdlClass, bucketId, {
-                    flesh: 1,
-                    flesh_fields: { [this.config.bucketIdlClass]: this.config.bucketFleshFields }
-                })
+            const response = await lastValueFrom(
+                this.net.request(
+                    'open-ils.actor',
+                    'open-ils.actor.container.flesh',
+                    this.auth.token(),
+                    this.config.containerType,
+                    bucketId
+                )
             );
+
+            if (!response || (typeof response === 'object' && 'textcode' in response)) {
+                return null;
+            }
+
+            return response as IdlObject;
         } catch {
             return null;
         }

@@ -4,7 +4,7 @@ import {ChangeDetectorRef} from '@angular/core';
 import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY,
     map, switchMap, takeUntil, take, catchError} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
-import {IdlService} from '@eg/core/idl.service';
+import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -25,6 +25,7 @@ import {BucketTypeConfig} from './bucket-types';
 export interface BucketQueryResult {
     bucketIds: number[];
     count: number;
+    useGridPager?: boolean;
 }
 
 export interface BucketView {
@@ -106,6 +107,10 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
         this.grid.onRowActivate.subscribe(
             (bucket: any) => this.jumpToBucketContent(bucket.id)
         );
+        this.editDialog.inPlaceMode = true;
+        this.editDialog.recordSaved.pipe(takeUntil(this.destroy$)).subscribe(
+            bucket => void this.saveEditedBucket(bucket)
+        );
 
         if (this.config.flagIdlClass) {
             await this.bucketService.loadFavoriteBucketFlags(this.auth.user().id());
@@ -168,11 +173,24 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             all: this.createStandardView('all', $localize`Visible to me`, 10,
                 () => ({ owner: { '!=': userId() }, pub: 't' })),
 
-            recent: this.createStandardView('recent', $localize`Recent`, 3,
-                () => {
-                    const ids = this.bucketService.recentBucketIds();
-                    return ids.length ? { id: ids } : null;
-                }),
+            recent: {
+                label: $localize`Recent`,
+                sort_key: 3,
+                count: -1,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    const rawIds = this.bucketService.recentBucketIds();
+                    if (rawIds.length === 0) {
+                        if (justCount) { this.views['recent'].count = 0; }
+                        return { bucketIds: [], count: 0, useGridPager: true };
+                    }
+                    const ids = await this.bucketService.filterAccessibleIds(rawIds);
+                    if (justCount) {
+                        this.views['recent'].count = ids.length;
+                        return { bucketIds: [], count: ids.length, useGridPager: true };
+                    }
+                    return { bucketIds: ids, count: ids.length, useGridPager: true };
+                }
+            },
 
             retrieved_by_id: {
                 label: null,
@@ -196,11 +214,24 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
         };
 
         if (this.config.flagIdlClass) {
-            this.views['favorites'] = this.createStandardView('favorites', $localize`Favorites`, 2,
-                () => {
+            this.views['favorites'] = {
+                label: $localize`Favorites`,
+                sort_key: 2,
+                count: -1,
+                bucketIdQuery: async (pager, sort, justCount) => {
                     this.favoriteIds = this.bucketService.getFavoriteBucketIds();
-                    return this.favoriteIds.length ? { id: this.favoriteIds } : null;
-                });
+                    if (this.favoriteIds.length === 0) {
+                        if (justCount) { this.views['favorites'].count = 0; }
+                        return { bucketIds: [], count: 0, useGridPager: true };
+                    }
+                    const ids = await this.bucketService.filterAccessibleIds(this.favoriteIds);
+                    if (justCount) {
+                        this.views['favorites'].count = ids.length;
+                        return { bucketIds: [], count: ids.length, useGridPager: true };
+                    }
+                    return { bucketIds: ids, count: ids.length, useGridPager: true };
+                }
+            };
         }
 
         if (sc) {
@@ -213,8 +244,25 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                     }}
                 ]}));
 
-            this.views['shared_with_user'] = this.createStandardView('shared_with_user', $localize`Shared with me`, 5,
-                () => ({ owner: { '!=': userId() }, pub: 'f' }));
+            this.views['shared_with_user'] = {
+                label: $localize`Shared with me`,
+                sort_key: 5,
+                count: -1,
+                bucketIdQuery: async (pager, sort, justCount) => {
+                    if (!this.config.sharedWithUserApi) {
+                        return { bucketIds: [], count: 0, useGridPager: true };
+                    }
+
+                    if (justCount) {
+                        const count = await this.bucketService.countBucketsSharedWithUser();
+                        this.views['shared_with_user'].count = count;
+                        return { bucketIds: [], count, useGridPager: true };
+                    }
+
+                    const bucketIds = await this.bucketService.retrieveBucketsSharedWithUser();
+                    return { bucketIds, count: bucketIds.length, useGridPager: true };
+                }
+            };
         }
     }
 
@@ -279,7 +327,8 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
 
                     return this.bucketService.getBucketCountStats(response.bucketIds).pipe(
                         switchMap(countStats => {
-                            return this.flatData.getRows(this.grid.context, query, new Pager(), sort).pipe(
+                            const retrievePager = response.useGridPager ? pager : new Pager();
+                            return this.flatData.getRows(this.grid.context, query, retrievePager, sort).pipe(
                                 map(row => {
                                     return {
                                         ...row,
@@ -382,10 +431,17 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
 
     openEditBucketDialog = async (rows: any[]) => {
         if (!rows.length) { return; }
-        const bucket = rows[0];
+        const bucket = await this.bucketService.checkBucketAccess(rows[0].id);
+        if (!bucket) {
+            this.showErrorDialog(
+                'Could not load bucket.',
+                $localize`This bucket could not be loaded. It may not exist, or it may belong to another user and has not been shared with you.`
+            );
+            return;
+        }
         this.editDialog.mode = 'update';
-        this.editDialog.recordId = bucket.id;
-        this.editDialog.open().subscribe(ok => this.grid.reload());
+        this.editDialog.record = bucket;
+        this.editDialog.open().subscribe();
     };
 
     openNewBucketDialog = async (rows: any[]) => {
@@ -431,8 +487,10 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                         const evt = this.evt.parse(response);
                         if (evt) {
                             console.error(evt.toString());
-                            this.deleteFail.dialogBody = evt.toString();
-                            this.deleteFail.open();
+                            this.showErrorDialog(
+                                $localize`Could not delete bucket(s).`,
+                                evt.toString()
+                            );
                             resolve(0);
                         } else {
                             let carousels = 0;
@@ -452,8 +510,10 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                     },
                     error: (error: unknown) => {
                         console.error(error);
-                        this.deleteFail.dialogBody = error.toString();
-                        this.deleteFail.open();
+                        this.showErrorDialog(
+                            $localize`Could not delete bucket(s).`,
+                            error.toString()
+                        );
                         reject(error);
                     },
                     complete: () => {
@@ -600,6 +660,40 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
 
     protected async confirmDeleteOverride(rows: any[]): Promise<boolean> {
         return false;
+    }
+
+    protected showErrorDialog(title: string, body: string) {
+        this.deleteFail.dialogTitle = title;
+        this.deleteFail.dialogBody = body;
+        this.deleteFail.open();
+    }
+
+    protected async saveEditedBucket(bucket: IdlObject): Promise<void> {
+        try {
+            const response = await firstValueFrom(this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.container.update',
+                this.auth.token(),
+                this.config.containerType,
+                bucket
+            ));
+
+            const evt = this.evt.parse(response);
+            if (evt) {
+                console.error(evt.toString());
+                this.showErrorDialog('Could not save bucket.', evt.toString());
+                return;
+            }
+
+            this.grid.reload();
+            this.updateCounts();
+        } catch (error) {
+            console.error('saveEditedBucket error:', error);
+            this.showErrorDialog(
+                'Could not save bucket.',
+                error?.toString?.() || String(error)
+            );
+        }
     }
 
     ngOnDestroy() {

@@ -29,6 +29,8 @@ my %ttypes;
 my %jtypes;
 my %batch_perm;
 my %table;
+my %share_retrieve_methods;
+my %perm_id_cache;
 
 $batch_perm{'biblio'} = ['UPDATE_MARC'];
 $batch_perm{'callnumber'} = ['UPDATE_VOLUME'];
@@ -61,14 +63,17 @@ $htypes{'copy'} = "acp";
 $htypes{'user'} = "au";
 
 $jtypes{'biblio'} = "cbreb";
-#$jtypes{'callnumber'} = "ccnb";
-#$jtypes{'copy'} = "ccb";
+$jtypes{'callnumber'} = "ccnb";
+$jtypes{'copy'} = "ccb";
 $jtypes{'user'} = "cub";
 
 $table{'biblio'} = "biblio.record_entry";
 $table{'callnumber'} = "asset.call_number";
 $table{'copy'} = "asset.copy";
 $table{'user'} = "actor.usr";
+
+$share_retrieve_methods{'biblio'} = 'search_container_biblio_record_entry_bucket_shares';
+$share_retrieve_methods{'user'} = 'search_container_user_bucket_shares';
 
 #$qtypes{'biblio'} = 0 
 #$qtypes{'callnumber'} = 0;
@@ -81,6 +86,145 @@ sub _sort_buckets {
     my $buckets = shift;
     return $buckets unless ($buckets && $buckets->[0]);
     return [ sort { $a->name cmp $b->name } @$buckets ];
+}
+
+sub _container_perm_id {
+    my ($e, $perm_code) = @_;
+    return $perm_id_cache{$perm_code} if exists $perm_id_cache{$perm_code};
+
+    my $perm = $e->search_permission_perm_list({code => $perm_code})->[0];
+    $perm_id_cache{$perm_code} = $perm ? $perm->id : undef;
+    return $perm_id_cache{$perm_code};
+}
+
+sub _requestor_has_direct_container_share {
+    my ($e, $class, $bucket, $perm_codes) = @_;
+    return 0 unless $jtypes{$class};
+
+    my @perm_ids = grep { defined($_) }
+        map { _container_perm_id($e, $_) } @$perm_codes;
+    return 0 unless @perm_ids;
+
+    my $maps = $e->search_permission_usr_object_perm_map({
+        usr         => $e->requestor->id,
+        object_type => $jtypes{$class},
+        object_id   => ''.$bucket->id,
+        perm        => \@perm_ids
+    });
+
+    return ($maps && @$maps) ? 1 : 0;
+}
+
+sub _requestor_has_org_shared_container_access {
+    my ($e, $class, $bucket, $perm_codes) = @_;
+    my $share_retrieve_method = $share_retrieve_methods{$class} or return 0;
+
+    my $maps = $e->$share_retrieve_method({bucket => $bucket->id}) || [];
+    for my $map (@$maps) {
+        for my $perm_code (@$perm_codes) {
+            return 1 unless $U->check_user_perms(
+                $e->requestor->id,
+                $map->share_org,
+                $perm_code
+            );
+        }
+    }
+
+    return 0;
+}
+
+sub _container_access_rule {
+    my ($mode) = @_;
+
+    return {
+        allow_public => 1,
+        perms        => [qw/VIEW_CONTAINER UPDATE_CONTAINER DELETE_CONTAINER/],
+        failure_perm => 'VIEW_CONTAINER'
+    } if $mode eq 'view';
+
+    return {
+        allow_public => 0,
+        perms        => ['UPDATE_CONTAINER'],
+        failure_perm => 'UPDATE_CONTAINER'
+    } if $mode eq 'update' || $mode eq 'manage_contents';
+
+    return {
+        allow_public => 0,
+        perms        => ['DELETE_CONTAINER'],
+        failure_perm => 'DELETE_CONTAINER'
+    } if $mode eq 'delete';
+
+    return {
+        allow_public => 0,
+        perms        => [$mode],
+        failure_perm => $mode
+    };
+}
+
+sub _requestor_has_container_access {
+    my ($e, $class, $bucket, $mode) = @_;
+
+    my $rule = _container_access_rule($mode);
+    my $requestor = $e->requestor;
+
+    return 1 if $rule->{allow_public} && $U->is_true($bucket->pub);
+    return 1 if $requestor && $bucket->owner eq $requestor->id;
+    return 0 unless $requestor;
+    return 1 if _requestor_has_direct_container_share($e, $class, $bucket, $rule->{perms});
+    return 1 if _requestor_has_org_shared_container_access($e, $class, $bucket, $rule->{perms});
+
+    $e->event(OpenILS::Event->new(
+        'PERM_FAILURE',
+        ilsperm    => $rule->{failure_perm},
+        ilspermloc => $bucket->owning_lib || $requestor->home_ou
+    ));
+
+    return 0;
+}
+
+__PACKAGE__->register_method(
+    method  => "bucket_filter_accessible",
+    api_name    => "open-ils.actor.container.filter_accessible",
+    authoritative => 1,
+    signature => {
+        desc => q|
+            Given an array of bucket IDs and a container class, returns only
+            the IDs that the requestor has view access to, as determined by
+            the share and permission model (owner, public, org-share, user-share).
+        |,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Container class: biblio, user, copy, callnumber', type => 'string'},
+            {desc => 'Array of bucket IDs to check', type => 'array'},
+        ],
+        return => {
+            desc => 'An array of accessible bucket IDs (subset of the input).'
+        }
+    }
+);
+
+sub bucket_filter_accessible {
+    my ($self, $conn, $auth, $class, $bucket_ids) = @_;
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+    return [] unless $ctypes{$class};
+
+    $bucket_ids = [$bucket_ids] unless ref($bucket_ids);
+    my $meth = 'retrieve_' . $ctypes{$class};
+    my @accessible;
+
+    for my $id (@$bucket_ids) {
+        my $bkt = $e->$meth($id);
+        next unless $bkt;
+        # Clear any previous event before the access check
+        $e->clear_event;
+        if (_requestor_has_container_access($e, $class, $bkt, 'view')) {
+            push @accessible, $id;
+        }
+        $e->clear_event;
+    }
+
+    return \@accessible;
 }
 
 __PACKAGE__->register_method(
@@ -263,9 +407,12 @@ sub get_bucket_ids_shared_with_user {
     my $json_query;
     my $bucket_user_share_retrieve_method;
     my $object_class_for_user_object_perms;
+    my $view_perm_id = _container_perm_id($e, 'VIEW_CONTAINER');
+    my $update_perm_id = _container_perm_id($e, 'UPDATE_CONTAINER');
+    my $delete_perm_id = _container_perm_id($e, 'DELETE_CONTAINER');
     if ($self->api_name =~ 'biblio_record_entry') {
         $json_query = {
-            select => { cbrebs => ['bucket'], cbreb => ['id'] },
+            select => { cbrebs => ['bucket', 'share_org'], cbreb => ['id'] },
             from => { cbrebs => { cbreb => { type => 'inner' } } },
             where => { '+cbrebs' => { share_org => $all_ou_ids },
                 '+cbreb' => { owner => { '!=' => $user_id } } },
@@ -275,7 +422,7 @@ sub get_bucket_ids_shared_with_user {
         $object_class_for_user_object_perms = 'cbreb';
     } elsif ($self->api_name =~ 'user_buckets') {
         $json_query = {
-            select => { cubs => ['bucket'], cub => ['id'] },
+            select => { cubs => ['bucket', 'share_org'], cub => ['id'] },
             from => { cubs => { cub => { type => 'inner' } } },
             where => { '+cubs' => { share_org => $all_ou_ids },
                 '+cub' => { owner => { '!=' => $user_id } } },
@@ -289,7 +436,7 @@ sub get_bucket_ids_shared_with_user {
     my $org_share_mappings = $e->json_query($json_query);
     # Buckets being shared directly with the user
     my $user_share_mappings = $e->$bucket_user_share_retrieve_method({
-        perm => $e->search_permission_perm_list({code => "VIEW_CONTAINER"})->[0]->id,
+        perm => [$view_perm_id, $update_perm_id, $delete_perm_id],
         object_type => $object_class_for_user_object_perms,
         usr => $user_id
     });
@@ -302,6 +449,9 @@ sub get_bucket_ids_shared_with_user {
     my %shared_bucket_ids = ();
     if ($org_share_mappings && ref($org_share_mappings) eq 'ARRAY') {
         foreach my $m (@$org_share_mappings) {
+            next unless grep {
+                !$U->check_user_perms($user_id, $m->{share_org}, $_)
+            } qw/VIEW_CONTAINER UPDATE_CONTAINER DELETE_CONTAINER/;
             $shared_bucket_ids{ $m->{bucket} } = 1;
         }
     }
@@ -450,17 +600,8 @@ sub _bucket_flesh {
     my $meth = 'retrieve_' . $ctypes{$class};
     my $bkt = $e->$meth($bucket_id) or return $e->event;
 
-    unless($U->is_true($bkt->pub)) {
-        return undef if $self->api_name =~ /public/;
-        unless($bkt->owner eq $e->requestor->id) {
-            my $owner = $e->retrieve_actor_user($bkt->owner)
-                or return $e->die_event;
-            return $e->event unless (
-                $e->allowed('VIEW_CONTAINER', $owner->home_ou) or
-                $e->allowed('VIEW_CONTAINER', $bkt->owning_lib)
-            );
-        }
-    }
+    return undef if $self->api_name =~ /public/ && !$U->is_true($bkt->pub);
+    return $e->event unless _requestor_has_container_access($e, $class, $bkt, 'view');
 
     my $fmclass = $bkt->class_name . "i";
     $meth = 'search_' . $ctypes{$class} . '_item';
@@ -617,9 +758,8 @@ sub item_note_cud {
         $item = $db_note->item;
     }
 
-    if($item->bucket->owner ne $e->requestor->id) {
-        return $e->die_event unless $e->allowed("UPDATE_CONTAINER");
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $item->bucket, 'manage_contents');
 
     $meth = 'create_' . $meat if $note->isnew;
     $meth = 'update_' . $meat if $note->ischanged;
@@ -958,14 +1098,8 @@ sub item_create {
         $apputils->fetch_container_e($e, $items->[0]->bucket, $class);
     return $evt if $evt;
 
-    if( $bucket->owner ne $e->requestor->id ) {
-        return $e->die_event unless
-            $e->allowed('CREATE_CONTAINER_ITEM');
-
-    } else {
-#       return $e->event unless
-#           $e->allowed('CREATE_CONTAINER_ITEM'); # new perm here?
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bucket, 'manage_contents');
         
     for my $one_item (@$items) {
 
@@ -1064,9 +1198,8 @@ sub batch_add_items {
 
     my $bucket = $e->$retrieve($bucket_id) or return $e->die_event;
 
-    if ($bucket->owner ne $e->requestor->id) {
-        return $e->die_event unless $e->allowed('CREATE_CONTAINER_ITEM');
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $bucket_class, $bucket, 'manage_contents');
 
     for my $target_id (@$target_ids) {
 
@@ -1121,9 +1254,8 @@ sub batch_delete_items {
 
     my $bucket = $e->$retrieve($bucket_id) or return $e->die_event;
 
-    if ($bucket->owner ne $e->requestor->id) {
-        return $e->die_event unless $e->allowed('DELETE_CONTAINER_ITEM');
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $bucket_class, $bucket, 'manage_contents');
 
     for my $target_id (@$target_ids) {
 
@@ -1169,11 +1301,8 @@ sub __item_delete {
     ( $bucket, $evt ) = $U->fetch_container_e($e, $item->bucket, $class);
     return $evt if $evt;
 
-    if( $bucket->owner ne $e->requestor->id ) {
-      my $owner = $e->retrieve_actor_user($bucket->owner)
-         or return $e->die_event;
-        return $e->event unless $e->allowed('DELETE_CONTAINER_ITEM', $owner->home_ou);
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bucket, 'manage_contents');
 
     my $stat;
     if( $class eq 'copy' ) {
@@ -1284,11 +1413,13 @@ sub full_delete {
     ( $container, $evt ) = $apputils->fetch_container_e($e, $containerId, $class);
     return $evt if $evt;
 
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $container, 'delete');
+
     my $owner;
     if( $container->owner ne $e->requestor->id ) {
         $owner = $e->retrieve_actor_user($container->owner)
             or return $e->die_event;
-        return $e->event unless $e->allowed('DELETE_CONTAINER', $owner->home_ou);
     }
 
     my $items; my $carousels = [];
@@ -1398,9 +1529,14 @@ sub container_update {
     my ( $dbcontainer, $evt ) = $U->fetch_container_e($e, $container->id, $class);
     return $evt if $evt;
 
-    if( $e->requestor->id ne $container->owner ) {
-        return $e->event unless $e->allowed('UPDATE_CONTAINER');
-    }
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $dbcontainer, 'update');
+
+    $container->id($dbcontainer->id);
+    $container->owner($dbcontainer->owner);
+    $container->btype($dbcontainer->btype);
+    $container->create_time($dbcontainer->create_time);
+    $container->owning_lib($dbcontainer->owning_lib);
 
     my $stat;
     if( $class eq 'copy' ) {
@@ -1636,14 +1772,9 @@ sub batch_statcat_apply {
     my $meth = 'retrieve_' . $ctypes{$class};
     my $bkt = $e->$meth($c_id) or return $e->die_event;
 
-    unless($bkt->owner eq $e->requestor->id) {
-        $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
-        my $owner = $e->retrieve_actor_user($bkt->owner)
-            or return $e->die_event;
-        return $e->die_event unless (
-            $e->allowed('VIEW_CONTAINER', $bkt->owning_lib) || $e->allowed('VIEW_CONTAINER', $owner->home_ou)
-        );
-    }
+    $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bkt, 'manage_contents');
 
     $meth = 'search_' . $ctypes{$class} . '_item';
     my $contents = $e->$meth({bucket => $c_id});
@@ -1770,14 +1901,9 @@ sub batch_create_message {
     my $meth = 'retrieve_' . $ctypes{$class};
     my $bkt = $e->$meth($c_id) or return $e->die_event;
 
-    unless($bkt->owner eq $e->requestor->id) {
-        $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
-        my $owner = $e->retrieve_actor_user($bkt->owner)
-            or return $e->die_event;
-        return $e->die_event unless (
-            $e->allowed('VIEW_CONTAINER', $bkt->owning_lib) || $e->allowed('VIEW_CONTAINER', $owner->home_ou)
-        );
-    }
+    $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bkt, 'manage_contents');
 
     $meth = 'search_' . $ctypes{$class} . '_item';
     my $contents = $e->$meth({bucket => $c_id});
@@ -1897,14 +2023,9 @@ sub apply_rollback {
     my $meth = 'retrieve_' . $ctypes{$class};
     my $bkt = $e->$meth($c_id) or return $e->die_event;
 
-    unless($bkt->owner eq $e->requestor->id) {
-        $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
-        my $owner = $e->retrieve_actor_user($bkt->owner)
-            or return $e->die_event;
-        return $e->die_event unless (
-            $e->allowed('VIEW_CONTAINER', $bkt->owning_lib) || $e->allowed('VIEW_CONTAINER', $owner->home_ou)
-        );
-    }
+    $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bkt, 'manage_contents');
 
     $main_fsg = $e->retrieve_action_fieldset_group($main_fsg);
     return { stage => 'COMPLETE', error => 'No field set group' } unless $main_fsg;
@@ -1984,14 +2105,9 @@ sub batch_edit {
     my $meth = 'retrieve_' . $ctypes{$class};
     my $bkt = $e->$meth($c_id) or return $e->die_event;
 
-    unless($bkt->owner eq $e->requestor->id) {
-        $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
-        my $owner = $e->retrieve_actor_user($bkt->owner)
-            or return $e->die_event;
-        return $e->die_event unless (
-            $e->allowed('VIEW_CONTAINER', $bkt->owning_lib) || $e->allowed('VIEW_CONTAINER', $owner->home_ou)
-        );
-    }
+    $client->respond({ ord => $stage++, stage => 'CONTAINER_PERM_CHECK' });
+    return $e->die_event
+        unless _requestor_has_container_access($e, $class, $bkt, 'manage_contents');
 
     $meth = 'search_' . $ctypes{$class} . '_item';
     my $contents = $e->$meth({bucket => $c_id});
@@ -2246,7 +2362,7 @@ sub add_container_user_share {
 
     my $map = Fieldmapper::permission::usr_object_perm_map->new;
     $map->usr($user_id);
-    $map->perm($e->retrieve_permission_perm_list({code => "VIEW_CONTAINER"})->id);
+    $map->perm($e->search_permission_perm_list({code => "VIEW_CONTAINER"})->[0]->id);
     $map->object_type($jtypes{$container_class});
     $map->object_id($container_id);
 

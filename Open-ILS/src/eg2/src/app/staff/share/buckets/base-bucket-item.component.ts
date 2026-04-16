@@ -66,6 +66,7 @@ export abstract class BaseBucketItemComponent implements OnInit {
                     this.onBucketLoaded(fleshedBucket);
                     this.initDataSource(this.bucketId);
                     this.gridSelectionChange([]);
+                    this.grid.reload();
                 } else {
                     this.accessDenied = true;
                 }
