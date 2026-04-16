@@ -562,12 +562,15 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     openShareBucketDialog = async (rows: any[]) => {
         if (!rows || rows.length === 0) { return; }
 
+        console.warn('openShareBucketDialog: rows =', rows, 'containerType =', this.config.containerType);
         this.shareBucketDialog.containerType = this.config.containerType;
         this.shareBucketDialog.containerObjects = rows;
+        console.warn('openShareBucketDialog: containerObjects set, containerIds will be =', rows.map(r => r.id));
         await this.shareBucketDialog.loadAouTree();
         await this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();
         await this.shareBucketDialog.loadAuGridEditPermGrid();
+        console.warn('openShareBucketDialog: after loads, usersViewPermGrid =', this.shareBucketDialog.usersViewPermGrid, 'usersEditPermGrid =', this.shareBucketDialog.usersEditPermGrid);
 
         try {
             const dialogRef$ = this.shareBucketDialog.open({size: 'lg'}).pipe(

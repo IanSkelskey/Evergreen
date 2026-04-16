@@ -2492,15 +2492,16 @@ __PACKAGE__->register_method(
             {desc => "Container class (biblio, callnumber, copy, user)", type => "string"},
             {desc => "Container ID", type => "number"},
             {desc => "Optional permission code to filter with", type => "string"},
+            {desc => "Optional: if true, return fleshed user objects (with card) instead of user IDs", type => "number"},
         ],
         return => {
-            desc => "Array of user IDs with shares on the container, Event on error",
+            desc => "Array of user IDs (or fleshed user objects if flesh_users is set) with shares on the container, Event on error",
         }
     }
 );
 
 sub list_container_user_shares {
-    my($self, $conn, $auth, $container_class, $container_id, $perm_code) = @_;
+    my($self, $conn, $auth, $container_class, $container_id, $perm_code, $flesh_users) = @_;
     my $e = new_editor(authtoken=>$auth);
     return $e->die_event unless $e->checkauth;
 
@@ -2522,8 +2523,16 @@ sub list_container_user_shares {
     }
 
     my $maps = $e->search_permission_usr_object_perm_map($search);
+    my @user_ids = map { $_->usr } @$maps;
 
-    return [map { $_->usr } @$maps];
+    if ($flesh_users && @user_ids) {
+        return $e->search_actor_user(
+            {id => \@user_ids},
+            {flesh => 1, flesh_fields => {au => ['card']}}
+        );
+    }
+
+    return \@user_ids;
 }
 
 __PACKAGE__->register_method(
