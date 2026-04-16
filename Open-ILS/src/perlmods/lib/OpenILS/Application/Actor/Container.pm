@@ -228,6 +228,76 @@ sub bucket_filter_accessible {
 }
 
 __PACKAGE__->register_method(
+    method  => "bucket_access_levels",
+    api_name    => "open-ils.actor.container.access_levels",
+    authoritative => 1,
+    signature => {
+        desc => q|
+            Given an array of bucket IDs and a container class, returns a hash
+            mapping each bucket ID to the requestor's highest access level:
+            'owner', 'edit', 'view', or 'none'.
+        |,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Container class: biblio, user, copy, callnumber', type => 'string'},
+            {desc => 'Array of bucket IDs to check', type => 'array'},
+        ],
+        return => {
+            desc => 'A hash of {bucket_id => access_level}.'
+        }
+    }
+);
+
+sub bucket_access_levels {
+    my ($self, $conn, $auth, $class, $bucket_ids) = @_;
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+    return {} unless $ctypes{$class};
+
+    $bucket_ids = [$bucket_ids] unless ref($bucket_ids);
+    my $meth = 'retrieve_' . $ctypes{$class};
+    my %levels;
+
+    for my $id (@$bucket_ids) {
+        my $bkt = $e->$meth($id);
+        unless ($bkt) {
+            $levels{$id} = 'none';
+            next;
+        }
+
+        my $requestor = $e->requestor;
+        if ($requestor && $bkt->owner eq $requestor->id) {
+            $levels{$id} = 'owner';
+            next;
+        }
+
+        # Check for edit access (UPDATE_CONTAINER) via direct or org share
+        $e->clear_event;
+        my $has_edit = _requestor_has_direct_container_share($e, $class, $bkt, ['UPDATE_CONTAINER'])
+            || _requestor_has_org_shared_container_access($e, $class, $bkt, ['UPDATE_CONTAINER']);
+        $e->clear_event;
+
+        if ($has_edit) {
+            $levels{$id} = 'edit';
+            next;
+        }
+
+        # Check for view access
+        $e->clear_event;
+        if ($U->is_true($bkt->pub)
+            || _requestor_has_direct_container_share($e, $class, $bkt, [qw/VIEW_CONTAINER UPDATE_CONTAINER DELETE_CONTAINER/])
+            || _requestor_has_org_shared_container_access($e, $class, $bkt, [qw/VIEW_CONTAINER UPDATE_CONTAINER DELETE_CONTAINER/])) {
+            $levels{$id} = 'view';
+        } else {
+            $levels{$id} = 'none';
+        }
+        $e->clear_event;
+    }
+
+    return \%levels;
+}
+
+__PACKAGE__->register_method(
     method  => "bucket_retrieve_all",
     api_name    => "open-ils.actor.container.all.retrieve_by_user",
     authoritative => 1,

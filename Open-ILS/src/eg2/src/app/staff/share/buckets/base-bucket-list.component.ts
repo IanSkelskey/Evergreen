@@ -1,7 +1,7 @@
 import {OnInit, OnDestroy, ViewChild, Input, Directive} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ChangeDetectorRef} from '@angular/core';
-import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY,
+import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY, forkJoin,
     map, switchMap, takeUntil, take, catchError} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -170,7 +170,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             user: this.createStandardView('user', $localize`My buckets`, 1,
                 () => ({ owner: userId() })),
 
-            all: this.createStandardView('all', $localize`Visible to me`, 10,
+            all: this.createStandardView('all', $localize`Public`, 10,
                 () => ({ owner: { '!=': userId() }, pub: 't' })),
 
             recent: {
@@ -325,8 +325,11 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                     }
                     const query = this.buildRetrieveByIdsQuery(response.bucketIds);
 
-                    return this.bucketService.getBucketCountStats(response.bucketIds).pipe(
-                        switchMap(countStats => {
+                    return forkJoin({
+                        countStats: this.bucketService.getBucketCountStats(response.bucketIds),
+                        accessLevels: from(this.bucketService.getAccessLevels(response.bucketIds))
+                    }).pipe(
+                        switchMap(({countStats, accessLevels}) => {
                             const retrievePager = response.useGridPager ? pager : new Pager();
                             return this.flatData.getRows(this.grid.context, query, retrievePager, sort).pipe(
                                 map(row => {
@@ -336,7 +339,8 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                                         org_share_count: countStats[row.id]?.org_share_count || 0,
                                         usr_view_share_count: countStats[row.id]?.usr_view_share_count || 0,
                                         usr_edit_share_count: countStats[row.id]?.usr_update_share_count || 0,
-                                        favorite: this.bucketService.isFavoriteBucket(row.id)
+                                        favorite: this.bucketService.isFavoriteBucket(row.id),
+                                        my_access: accessLevels[row.id] || 'none'
                                     };
                                 })
                             );

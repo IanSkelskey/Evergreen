@@ -230,6 +230,21 @@ export abstract class BaseBucketService {
         return response.map(id => Number(id)).filter(id => Number.isInteger(id));
     }
 
+    async getAccessLevels(bucketIds: number[]): Promise<{[id: number]: string}> {
+        if (bucketIds.length === 0) { return {}; }
+        const response = await lastValueFrom(
+            this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.container.access_levels',
+                this.auth.token(),
+                this.config.containerType,
+                bucketIds
+            )
+        );
+        if (!response || typeof response !== 'object') { return {}; }
+        return response;
+    }
+
     async checkBucketAccess(bucketId: number): Promise<IdlObject | null> {
         try {
             const response = await lastValueFrom(

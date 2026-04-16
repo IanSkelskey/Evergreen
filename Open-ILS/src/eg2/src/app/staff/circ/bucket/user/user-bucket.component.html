@@ -129,6 +129,7 @@
     <eg-grid-column [required]="true" [sortable]="false" path="usr_edit_share_count" i18n-label label="# of user edit shares"></eg-grid-column>
     <eg-grid-column [required]="true" path="btype"></eg-grid-column>
     <eg-grid-column [required]="true" path="pub"></eg-grid-column>
+    <eg-grid-column [required]="true" name="my_access" i18n-label label="My Access" [filterable]="false" [sortable]="false" [cellTemplate]="myAccessTemplate"></eg-grid-column>
     <eg-grid-column [required]="true" path="create_time"></eg-grid-column>
     <eg-grid-column [required]="true" name="owner" path="owner.usrname" i18n-label label="Owner" idlClass="au" [hidden]="true"></eg-grid-column>
     <eg-grid-column [required]="true" name="owning_lib" path="owning_lib.shortname" i18n-label label="Owning Lib" idlClass="aou" [hidden]="true"></eg-grid-column>
@@ -157,6 +158,13 @@
 
 <ng-template #nameTemplate let-r="row">
     <a routerLink="/staff/circ/bucket/user/content/{{r?.id}}" [queryParams]="{returnTo: currentView}">{{r?.name}}</a>
+</ng-template>
+
+<ng-template #myAccessTemplate let-row="row">
+  <span *ngIf="row?.my_access === 'owner'" class="badge bg-primary" i18n>Owner</span>
+  <span *ngIf="row?.my_access === 'edit'" class="badge bg-success" i18n>Edit</span>
+  <span *ngIf="row?.my_access === 'view'" class="badge bg-secondary" i18n>View</span>
+  <span *ngIf="row?.my_access === 'none'" class="badge bg-light text-dark" i18n>None</span>
 </ng-template>
 
 <ng-template #bucketActionsTemplate let-row="row">
