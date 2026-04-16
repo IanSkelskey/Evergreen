@@ -1088,7 +1088,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
     openBucketDialog(rows: HoldingsEntry[]) {
         const copyIds = this.selectedCopyIds(rows);
         if (copyIds.length > 0) {
-            this.bucketDialog.bucketClass = 'copy';
+            this.bucketDialog.containerType = 'copy';
             this.bucketDialog.itemIds = copyIds;
             this.bucketDialog.open({size: 'lg'});
         }
@@ -1193,4 +1193,3 @@ export class HoldingsMaintenanceComponent implements OnInit {
             .then(success => success ?  this.hardRefresh() : null);
     }
 }
-

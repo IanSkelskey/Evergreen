@@ -329,7 +329,7 @@ export class CheckinComponent implements OnInit, AfterViewInit {
     openBucketDialog(rows: CheckinGridEntry[]) {
         const copyIds = this.getCopyIds(rows);
         if (copyIds.length > 0) {
-            this.bucketDialog.bucketClass = 'copy';
+            this.bucketDialog.containerType = 'copy';
             this.bucketDialog.itemIds = copyIds;
             this.bucketDialog.open({size: 'lg'});
         }
@@ -450,4 +450,3 @@ export class CheckinComponent implements OnInit, AfterViewInit {
             });
     }
 }
-

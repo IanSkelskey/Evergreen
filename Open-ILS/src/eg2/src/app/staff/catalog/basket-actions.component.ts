@@ -153,7 +153,7 @@ export class BasketActionsComponent implements OnInit {
 
             case 'bucket':
                 this.basket.getRecordIds().then(ids => {
-                    this.addToBucketDialog.bucketClass = 'biblio';
+                    this.addToBucketDialog.containerType = 'biblio';
                     this.addToBucketDialog.itemIds = ids;
                     this.addToBucketDialog.open({size: 'lg'});
                 });
@@ -167,5 +167,4 @@ export class BasketActionsComponent implements OnInit {
         setTimeout(() => this.basketAction = ''); // reset
     }
 }
-
 

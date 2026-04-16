@@ -30,7 +30,7 @@ export abstract class BaseBucketService {
     async addItemsToBucket(bucketId: number, targetIds: number[]): Promise<any> {
         this.logBucket(bucketId);
         const items = targetIds.map(targetId => {
-            const item = this.idl.create(this.config.bucketItemClass);
+            const item = this.idl.create(this.config.bucketItemIdlClass);
             item.bucket(bucketId);
             item[this.config.targetField](targetId);
             return item;
@@ -40,7 +40,7 @@ export abstract class BaseBucketService {
 
     async removeItemsFromBucket(bucketId: number, targetIds: number[]): Promise<any> {
         return this.pcrud.search(
-            this.config.bucketItemClass,
+            this.config.bucketItemIdlClass,
             { bucket: bucketId, [this.config.targetField]: targetIds },
             {}, {atomic: true}
         ).toPromise().then(entries => this.pcrud.remove(entries).toPromise());
@@ -79,9 +79,9 @@ export abstract class BaseBucketService {
 
     protected async loadBuckets(bucketIds: number[]): Promise<any[]> {
         return lastValueFrom(
-            this.pcrud.search(this.config.bucketClass,
+            this.pcrud.search(this.config.bucketIdlClass,
                 {id: bucketIds},
-                {flesh: 1, flesh_fields: { [this.config.bucketClass]: this.config.bucketFleshFields }},
+                {flesh: 1, flesh_fields: { [this.config.bucketIdlClass]: this.config.bucketFleshFields }},
                 {atomic: true}
             )
         );
@@ -122,9 +122,9 @@ export abstract class BaseBucketService {
     }
 
     async loadFavoriteBucketFlags(userId: number) {
-        if (!this.config.flagClass) { return; }
+        if (!this.config.flagIdlClass) { return; }
         const flags = (await lastValueFrom(
-            this.pcrud.search(this.config.flagClass, { flag: 'favorite', usr: userId }, {}, { idlist: false, atomic: true })
+            this.pcrud.search(this.config.flagIdlClass, { flag: 'favorite', usr: userId }, {}, { idlist: false, atomic: true })
         ));
         this.favoriteBucketFlags = flags.reduce((acc, flag) => {
             acc[flag.bucket()] = flag;
@@ -137,8 +137,8 @@ export abstract class BaseBucketService {
     }
 
     async addFavoriteBucketFlag(bucketId: number, userId: number): Promise<void> {
-        if (!this.config.flagClass || this.favoriteBucketFlags[bucketId]) { return; }
-        const flag = this.idl.create(this.config.flagClass);
+        if (!this.config.flagIdlClass || this.favoriteBucketFlags[bucketId]) { return; }
+        const flag = this.idl.create(this.config.flagIdlClass);
         flag.isnew(true);
         flag.bucket(bucketId);
         flag.usr(userId);
@@ -171,9 +171,9 @@ export abstract class BaseBucketService {
     async checkBucketAccess(bucketId: number): Promise<IdlObject | null> {
         try {
             return await lastValueFrom(
-                this.pcrud.retrieve(this.config.bucketClass, bucketId, {
+                this.pcrud.retrieve(this.config.bucketIdlClass, bucketId, {
                     flesh: 1,
-                    flesh_fields: { [this.config.bucketClass]: this.config.bucketFleshFields }
+                    flesh_fields: { [this.config.bucketIdlClass]: this.config.bucketFleshFields }
                 })
             );
         } catch {

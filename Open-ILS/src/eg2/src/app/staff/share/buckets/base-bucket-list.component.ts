@@ -107,7 +107,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             (bucket: any) => this.jumpToBucketContent(bucket.id)
         );
 
-        if (this.config.flagClass) {
+        if (this.config.flagIdlClass) {
             await this.bucketService.loadFavoriteBucketFlags(this.auth.user().id());
         }
 
@@ -123,7 +123,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
         viewKey: string, label: string, sortKey: number,
         queryFn: () => any
     ): BucketView {
-        const bc = this.config.bucketClass;
+        const bc = this.config.bucketIdlClass;
         return {
             label,
             sort_key: sortKey,
@@ -157,8 +157,8 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     }
 
     initViews() {
-        const bc = this.config.bucketClass;
-        const sc = this.config.shareClass;
+        const bc = this.config.bucketIdlClass;
+        const sc = this.config.shareIdlClass;
         const userId = () => this.userId || this.auth.user().id();
 
         this.views = {
@@ -195,7 +195,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
             }
         };
 
-        if (this.config.flagClass) {
+        if (this.config.flagIdlClass) {
             this.views['favorites'] = this.createStandardView('favorites', $localize`Favorites`, 2,
                 () => {
                     this.favoriteIds = this.bucketService.getFavoriteBucketIds();
@@ -389,7 +389,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     };
 
     openNewBucketDialog = async (rows: any[]) => {
-        this.newBucketDialog.bucketClass = this.config.containerType;
+        this.newBucketDialog.containerType = this.config.containerType;
 
         try {
             const dialogObservable = this.newBucketDialog.open({size: 'lg'}).pipe(

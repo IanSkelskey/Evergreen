@@ -155,7 +155,7 @@ export abstract class BaseBucketItemComponent implements OnInit {
 
     openAddToBucketDialog = async (rows: any[]): Promise<boolean> => {
         if (!rows.length) { return false; }
-        this.addToBucketDialog.bucketClass = this.config.containerType;
+        this.addToBucketDialog.containerType = this.config.containerType;
         this.addToBucketDialog.itemIds = rows.map(r => r[this.config.targetField + '.id']);
         try {
             const dialogObservable = this.addToBucketDialog.open({size: 'lg'}).pipe(

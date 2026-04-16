@@ -1,20 +1,25 @@
 export type ContainerType = 'biblio' | 'user' | 'copy' | 'callnumber';
+export type ContainerItemType = 'biblio_record_entry' | 'user' | 'copy' | 'call_number';
+export type BucketIdlClass = 'cbreb' | 'cub' | 'ccb' | 'ccnb';
+export type BucketItemIdlClass = 'cbrebi' | 'cubi' | 'ccbi' | 'ccnbi';
+export type BucketFlagIdlClass = 'cbrebuf' | 'cubuf';
+export type BucketShareIdlClass = 'cbrebs' | 'cubs';
 
 export interface BucketTypeConfig {
     /** Short container type: 'biblio', 'user', 'copy', 'callnumber' */
     containerType: ContainerType;
     /** Container item type for item-level APIs: 'biblio_record_entry', 'user', 'copy', 'call_number' */
-    containerItemType: string;
+    containerItemType: ContainerItemType;
     /** IDL class for the bucket: 'cbreb', 'cub', 'ccb', 'ccnb' */
-    bucketClass: string;
+    bucketIdlClass: BucketIdlClass;
     /** IDL class for bucket items: 'cbrebi', 'cubi', 'ccbi', 'ccnbi' */
-    bucketItemClass: string;
+    bucketItemIdlClass: BucketItemIdlClass;
     /** Field on bucket item linking to the target object */
     targetField: string;
     /** IDL class for user flags (favorites), if supported */
-    flagClass?: string;
+    flagIdlClass?: BucketFlagIdlClass;
     /** IDL class for org-level sharing, if supported */
-    shareClass?: string;
+    shareIdlClass?: BucketShareIdlClass;
     /** Fields to flesh when loading buckets */
     bucketFleshFields: string[];
     /** Local storage key for recent bucket IDs */
@@ -28,11 +33,11 @@ export interface BucketTypeConfig {
 export const RECORD_BUCKET_CONFIG: BucketTypeConfig = {
     containerType: 'biblio',
     containerItemType: 'biblio_record_entry',
-    bucketClass: 'cbreb',
-    bucketItemClass: 'cbrebi',
+    bucketIdlClass: 'cbreb',
+    bucketItemIdlClass: 'cbrebi',
     targetField: 'target_biblio_record_entry',
-    flagClass: 'cbrebuf',
-    shareClass: 'cbrebs',
+    flagIdlClass: 'cbrebuf',
+    shareIdlClass: 'cbrebs',
     bucketFleshFields: ['owner', 'owning_lib'],
     storageKey: 'eg.record_bucket_log',
     countStatsApi: 'open-ils.actor.container.biblio_record_entry.count_stats.authoritative',
@@ -42,11 +47,11 @@ export const RECORD_BUCKET_CONFIG: BucketTypeConfig = {
 export const USER_BUCKET_CONFIG: BucketTypeConfig = {
     containerType: 'user',
     containerItemType: 'user',
-    bucketClass: 'cub',
-    bucketItemClass: 'cubi',
+    bucketIdlClass: 'cub',
+    bucketItemIdlClass: 'cubi',
     targetField: 'target_user',
-    flagClass: 'cubuf',
-    shareClass: 'cubs',
+    flagIdlClass: 'cubuf',
+    shareIdlClass: 'cubs',
     bucketFleshFields: ['owner', 'owning_lib'],
     storageKey: 'eg.user_bucket_log',
     countStatsApi: 'open-ils.actor.container.user.count_stats.authoritative',

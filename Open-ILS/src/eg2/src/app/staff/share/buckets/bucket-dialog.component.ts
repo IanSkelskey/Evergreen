@@ -11,6 +11,7 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {RecordBucketService} from '@eg/staff/cat/bucket/record/record-bucket.service';
+import {BucketIdlClass, ContainerType} from './bucket-types';
 
 /**
  * Dialog for adding items to new and existing buckets.
@@ -32,8 +33,8 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     buckets: any[];
     showExistingBuckets = true;
 
-    @Input() bucketClass: 'biblio' | 'user' | 'callnumber' | 'copy';
-    @Input() bucketType: string; // e.g. staff_client
+    @Input() containerType: ContainerType = 'biblio';
+    @Input() bucketSubtype: string; // bucket.btype(), e.g. staff_client
 
     // ID's of items to add to the bucket
     @Input() itemIds: number[];
@@ -41,8 +42,8 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     // If set, itemIds will be derived from the records in a bib queue
     @Input() fromBibQueue: number;
 
-    // bucket item classes are these plus a following 'i'.
-    bucketFmClass: 'ccb' | 'ccnb' | 'cbreb' | 'cub';
+    // Fieldmapper class for the bucket record.
+    bucketIdlClass: BucketIdlClass;
     targetField: string;
 
     @ViewChild('confirmAddToShared') confirmAddToShared: ConfirmDialogComponent;
@@ -71,7 +72,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
                     'open-ils.actor',
                     'open-ils.actor.container.retrieve_by_class.authoritative',
                     this.auth.token(), this.auth.user().id(),
-                    this.bucketClass, this.bucketType
+                    this.containerType, this.bucketSubtype
                 // eslint-disable-next-line rxjs-x/no-nested-subscribe
                 ).subscribe(buckets => this.buckets = buckets);
             } else {
@@ -87,33 +88,29 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         this.newBucketName = '';
         this.newBucketDesc = '';
 
-        if (!this.bucketClass) {
-            this.bucketClass = 'biblio';
-        }
-
-        switch (this.bucketClass) {
+        switch (this.containerType) {
             case 'biblio':
                 if (this.fromBibQueue) {
-                    this.bucketType = 'vandelay_queue';
+                    this.bucketSubtype = 'vandelay_queue';
                 }
-                this.bucketFmClass = 'cbreb';
+                this.bucketIdlClass = 'cbreb';
                 this.targetField = 'target_biblio_record_entry';
                 break;
             case 'copy':
-                this.bucketFmClass = 'ccb';
+                this.bucketIdlClass = 'ccb';
                 this.targetField = 'target_copy';
                 break;
             case 'callnumber':
-                this.bucketFmClass = 'ccnb';
+                this.bucketIdlClass = 'ccnb';
                 this.targetField = 'target_call_number';
                 break;
             case 'user':
-                this.bucketFmClass = 'cub';
+                this.bucketIdlClass = 'cub';
                 this.targetField = 'target_user';
         }
 
-        if (!this.bucketType) {
-            this.bucketType = 'staff_client';
+        if (!this.bucketSubtype) {
+            this.bucketSubtype = 'staff_client';
         }
 
         this.showExistingBuckets = this.itemIds.length > 0 || Boolean(this.fromBibQueue);
@@ -126,7 +123,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     addToShared() {
         this.net.request('open-ils.actor',
             'open-ils.actor.container.flesh',
-            this.auth.token(), this.bucketClass,
+            this.auth.token(), this.containerType,
             this.sharedBucketId)
             .pipe(switchMap((resp) => {
                 const evt = this.evt.parse(resp);
@@ -156,17 +153,17 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     // Create a new bucket then add the record
     addToNew() {
-        const bucket = this.idl.create(this.bucketFmClass);
+        const bucket = this.idl.create(this.bucketIdlClass);
 
         bucket.owner(this.auth.user().id());
         bucket.name(this.newBucketName);
         bucket.description(this.newBucketDesc);
-        bucket.btype(this.bucketType);
+        bucket.btype(this.bucketSubtype);
 
         this.net.request(
             'open-ils.actor',
             'open-ils.actor.container.create',
-            this.auth.token(), this.bucketClass, bucket
+            this.auth.token(), this.containerType, bucket
         ).subscribe(bktId => {
             const evt = this.evt.parse(bktId);
             if (evt) {
@@ -179,7 +176,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
                 if (this.showExistingBuckets) { // aka, in a "add to bucket" context
                     this.addToBucket(bktId);
                 } else {
-                    if (this.bucketClass === 'biblio') {
+                    if (this.containerType === 'biblio') {
                         this.recordBucketService.logRecordBucket(bktId);
                         this.recordBucketService.requestBibBucketsRefresh();
                     }
@@ -199,12 +196,12 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     // Add the record(s) to the bucket with provided ID.
     addRecordToBucket(bucketId: number) {
-        if (this.bucketClass === 'biblio') {
+        if (this.containerType === 'biblio') {
             this.recordBucketService.logRecordBucket(bucketId);
         }
         const items = [];
         this.itemIds.forEach(itemId => {
-            const item = this.idl.create(this.bucketFmClass + 'i');
+            const item = this.idl.create(this.bucketIdlClass + 'i');
             item.bucket(bucketId);
             item[this.targetField](itemId);
             items.push(item);
@@ -213,14 +210,14 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         this.net.request(
             'open-ils.actor',
             'open-ils.actor.container.item.create',
-            this.auth.token(), this.bucketClass, items
+            this.auth.token(), this.containerType, items
         ).subscribe(resp => {
             const evt = this.evt.parse(resp);
             if (evt) {
                 this.toast.danger(evt.toString());
             } else {
                 this.toast.success(this.successString.text);
-                if (this.bucketClass === 'biblio') {
+                if (this.containerType === 'biblio') {
                     this.recordBucketService.requestBibBucketsRefresh();
                 }
                 this.close({success: true, bucket: bucketId}); // we're done
@@ -248,7 +245,6 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         });
     }
 }
-
 
 
 
