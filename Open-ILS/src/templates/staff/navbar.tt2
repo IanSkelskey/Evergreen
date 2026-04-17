@@ -345,6 +345,12 @@
               <span>[% l('Verify Credentials') %]</span>
             </a>
           </li>
+          <li>
+            <a href="/eg2/staff/circ/bucket/user">
+              <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+              <span>[% l('User Buckets') %]</span>
+            </a>
+          </li>
         </ul>
       </li>
 
