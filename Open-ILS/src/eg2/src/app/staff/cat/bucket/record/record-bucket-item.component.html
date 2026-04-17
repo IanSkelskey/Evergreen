@@ -49,11 +49,13 @@
 <eg-record-bucket-item-upload-dialog #importDialog>
 </eg-record-bucket-item-upload-dialog>
 
-<div class="row row-cols-auto justify-content-between mb-3">
+<div *ngIf="bucketDescription" class="bucket-description mb-3">{{bucketDescription}}</div>
+
+<div class="row row-cols-auto justify-content-between align-items-start mb-2">
     <div class="col">
-        <ul class="list-unstyled hstack eg-grid-filter-links">
+        <ul class="list-unstyled hstack eg-grid-filter-links mb-0">
             <li>
-                <a class="btn btn-sm btn-link" routerLink="/staff/cat/bucket/record/{{returnTo}}" i18n>&larr; Return to Buckets</a>
+                <a class="btn btn-sm btn-link" [routerLink]="['/staff/cat/bucket/record', returnTo || 'user']" i18n>&larr; Return to Buckets</a>
             </li>
         </ul>
     </div>
@@ -72,6 +74,41 @@
             </button>
         </form>
     </div>
+</div>
+
+<div class="bucket-meta mb-3">
+    <div class="bucket-meta__item" *ngIf="bucketOwnerPrimaryLabel">
+        <span class="text-muted" i18n>Owner:</span>
+        <ng-container *ngIf="bucketOwnerId; else ownerNameOnly">
+            <a [routerLink]="['/staff/circ/patron', bucketOwnerId, 'checkout']" target="_blank">
+                {{bucketOwnerPrimaryLabel}}
+            </a>
+        </ng-container>
+        <ng-template #ownerNameOnly>{{bucketOwnerPrimaryLabel}}</ng-template>
+        <span *ngIf="bucketOwnerSecondaryLabel" class="text-muted">({{bucketOwnerSecondaryLabel}})</span>
+    </div>
+
+    <div class="bucket-meta__item" *ngIf="accessLevel">
+        <span class="text-muted" i18n>Access:</span>
+        <span class="badge"
+            [ngClass]="{
+                'text-bg-primary': accessLevel === 'owner',
+                'text-bg-success': accessLevel === 'edit',
+                'text-bg-secondary': accessLevel === 'view',
+                'text-bg-light border': accessLevel === 'none'
+            }">{{accessLevel | titlecase}}</span>
+    </div>
+
+    <div class="bucket-meta__item">
+        <span class="text-muted" i18n>Visibility:</span>
+        <span>{{bucketIsPublic ? 'Public' : 'Private'}}</span>
+    </div>
+
+    <div class="bucket-meta__item" *ngIf="bucketOwningLibLabel">
+        <span class="text-muted" i18n>Library:</span>
+        <span>{{bucketOwningLibLabel}}</span>
+    </div>
+
 </div>
 
 <eg-grid #grid idlClass="cbrebi"

@@ -89,8 +89,12 @@ export class BucketShareDialogComponent
 
     async initialize() {
         if (this.containerObjects?.length) {
-            console.debug('BucketShareDialogComponent, initialize, loading org share maps');
-            await this.populateCheckedNodes();
+            console.debug('BucketShareDialogComponent, initialize, loading share data');
+            await Promise.all([
+                this.loadAuGridViewPermGrid(),
+                this.loadAuGridEditPermGrid(),
+                this.populateCheckedNodes()
+            ]);
         } else {
             console.error('BucketShareDialogComponent, initialize, no containers');
         }
@@ -112,40 +116,49 @@ export class BucketShareDialogComponent
         this.userShareEditPermGrid = that;
     };
 
+    private get containerIds(): number[] {
+        return (this.containerObjects || []).map(container => container.id);
+    }
+
     async loadAuGridViewPermGrid(): Promise<any> {
         this.usersViewPermGrid = [];
         this.users_touchedViewPermGrid = false;
 
-        const userIds = await firstValueFrom(
+        console.warn('loadAuGridViewPermGrid: containerIds =', this.containerIds, 'containerType =', this.containerType, 'containerObjects =', this.containerObjects);
+        if (!this.containerIds.length) {
+            console.warn('loadAuGridViewPermGrid: no containerIds, returning early');
+            return;
+        }
+
+        console.warn('loadAuGridViewPermGrid: calling user_share.retrieve with', this.containerType, this.containerIds[0], 'VIEW_CONTAINER (flesh_users=1)');
+        const result = await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
                 this.containerType,
-                this.containerObjects.map(o => o.id),
-                'VIEW_CONTAINER'
+                this.containerIds[0],
+                'VIEW_CONTAINER',
+                1 // flesh_users: return fleshed user objects with card
             )
         );
+        console.warn('loadAuGridViewPermGrid: result =', result);
 
-        const evt = this.evt.parse(userIds);
+        const evt = this.evt.parse(result);
         this.usersViewPermGrid = [];
         this._original_view_users = [];
-        console.debug('resetting this._original_view_users', this._original_view_users );
         if (evt) {
             console.error(evt.toString());
             this.fail.dialogBody = evt.toString();
             this.fail.open();
             return;
-        } else if (!userIds.length) {
+        } else if (!result.length) {
+            console.warn('loadAuGridViewPermGrid: no shared users found');
             return;
         } else {
-            this.usersViewPermGrid = await firstValueFrom( this.pcrud.search('au',
-                {id: userIds},
-                {flesh: 1, flesh_fields: {au: ['card']}},
-                {atomic: true, authoritative: true})
-            );
+            this.usersViewPermGrid = result;
+            console.warn('loadAuGridViewPermGrid: loaded', this.usersViewPermGrid.length, 'users');
             this._original_view_users = this.idl.clone( this.usersViewPermGrid );
-            console.debug('populating this._original_view_users', this._original_view_users );
             this.userShareViewPermGrid?.reload();
         }
     }
@@ -154,36 +167,41 @@ export class BucketShareDialogComponent
         this.usersEditPermGrid = [];
         this.users_touchedEditPermGrid = false;
 
-        const userIds = await firstValueFrom(
+        console.warn('loadAuGridEditPermGrid: containerIds =', this.containerIds, 'containerType =', this.containerType);
+        if (!this.containerIds.length) {
+            console.warn('loadAuGridEditPermGrid: no containerIds, returning early');
+            return;
+        }
+
+        console.warn('loadAuGridEditPermGrid: calling user_share.retrieve with', this.containerType, this.containerIds[0], 'UPDATE_CONTAINER (flesh_users=1)');
+        const result = await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
                 'open-ils.actor.container.user_share.retrieve',
                 this.auth.token(),
                 this.containerType,
-                this.containerObjects.map(o => o.id),
-                'UPDATE_CONTAINER'
+                this.containerIds[0],
+                'UPDATE_CONTAINER',
+                1 // flesh_users: return fleshed user objects with card
             )
         );
+        console.warn('loadAuGridEditPermGrid: result =', result);
 
-        const evt = this.evt.parse(userIds);
+        const evt = this.evt.parse(result);
         this.usersEditPermGrid = [];
         this._original_edit_users = [];
-        console.debug('resetting this._original_edit_users', this._original_edit_users );
         if (evt) {
             console.error(evt.toString());
             this.fail.dialogBody = evt.toString();
             this.fail.open();
             return;
-        } else if (!userIds.length) {
+        } else if (!result.length) {
+            console.warn('loadAuGridEditPermGrid: no shared users found');
             return;
         } else {
-            this.usersEditPermGrid = await firstValueFrom( this.pcrud.search('au',
-                {id: userIds},
-                {flesh: 1, flesh_fields: {au: ['card']}},
-                {atomic: true, authoritative: true})
-            );
+            this.usersEditPermGrid = result;
+            console.warn('loadAuGridEditPermGrid: loaded', this.usersEditPermGrid.length, 'users');
             this._original_edit_users = this.idl.clone( this.usersEditPermGrid );
-            console.debug('populating this._original_edit_users', this._original_edit_users );
             this.userShareEditPermGrid?.reload();
         }
     }
@@ -418,9 +436,10 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            'open-ils.actor.container.update_user_share_mapping',
             this.auth.token(),
-            this.containerObjects.map(o => o.id),
+            this.containerType,
+            this.containerIds,
             selectedUserIds,
             'VIEW_CONTAINER'
         ).pipe(
@@ -453,9 +472,10 @@ export class BucketShareDialogComponent
         console.debug('BucketUserShareDialog, updateUserShares$', selectedUserIds);
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_user_share_mapping',
+            'open-ils.actor.container.update_user_share_mapping',
             this.auth.token(),
-            this.containerObjects.map(o => o.id),
+            this.containerType,
+            this.containerIds,
             selectedUserIds,
             'UPDATE_CONTAINER'
         ).pipe(
@@ -513,7 +533,7 @@ export class BucketShareDialogComponent
                 label: orgNode.name() + '--' + orgNode.shortname(),
                 callerData: {orgId: orgNode.id()},
                 expanded: expand,
-                stateFlagLabel: $localize`Select for record bucket sharing.`
+                stateFlagLabel: $localize`Select for bucket sharing.`
             });
 
             // Tree node labels are "name -- shortname".  Sorting
@@ -597,9 +617,10 @@ export class BucketShareDialogComponent
         this._original_orgs = (await firstValueFrom(
             this.net.request(
                 'open-ils.actor',
-                'open-ils.actor.container.retrieve_record_bucket_shared_org_ids', // hard-coded to record buckets for now
+                'open-ils.actor.container.retrieve_shared_org_ids',
                 this.auth.token(),
-                this.containerObjects.map( o => o.id ),
+                this.containerType,
+                this.containerIds,
             )
         )).sort((a,b) => { return a - b; });
         console.debug('populating this._original_orgs', this._original_orgs );
@@ -614,9 +635,10 @@ export class BucketShareDialogComponent
     updateOrgShares$ = (checkedNodes) => {
         return this.net.request(
             'open-ils.actor',
-            'open-ils.actor.container.update_record_bucket_org_share_mapping', // hard-coded to record buckets for now
+            'open-ils.actor.container.update_org_share_mapping',
             this.auth.token(),
-            this.containerObjects.map( o => o.id ),
+            this.containerType,
+            this.containerIds,
             checkedNodes.map( n => n.id )
         ).pipe(
             tap({

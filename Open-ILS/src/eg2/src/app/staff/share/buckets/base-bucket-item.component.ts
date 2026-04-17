@@ -35,8 +35,62 @@ export abstract class BaseBucketItemComponent implements OnInit {
     noSelectedRows: boolean;
     oneSelectedRow: boolean;
     bucket: IdlObject;
+    bucketOwner: IdlObject;
     returnTo: string;
     accessDenied = false;
+    accessLevel: string;
+
+    protected getFieldValue(obj: any, field: string): any {
+        if (!obj) { return null; }
+        const value = obj[field];
+        return typeof value === 'function' ? value.call(obj) : value;
+    }
+
+    protected getEntityId(obj: any): number | null {
+        if (obj == null) { return null; }
+        if (typeof obj === 'number') { return obj; }
+        if (typeof obj === 'string') {
+            const parsed = Number(obj);
+            return Number.isInteger(parsed) ? parsed : null;
+        }
+
+        const id = this.getFieldValue(obj, 'id');
+        if (id == null) { return null; }
+
+        const parsed = Number(id);
+        return Number.isInteger(parsed) ? parsed : null;
+    }
+
+    get bucketDescription(): string {
+        return this.getFieldValue(this.bucket, 'description') || '';
+    }
+
+    get bucketIsPublic(): boolean {
+        const pub = this.getFieldValue(this.bucket, 'pub');
+        return pub === true || pub === 't';
+    }
+
+    get bucketOwnerId(): number | null {
+        return this.getEntityId(this.bucketOwner) ?? this.getEntityId(this.getFieldValue(this.bucket, 'owner'));
+    }
+
+    get bucketOwnerPrimaryLabel(): string {
+        return this.getFieldValue(this.getFieldValue(this.bucketOwner, 'card'), 'barcode')
+            || this.getFieldValue(this.bucketOwner, 'usrname')
+            || this.getFieldValue(this.getFieldValue(this.bucket, 'owner'), 'usrname')
+            || '';
+    }
+
+    get bucketOwnerSecondaryLabel(): string {
+        const barcode = this.getFieldValue(this.getFieldValue(this.bucketOwner, 'card'), 'barcode');
+        const username = this.getFieldValue(this.bucketOwner, 'usrname')
+            || this.getFieldValue(this.getFieldValue(this.bucket, 'owner'), 'usrname');
+        return barcode && username ? username : '';
+    }
+
+    get bucketOwningLibLabel(): string {
+        return this.getFieldValue(this.getFieldValue(this.bucket, 'owning_lib'), 'shortname') || '';
+    }
 
     constructor(
         protected router: Router,
@@ -63,6 +117,22 @@ export abstract class BaseBucketItemComponent implements OnInit {
             next: fleshedBucket => {
                 if (fleshedBucket) {
                     this.bucket = fleshedBucket;
+                    const bucketId = this.getEntityId(fleshedBucket);
+                    if (bucketId) {
+                        this.bucketService.getAccessLevels([bucketId]).then(levels => {
+                            this.accessLevel = levels[bucketId] || 'none';
+                        });
+                    } else {
+                        this.accessLevel = 'none';
+                    }
+                    const ownerId = this.getEntityId(this.getFieldValue(fleshedBucket, 'owner'));
+                    if (ownerId) {
+                        this.pcrud.retrieve('au', ownerId, {
+                            flesh: 1, flesh_fields: {au: ['card']}
+                        }).subscribe(user => this.bucketOwner = user);
+                    } else {
+                        this.bucketOwner = null;
+                    }
                     this.onBucketLoaded(fleshedBucket);
                     this.initDataSource(this.bucketId);
                     this.gridSelectionChange([]);

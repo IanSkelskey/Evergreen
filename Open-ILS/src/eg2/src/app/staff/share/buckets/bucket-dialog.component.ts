@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
+import {Component, OnInit, Input, ViewChild} from '@angular/core';
 import {throwError, switchMap} from 'rxjs';
 import {NetService} from '@eg/core/net.service';
 import {IdlService} from '@eg/core/idl.service';
@@ -30,6 +30,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     sharedBucketName: string;
     newBucketName: string;
     newBucketDesc: string;
+    newBucketPublic = false;
     buckets: any[];
     showExistingBuckets = true;
 
@@ -51,7 +52,6 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     constructor(
         private modal: NgbModal, // required for passing to parent
-        private renderer: Renderer2,
         private toast: ToastService,
         private idl: IdlService,
         private net: NetService,
@@ -87,6 +87,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         this.sharedBucketName = '';
         this.newBucketName = '';
         this.newBucketDesc = '';
+        this.newBucketPublic = false;
 
         switch (this.containerType) {
             case 'biblio':
@@ -114,6 +115,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         }
 
         this.showExistingBuckets = this.itemIds.length > 0 || Boolean(this.fromBibQueue);
+        this.activeTabId = this.showExistingBuckets ? 1 : 2;
     }
 
     addToSelected() {
@@ -158,6 +160,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
         bucket.owner(this.auth.user().id());
         bucket.name(this.newBucketName);
         bucket.description(this.newBucketDesc);
+        bucket.pub(this.newBucketPublic ? 't' : 'f');
         bucket.btype(this.bucketSubtype);
 
         this.net.request(
@@ -244,7 +247,80 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
             }
         });
     }
+
+    get bucketKindLabel(): string {
+        switch (this.containerType) {
+            case 'biblio':
+                return $localize`Record Bucket`;
+            case 'user':
+                return $localize`Patron Bucket`;
+            case 'copy':
+                return $localize`Item Bucket`;
+            case 'callnumber':
+                return $localize`Call Number Bucket`;
+            default:
+                return $localize`Bucket`;
+        }
+    }
+
+    get bucketMemberLabelPlural(): string {
+        switch (this.containerType) {
+            case 'biblio':
+                return $localize`records`;
+            case 'user':
+                return $localize`patrons`;
+            case 'copy':
+                return $localize`items`;
+            case 'callnumber':
+                return $localize`call numbers`;
+            default:
+                return $localize`items`;
+        }
+    }
+
+    get bucketMemberLabelSingular(): string {
+        switch (this.containerType) {
+            case 'biblio':
+                return $localize`record`;
+            case 'user':
+                return $localize`patron`;
+            case 'copy':
+                return $localize`item`;
+            case 'callnumber':
+                return $localize`call number`;
+            default:
+                return $localize`item`;
+        }
+    }
+
+    get bucketDialogTitle(): string {
+        if (!this.showExistingBuckets) {
+            return $localize`Create New ${this.bucketKindLabel}:bucketKind:`;
+        }
+
+        if (this.fromBibQueue) {
+            return $localize`Add ${this.bucketMemberLabelPlural}:memberType: from Queue #${this.fromBibQueue}:queueId: to a ${this.bucketKindLabel}:bucketKind:`;
+        }
+
+        if (this.itemIds.length === 1) {
+            return $localize`Add ${this.bucketMemberLabelSingular}:memberType: #${this.itemIds[0]}:itemId: to a ${this.bucketKindLabel}:bucketKind:`;
+        }
+
+        return $localize`Add ${this.itemIds.length}:itemCount: ${this.bucketMemberLabelPlural}:memberType: to a ${this.bucketKindLabel}:bucketKind:`;
+    }
+
+    get bucketDialogContextLabel(): string {
+        if (this.showExistingBuckets) {
+            return $localize`Working with ${this.bucketKindLabel}:bucketKind:`;
+        }
+        return $localize`Create and configure a ${this.bucketKindLabel}:bucketKind:`;
+    }
+
+    get createButtonLabel(): string {
+        if (this.showExistingBuckets) {
+            return $localize`Create Bucket and Add`;
+        }
+        return $localize`Create Bucket`;
+    }
 }
-
-
 

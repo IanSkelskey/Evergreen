@@ -1,7 +1,7 @@
 import {OnInit, OnDestroy, ViewChild, Input, Directive} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ChangeDetectorRef} from '@angular/core';
-import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY,
+import {from, Observable, Subject, lastValueFrom, firstValueFrom, defaultIfEmpty, EMPTY, forkJoin,
     map, switchMap, takeUntil, take, catchError} from 'rxjs';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -114,6 +114,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
 
         if (this.config.flagIdlClass) {
             await this.bucketService.loadFavoriteBucketFlags(this.auth.user().id());
+            this.favoriteIds = this.bucketService.getFavoriteBucketIds();
         }
 
         this.initInProgress = false;
@@ -305,10 +306,12 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                     }
                     const query = this.buildRetrieveByIdsQuery(response.bucketIds);
 
-                    return this.bucketService.getBucketCountStats(response.bucketIds).pipe(
-                        switchMap(countStats => {
+                    return forkJoin({
+                        countStats: this.bucketService.getBucketCountStats(response.bucketIds),
+                        accessLevels: from(this.bucketService.getAccessLevels(response.bucketIds))
+                    }).pipe(
+                        switchMap(({countStats, accessLevels}) => {
                             const retrievePager = response.useGridPager ? pager : new Pager();
-                            const userId = this.auth.user().id();
                             return this.flatData.getRows(this.grid.context, query, retrievePager, sort).pipe(
                                 map(row => {
                                     return {
@@ -318,7 +321,7 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
                                         usr_view_share_count: countStats[row.id]?.usr_view_share_count || 0,
                                         usr_edit_share_count: countStats[row.id]?.usr_update_share_count || 0,
                                         favorite: this.bucketService.isFavoriteBucket(row.id),
-                                        my_access: (row.owner === userId) ? 'owner' : 'view'
+                                        my_access: accessLevels[row.id] || 'none'
                                     };
                                 })
                             );
@@ -558,14 +561,17 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
     };
 
     openShareBucketDialog = async (rows: any[]) => {
-        if (!rows || rows.length === 0) { return; }
+        if (!rows || rows.length !== 1) { return; }
 
+        console.warn('openShareBucketDialog: rows =', rows, 'containerType =', this.config.containerType);
         this.shareBucketDialog.containerType = this.config.containerType;
         this.shareBucketDialog.containerObjects = rows;
+        console.warn('openShareBucketDialog: containerObjects set, containerIds will be =', rows.map(r => r.id));
         await this.shareBucketDialog.loadAouTree();
         await this.shareBucketDialog.populateCheckedNodes();
         await this.shareBucketDialog.loadAuGridViewPermGrid();
         await this.shareBucketDialog.loadAuGridEditPermGrid();
+        console.warn('openShareBucketDialog: after loads, usersViewPermGrid =', this.shareBucketDialog.usersViewPermGrid, 'usersEditPermGrid =', this.shareBucketDialog.usersEditPermGrid);
 
         try {
             const dialogRef$ = this.shareBucketDialog.open({size: 'lg'}).pipe(
@@ -590,45 +596,112 @@ export abstract class BaseBucketListComponent implements OnInit, OnDestroy {
 
     favoriteBucket = async (rows: any[]) => {
         if (!rows || rows.length === 0) { return; }
+        const targets = rows.filter(row => !this.bucketService.isFavoriteBucket(row.id));
+        if (targets.length === 0) { return; }
 
-        for (const row of rows) {
-            if (!this.bucketService.isFavoriteBucket(row.id)) {
-                try {
-                    /* eslint-disable no-await-in-loop */
-                    await this.bucketService.addFavoriteBucketFlag(row.id, this.auth.user().id());
-                    row.favorite = true;
-                } catch (error) {
-                    console.error(`Error adding favorite for bucket ${row.id}:`, error);
-                }
+        const results = await Promise.allSettled(
+            targets.map(row => this.bucketService.addFavoriteBucketFlag(row.id, this.auth.user().id()))
+        );
+
+        const updatedIds: number[] = [];
+        results.forEach((result, index) => {
+            const row = targets[index];
+            if (result.status === 'fulfilled') {
+                row.favorite = true;
+                updatedIds.push(row.id);
+            } else {
+                console.error(`Error adding favorite for bucket ${row.id}:`, result.reason);
             }
-        }
+        });
 
-        setTimeout(() => {
-            this.grid.reload();
-            this.updateCounts();
-        }, 1000);
+        if (updatedIds.length === 0) { return; }
+
+        this.syncFavoriteIds();
+        this.patchLoadedFavoriteState(updatedIds, true);
+        this.adjustFavoritesCount(updatedIds.length);
+        this.cdr.detectChanges();
     };
 
     unFavoriteBucket = async (rows: any[]) => {
         if (!rows || rows.length === 0) { return; }
+        const targets = rows.filter(row => this.bucketService.isFavoriteBucket(row.id));
+        if (targets.length === 0) { return; }
 
-        for (const row of rows) {
-            if (this.bucketService.isFavoriteBucket(row.id)) {
-                try {
-                    /* eslint-disable no-await-in-loop */
-                    await this.bucketService.removeFavoriteBucketFlag(row.id);
-                    row.favorite = false;
-                } catch (error) {
-                    console.error(`Error removing favorite for bucket ${row.id}:`, error);
-                }
+        const results = await Promise.allSettled(
+            targets.map(row => this.bucketService.removeFavoriteBucketFlag(row.id))
+        );
+
+        const updatedIds: number[] = [];
+        results.forEach((result, index) => {
+            const row = targets[index];
+            if (result.status === 'fulfilled') {
+                row.favorite = false;
+                updatedIds.push(row.id);
+            } else {
+                console.error(`Error removing favorite for bucket ${row.id}:`, result.reason);
+            }
+        });
+
+        if (updatedIds.length === 0) { return; }
+
+        this.syncFavoriteIds();
+        this.patchLoadedFavoriteState(updatedIds, false);
+        this.adjustFavoritesCount(-updatedIds.length);
+
+        if (this.currentView === 'favorites') {
+            await this.pruneFavoritesViewRows(updatedIds);
+        } else {
+            this.cdr.detectChanges();
+        }
+    };
+
+    protected syncFavoriteIds() {
+        this.favoriteIds = this.bucketService.getFavoriteBucketIds();
+    }
+
+    protected patchLoadedFavoriteState(bucketIds: number[], favorite: boolean) {
+        if (!this.dataSource?.data?.length || bucketIds.length === 0) { return; }
+        const ids = new Set(bucketIds);
+        this.dataSource.data.forEach(row => {
+            if (row && ids.has(row.id)) {
+                row.favorite = favorite;
+            }
+        });
+    }
+
+    protected adjustFavoritesCount(delta: number) {
+        if (!this.views?.favorites) { return; }
+        if (typeof this.views.favorites.count !== 'number' || this.views.favorites.count < 0) { return; }
+        this.views.favorites.count = Math.max(0, this.views.favorites.count + delta);
+    }
+
+    protected async pruneFavoritesViewRows(bucketIds: number[]) {
+        if (!this.dataSource?.data?.length || bucketIds.length === 0) {
+            this.cdr.detectChanges();
+            return;
+        }
+
+        const ids = new Set(bucketIds);
+        this.dataSource.data = this.dataSource.data.filter(row => !row || !ids.has(row.id));
+
+        this.grid?.context?.rowSelector?.clear();
+        this.updateSelectionState([]);
+
+        const pager = this.grid?.context?.pager;
+        if (pager && typeof pager.resultCount === 'number') {
+            pager.resultCount = Math.max(0, pager.resultCount - bucketIds.length);
+            if (pager.resultCount > 0 && pager.currentPage() > pager.pageCount()) {
+                pager.toLast();
+                return;
             }
         }
 
-        setTimeout(() => {
-            this.grid.reload();
-            this.updateCounts();
-        }, 1000);
-    };
+        if (pager) {
+            await this.dataSource.requestPage(pager);
+        }
+
+        this.cdr.detectChanges();
+    }
 
     protected async confirmDeleteOverride(rows: any[]): Promise<boolean> {
         return false;
