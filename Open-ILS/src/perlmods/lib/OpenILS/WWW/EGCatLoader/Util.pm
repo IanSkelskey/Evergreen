@@ -8,6 +8,7 @@ use HTML::TreeBuilder;
 use HTML::Element;
 use HTML::Defang;
 use OpenSRF::Utils::Cache;
+use OpenSRF::Utils::JSON;
 use OpenSRF::Utils::Logger qw/$logger/;
 use OpenILS::Utils::CStoreEditor qw/:funcs/;
 use OpenILS::Utils::Fieldmapper;
@@ -315,6 +316,61 @@ sub init_ro_object_cache {
                 unless exists $cache{org_settings}{$locale}{$org_id}{$setting};
 
         return $cache{org_settings}{$locale}{$org_id}{$setting};
+    };
+
+    # Retrieve and cache a library's hours of operation.  These are held
+    # in memcached rather than the process-local %cache so that changes
+    # to a library's hours become visible without an Apache reload.  The
+    # cache keys are shared with the library information page.
+    $locale_subs->{get_org_hours} = sub {
+        my $org_id = shift;
+        return undef unless defined $org_id;
+
+        my $cache_key = "TPAC_aouhoo_cache_$org_id";
+        my $blob = $memcache->get_cache($cache_key);
+
+        my $hours;
+        if (defined $blob) {
+            $hours = OpenSRF::Utils::JSON->JSON2perl($blob);
+        } else {
+            my $e = new_editor();
+            $hours = $e->retrieve_actor_org_unit_hours_of_operation($org_id);
+            undef $e;
+
+            # Cache an empty string for org units with no hours defined,
+            # so that they are not re-queried on every page load.
+            $memcache->put_cache($cache_key,
+                OpenSRF::Utils::JSON->perl2JSON($hours ? $hours : ''), 360);
+        }
+
+        return $hours ? $hours : undef;
+    };
+
+    # Retrieve and cache a library's mailing address.  See get_org_hours
+    # above regarding caching.
+    $locale_subs->{get_org_address} = sub {
+        my $org_id = shift;
+        return undef unless defined $org_id;
+
+        my $org = $locale_subs->{get_aou}->($org_id);
+        return undef unless $org && $org->mailing_address;
+
+        my $cache_key = "TPAC_aou_address_cache_$org_id";
+        my $blob = $memcache->get_cache($cache_key);
+
+        my $address;
+        if (defined $blob) {
+            $address = OpenSRF::Utils::JSON->JSON2perl($blob);
+        } else {
+            my $e = new_editor();
+            $address = $e->retrieve_actor_org_address($org->mailing_address);
+            undef $e;
+
+            $memcache->put_cache($cache_key,
+                OpenSRF::Utils::JSON->perl2JSON($address ? $address : ''), 360);
+        }
+
+        return $address ? $address : undef;
     };
 
     $locale_subs->{get_i18n_string} = sub {
