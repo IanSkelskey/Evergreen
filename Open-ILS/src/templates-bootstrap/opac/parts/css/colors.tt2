@@ -38,6 +38,7 @@
         text_greatnews = "green", # green
         text_invert = "#fff", # white
         text_match = "#c00", # deep red
+        text_muted = "#595959", # secondary text: labels, captions
         primary = "#007a54", # dark green
         primary_fade = "#007a54", # medium green
         primary_offset = "#417860", # light_green

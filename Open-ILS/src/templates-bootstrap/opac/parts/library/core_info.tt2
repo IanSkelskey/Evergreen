@@ -3,56 +3,67 @@
     IF ctx.kpac_root;
         opac_root = ctx.kpac_root;
     END;
+
+    lib_url = ctx.get_org_setting(ctx.library.id, 'lib.info_url');
 -%]
-<div class="container">
-    <div>
-    <h2>[% ctx.library.name | html %]</h2>
+<div class="container library-info my-4">
 
-    [%-
-        lib_url = ctx.get_org_setting(ctx.library.id, 'lib.info_url');
-        IF lib_url;
-            '<div id="library-url"><a href="'; lib_url | html; '" property="url">'; l('Library web site'); '</a></div>';
-        END;
-    -%]
+    <h1 class="library-name">[% ctx.library.name | html %]</h1>
 
-    [%- IF ctx.hours; %]
-        [%- INCLUDE "opac/parts/library/hours.tt2"; %]
-    [% END; -%]
+    <div class="row">
 
-    [%- IF (ctx.library.email OR ctx.library.phone); %]
-    <div class="my-3">
-    <h3 id="contact-info">[% l('Contact information') %]</h3>
-    [%- IF ctx.library.email; %]
-        <div>[% l('Email address: ') %]<a href="mailto:[% ctx.library.email | html %]" property="email">[% ctx.library.email | html %]</a></div>
-    [%- END; %]
-    [%- IF ctx.library.phone; %]
-        <div>[% l('Telephone: ') %]<a href="tel:[% ctx.library.phone | html %]" property="telephone">[% ctx.library.phone | html %]</a></div>
-    [% END %]
-    </div>
-    [% END %]
+        [%# ---------- Contact ---------- %]
+        <div class="col-12 col-lg-6 mb-4 mb-lg-0">
+            <h2 class="library-heading">[% l('Contact information') %]</h2>
 
-    [%- IF ctx.library.mailing_address; %]
-    <div class="my-3" id="addresses">
-        <div id="mailing" property="location address" typeof="PostalAddress">
-            <h3 property="contactType">[% l('Mailing address') %]</h3>
-            <span property="streetAddress">[% ctx.mailing_address.street1 | html %]
-            [%- IF ctx.mailing_address.street2; "<br />"; ctx.mailing_address.street2 | html; END; %]
-            </span><br />
-            <span property="addressLocality">[% ctx.mailing_address.city | html %]</span><br />
-            <span property="addressRegion">[% ctx.mailing_address.state | html %]</span><br />
-            <span property="addressCountry">[% ctx.mailing_address.country | html %]</span><br />
-            <span property="postalCode">[% ctx.mailing_address.post_code | html %]</span><br />
+            <address class="library-contact mb-0">
+                [%- IF ctx.mailing_address %]
+                <div class="library-contact-item" id="mailing" property="location address" typeof="PostalAddress">
+                    <span class="library-label"><i class="fas fa-location-dot" aria-hidden="true"></i>[% l('Address') %]</span>
+                    <div class="library-address-lines">
+                        <span property="streetAddress">[% ctx.mailing_address.street1 | html %][%- IF ctx.mailing_address.street2 %]<br />[% ctx.mailing_address.street2 | html %][% END %]</span><br />
+                        <span property="addressLocality">[% ctx.mailing_address.city | html %]</span>, <span property="addressRegion">[% ctx.mailing_address.state | html %]</span> <span property="postalCode">[% ctx.mailing_address.post_code | html %]</span><br />
+                        <span property="addressCountry">[% ctx.mailing_address.country | html %]</span>
+                    </div>
+                </div>
+                [%- END %]
+
+                [%- IF ctx.library.phone %]
+                <div class="library-contact-item">
+                    <span class="library-label"><i class="fas fa-phone" aria-hidden="true"></i>[% l('Phone') %]</span>
+                    <a href="tel:[% ctx.library.phone | html %]" property="telephone">[% ctx.library.phone | html %]</a>
+                </div>
+                [%- END %]
+
+                [%- IF ctx.library.email %]
+                <div class="library-contact-item">
+                    <span class="library-label"><i class="fas fa-envelope" aria-hidden="true"></i>[% l('Email') %]</span>
+                    <a href="mailto:[% ctx.library.email | html %]" property="email">[% ctx.library.email | html %]</a>
+                </div>
+                [%- END %]
+
+                [%- IF lib_url %]
+                <div class="library-contact-item" id="library-url">
+                    <span class="library-label"><i class="fas fa-globe" aria-hidden="true"></i>[% l('Website') %]</span>
+                    <a href="[% lib_url | html %]" property="url">[% l('Library web site') %]</a>
+                </div>
+                [%- END %]
+            </address>
+
+            [%- IF ctx.library.parent_ou %]
+            <div class="library-parent" id="branch-info">
+                <span class="library-label"><i class="fas fa-sitemap" aria-hidden="true"></i>[% l('Part of') %]</span>
+                <a property="branchOf" href="[% mkurl(opac_root _ '/library/' _ ctx.parent.shortname, {}, 1) %]">[% ctx.parent.name | html %]</a>
+            </div>
+            [%- END %]
         </div>
-    </div>
-    [%- END; %]
 
-    [%- IF ctx.library.parent_ou; %]
-    <div>
-    <h3>[% l('Branch relationship') %]</h3>
-    <div id="branch-info">[% l('Parent library: ') %]
-        <a property="branchOf" href="[% mkurl(opac_root _ '/library/' _ ctx.parent.shortname, {}, 1) %]">[% ctx.parent.name | html %]</a>
-    </div>
-    </div>
-    [%  END; -%]
+        [%# ---------- Hours and closures ---------- %]
+        <div class="col-12 col-lg-6">
+            [%- IF ctx.hours %]
+                [%- INCLUDE "opac/parts/library/hours.tt2" %]
+            [%- END %]
+        </div>
+
     </div>
 </div>

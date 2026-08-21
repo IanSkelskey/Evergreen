@@ -4854,3 +4854,103 @@ footer .form-control:focus,
 footer .form-control:focus-visible {
     box-shadow: 0 0 0 .25rem [% css_colors.footer_link_focus_outline %];
 }
+
+/* ---------- Library information page ---------- */
+/* Shared by opac/library.tt2 and kpac/library.tt2, both of which render
+   opac/parts/library/core_info.tt2.  The KPAC base template loads this
+   stylesheet as well as its own, so these rules apply to both. */
+
+.library-info .library-name {
+    font-size: [% css_fonts.size_biggest %];
+    margin-bottom: 1.5rem;
+}
+
+.library-info .library-heading {
+    font-size: [% css_fonts.size_smaller %];
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: [% css_colors.text_muted %];
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid [% css_colors.border_table %];
+}
+
+.library-info .library-contact {
+    font-style: normal;
+}
+
+.library-info .library-contact-item + .library-contact-item {
+    margin-top: 0.75rem;
+}
+
+/* Inline labels: Address, Phone, Email, Website, Part of.  Matches the
+   label treatment used in the catalog footer. */
+.library-info .library-label {
+    display: inline-block;
+    min-width: 5rem;
+    font-size: [% css_fonts.size_smallest %];
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: [% css_colors.text_muted %];
+}
+
+.library-info .library-label i {
+    letter-spacing: normal;
+    width: 1em;
+    text-align: center;
+    [% IF rtl == 't' -%]
+    margin-left: 0.25rem;
+    [% ELSE -%]
+    margin-right: 0.25rem;
+    [% END -%]
+}
+
+.library-info .library-address-lines {
+    margin: 0.25rem 0 0;
+}
+
+.library-info .library-parent {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid [% css_colors.border_table %];
+}
+
+/* Opening hours: a two column grid rather than a table, matching the
+   treatment used in the catalog footer. */
+.library-info .library-hours {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+}
+
+.library-info .library-hours dt {
+    font-weight: 400;
+    color: [% css_colors.text_muted %];
+    white-space: nowrap;
+}
+
+.library-info .library-hours dd {
+    margin: 0;
+}
+
+.library-info .library-hours .is-today {
+    font-weight: 600;
+    color: [% css_colors.text %];
+}
+
+/* Align the closures table with the headings above it. */
+.library-info table {
+    margin-bottom: 1.5rem;
+}
+
+.library-info table th:first-child,
+.library-info table td:first-child {
+    [% IF rtl == 't' -%]
+    padding-right: 0;
+    [% ELSE -%]
+    padding-left: 0;
+    [% END -%]
+}

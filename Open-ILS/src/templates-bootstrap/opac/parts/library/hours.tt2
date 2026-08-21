@@ -8,179 +8,48 @@
    USE date (format = time_format);
    today = date.format(format = '%Y-%m-%d ');
    # We need to add "today" to the opening/closing hours for Date input
+
+   # Evergreen stores dow_0 = Monday; strftime %w is 0 = Sunday.
+   today_dow = (date.format(date.now, '%w') + 6) % 7;
+
+   day_names = [ l('Monday'), l('Tuesday'), l('Wednesday'), l('Thursday'),
+                 l('Friday'), l('Saturday'), l('Sunday') ];
+
+   # Fragment identifiers from the GoodRelations vocabulary.  These form part
+   # of a URI and so are deliberately not translated.
+   day_uris = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+                'Friday', 'Saturday', 'Sunday' ];
 -%]
-<div class="my-3">
-<h2>[% l('Opening hours') %]</h2>
+<div class="mb-3">
+<h2 class="library-heading">[% l('Opening hours') %]</h2>
 
-<table role="table" class="table table-striped w-auto">
-    <thead role="rowgroup">
-        <tr role="row">
-          <th scope="col" role="columnheader">[% l('Day') %]</th>
-          <th scope="col" role="columnheader">[% l('Hours') %]</th>
-        </tr>
-    </thead>
-    <tr role="row">
-        <td role="cell">[% l('Monday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_0_open;
-            close = today _ ctx.hours.dow_0_close;
-            note = ctx.hours.dow_0_note;
-            IF open == close;
-        %]
-
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Monday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_0_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Tuesday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_1_open;
-            close = today _ ctx.hours.dow_1_close;
-            note = ctx.hours.dow_1_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Tuesday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_1_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Wednesday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_2_open;
-            close = today _ ctx.hours.dow_2_close;
-            note = ctx.hours.dow_2_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Wednesday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_2_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Thursday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_3_open;
-            close = today _ ctx.hours.dow_3_close;
-            note = ctx.hours.dow_3_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Thursday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_3_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Friday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_4_open;
-            close = today _ ctx.hours.dow_4_close;
-            note = ctx.hours.dow_4_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Friday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_4_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Saturday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_5_open;
-            close = today _ ctx.hours.dow_5_close;
-            note = ctx.hours.dow_5_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Saturday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_5_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-    <tr role="row">
-        <td role="cell">[% l('Sunday') %]</td>
-        <td role="cell">
-        [%-
-            open = today _ ctx.hours.dow_6_open;
-            close = today _ ctx.hours.dow_6_close;
-            note = ctx.hours.dow_6_note;
-            IF open == close;
-        %]
-        <div class="opening-hours">[% l('Closed') %]</div>
-        [%- ELSE %]
-        <div class="opening-hours" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#Sunday" />[%
-            l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
-             '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
-        -%]
-        [% IF ctx.hours.dow_6_note %]
-            <span>[%l('(' _ note _ ')')%]</span>
-        [% END -%]
-        </div>
-        [%- END %]
-        </td>
-    </tr>
-</table>
+<dl class="library-hours">
+    [%- FOR day IN [0, 1, 2, 3, 4, 5, 6];
+        open_key  = 'dow_' _ day _ '_open';
+        close_key = 'dow_' _ day _ '_close';
+        note_key  = 'dow_' _ day _ '_note';
+        open  = today _ ctx.hours.$open_key;
+        close = today _ ctx.hours.$close_key;
+        note  = ctx.hours.$note_key;
+        is_today = (day == today_dow);
+    -%]
+    <dt[% IF is_today %] class="is-today"[% END %]>[% day_names.$day %][% IF is_today %] <span class="sr-only">[% l('(today)') %]</span>[% END %]</dt>
+    [%- IF open == close %]
+    <dd class="opening-hours[% IF is_today %] is-today[% END %]">[% l('Closed') %]</dd>
+    [%- ELSE %]
+    <dd class="opening-hours[% IF is_today %] is-today[% END %]" property="openingHoursSpecification" typeof="OpeningHoursSpecification"><link property="dayOfWeek" href="http://purl.org/goodrelations/v1#[% day_uris.$day %]" />[%
+        l('[_1] - [_2]', '<time property="opens" content="' _ date.format(open, format => '%H:%M:%S') _ '">' _ date.format(open) _ '</time>',
+         '<time property="closes" content="' _ date.format(close, format => '%H:%M:%S') _ '">' _ date.format(close) _ '</time>')
+    -%][%- IF note %] <span>[% l('([_1])', note) %]</span>[% END %]</dd>
+    [%- END %]
+    [%- END %]
+</dl>
 </div>
 
-<h2>[% l('Upcoming closures') %]</h2>
+<h2 class="library-heading">[% l('Upcoming closures') %]</h2>
 
 [% IF ctx.closed_dates.size %]
-    <table role="table" title="[% l('Closed Dates') %]" class="table table-striped w-auto">
+    <table role="table" title="[% l('Closed Dates') %]" class="table w-auto">
     <thead role="rowgroup">
         <tr role="row">
           <th scope="col" role="columnheader">[% l('Date') %]</th>
