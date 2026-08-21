@@ -1,6 +1,9 @@
 [% IF !ctx.is_staff %]
 [%-
-    footer_org_id  = ctx.physical_loc || ctx.aou_tree.id;
+    # physical_loc when Apache pins this vhost to a library; otherwise the
+    # search library, which resolves to the patron's preferred or home
+    # library once they are logged in, and to the consortium when not.
+    footer_org_id  = ctx.physical_loc || ctx.search_ou || ctx.aou_tree.id;
     footer_library = ctx.get_aou(footer_org_id);
     footer_hours   = ctx.get_org_hours(footer_org_id);
     footer_address = ctx.get_org_address(footer_org_id);
