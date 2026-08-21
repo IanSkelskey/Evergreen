@@ -1,69 +1,201 @@
 [% IF !ctx.is_staff %]
+[%-
+    footer_org_id  = ctx.physical_loc || ctx.aou_tree.id;
+    footer_library = ctx.get_aou(footer_org_id);
+    footer_hours   = ctx.get_org_hours(footer_org_id);
+    footer_address = ctx.get_org_address(footer_org_id);
+    footer_lib_url = ctx.get_org_setting(footer_org_id, 'lib.info_url');
+
+    today = date.format(format = '%Y-%m-%d ');
+
+    # Evergreen stores dow_0 = Monday; strftime %w is 0 = Sunday.
+    today_dow = (date.format(date.now, '%w') + 6) % 7;
+    day_names = [ l('Monday'), l('Tuesday'), l('Wednesday'),
+                  l('Thursday'), l('Friday'), l('Saturday'), l('Sunday') ];
+
+    # Collapse the week into runs of identical hours, so that a library
+    # open 9-5 Monday through Friday renders as two lines, not seven.
+    hour_groups = [];
+    today_hours = '';
+
+    IF footer_hours;
+        FOR day IN [0, 1, 2, 3, 4, 5, 6];
+            open_key  = 'dow_' _ day _ '_open';
+            close_key = 'dow_' _ day _ '_close';
+            note_key  = 'dow_' _ day _ '_note';
+
+            IF footer_hours.$open_key == footer_hours.$close_key;
+                hours_txt = l('Closed');
+            ELSE;
+                open_txt  = date.format(today _ footer_hours.$open_key, format = '%l:%M %p');
+                close_txt = date.format(today _ footer_hours.$close_key, format = '%l:%M %p');
+                hours_txt = l('[_1] - [_2]', open_txt.trim, close_txt.trim);
+            END;
+
+            IF footer_hours.$note_key;
+                hours_txt = l('[_1] ([_2])', hours_txt, footer_hours.$note_key);
+            END;
+
+            IF day == today_dow;
+                today_hours = hours_txt;
+            END;
+
+            last_idx = hour_groups.max;
+            IF hour_groups.size && hour_groups.$last_idx.hours == hours_txt;
+                hour_groups.$last_idx.end = day;
+            ELSE;
+                hour_groups.push({ start => day, end => day, hours => hours_txt });
+            END;
+        END;
+    END;
+
+    # Size the columns to however many of them actually have content, so
+    # that a library with no hours recorded gets a balanced two column
+    # footer rather than a trailing gap.
+    footer_col_count = 1;
+    IF footer_library; footer_col_count = footer_col_count + 1; END;
+    IF hour_groups.size; footer_col_count = footer_col_count + 1; END;
+
+    IF footer_col_count == 3;
+        footer_col = 'col-12 col-md-6 col-lg-4';
+    ELSIF footer_col_count == 2;
+        footer_col = 'col-12 col-md-6';
+    ELSE;
+        footer_col = 'col-12';
+    END;
+-%]
 <div id="footer-wrap" class="mt-auto">
 <footer id="footer">
-<div class="row mx-0">
-<div class="col-12 col-lg-3">
-    
-</div>
-<div class="col-12 col-lg-6">
-    <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Additional Resources">
-        <ul class="navbar-nav mx-auto">
-        <!--Kids Catalog-->
-        [% IF ctx.get_org_setting(ctx.physical_loc || ctx.aou_tree.id, 'opac.show_kpac_link') %]
-            <li class="nav-item"><a class="nav-link" href="[% mkurl(ctx.base_path _ "/kpac/home") %]">
-            [% l('Kids\' Catalog') %]</a></li>
-        [% END %]
-            <!--Link 1-->
-            [% IF ctx.get_org_setting(ctx.physical_loc || ctx.aou_tree.id,
-                              'opac.ecard_registration_enabled') %]
-                <li class="nav-item">
-                    <a class="nav-link" href="[% mkurl(ctx.opac_root _ '/ecard/form') %]"> [% l('Request Electronic Card') %]</a>
-                </li>
-            [% ELSE %]
-                [% IF ctx.get_org_setting(ctx.physical_loc || ctx.aou_tree.id, 'opac.allow_pending_user') && !ctx.user %]
-                    <li class="nav-item"><a class="nav-link" href="[% mkurl(ctx.opac_root _ '/register') %]">[%
-                    l('Request Library Card') %]</a></li>
-                [% ELSE %]
-                    <li class="nav-item"><a class="nav-link" href="#">[% l('Example Link 1') %]</a></li>
+    <div class="container-fluid py-4">
+
+        <div class="row">
+
+            [%# ---------- Contact ---------- %]
+            [% IF footer_library %]
+            <div class="[% footer_col %] mb-4 mb-lg-0">
+                <h2 class="footer-heading">[% footer_library.name | html %]</h2>
+                <address class="footer-contact mb-0">
+                    [% IF footer_address %]
+                    <div class="footer-contact-item">
+                        <span class="footer-label"><i class="fas fa-location-dot" aria-hidden="true"></i>[% l('Address') %]</span>
+                        <div class="footer-address-lines">
+                            [% footer_address.street1 | html %][% IF footer_address.street2 %]<br />[% footer_address.street2 | html %][% END %]<br />
+                            [% footer_address.city | html %], [% footer_address.state | html %] [% footer_address.post_code | html %]
+                        </div>
+                    </div>
+                    [% END %]
+                    [% IF footer_library.phone %]
+                    <div class="footer-contact-item">
+                        <span class="footer-label"><i class="fas fa-phone" aria-hidden="true"></i>[% l('Phone') %]</span>
+                        <a href="tel:[% footer_library.phone | html %]">[% footer_library.phone | html %]</a>
+                    </div>
+                    [% END %]
+                    [% IF footer_library.email %]
+                    <div class="footer-contact-item">
+                        <span class="footer-label"><i class="fas fa-envelope" aria-hidden="true"></i>[% l('Email') %]</span>
+                        <a href="mailto:[% footer_library.email | html %]">[% footer_library.email | html %]</a>
+                    </div>
+                    [% END %]
+                    [% IF footer_lib_url %]
+                    <div class="footer-contact-item">
+                        <span class="footer-label"><i class="fas fa-globe" aria-hidden="true"></i>[% l('Website') %]</span>
+                        <a href="[% footer_lib_url | html %]">[% footer_lib_url | html %]</a>
+                    </div>
+                    [% END %]
+                </address>
+            </div>
+            [% END %]
+
+            [%# ---------- Hours ---------- %]
+            [% IF hour_groups.size %]
+            <div class="[% footer_col %] mb-4 mb-lg-0">
+                <h2 class="footer-heading">[% l('Hours') %]</h2>
+
+                [% IF today_hours %]
+                <p class="footer-today">
+                    <span class="footer-label">[% l('Today') %]</span>
+                    <span class="footer-today-hours">[% today_hours | html %]</span>
+                </p>
                 [% END %]
+
+                <dl class="footer-hours mb-0">
+                    [% FOR group IN hour_groups %]
+                    [%- is_today = (today_dow >= group.start && today_dow <= group.end) -%]
+                    <dt[% IF is_today %] class="is-today"[% END %]>
+                        [%- IF group.start == group.end -%]
+                            [% day_names.${group.start} %]
+                        [%- ELSE -%]
+                            [% l('[_1] - [_2]', day_names.${group.start}, day_names.${group.end}) %]
+                        [%- END -%]
+                    </dt>
+                    <dd[% IF is_today %] class="is-today"[% END %]>[% group.hours | html %]</dd>
+                    [% END %]
+                </dl>
+            </div>
             [% END %]
-            [% IF ctx.get_org_setting(ctx.physical_loc || ctx.aou_tree.id,
-                              'opac.ecard_verification_enabled') %]
-                <li class="nav-item">
-                    <a class="nav-link" href="[% mkurl(ctx.opac_root _ '/ecard/verify') %]"> [% l('Verify Electronic Card') %]</a>
-                </li>
-            [% ELSE %]
-                <li class="nav-item"><a class="nav-link" href="#">[% l('Example Link 2') %]</a></li>
+
+            [%# ---------- Links ---------- %]
+            <div class="[% footer_col %]">
+                <h2 class="footer-heading" id="footer-links-heading">[% l('Quick Links') %]</h2>
+                <nav aria-labelledby="footer-links-heading">
+                    <ul class="footer-links list-unstyled mb-0">
+                        <!--Kids Catalog-->
+                        [% IF ctx.get_org_setting(footer_org_id, 'opac.show_kpac_link') %]
+                        <li><a href="[% mkurl(ctx.base_path _ "/kpac/home") %]">[% l('Kids\' Catalog') %]</a></li>
+                        [% END %]
+                        <!--Link 1-->
+                        [% IF ctx.get_org_setting(footer_org_id, 'opac.ecard_registration_enabled') %]
+                        <li><a href="[% mkurl(ctx.opac_root _ '/ecard/form') %]">[% l('Request Electronic Card') %]</a></li>
+                        [% ELSIF ctx.get_org_setting(footer_org_id, 'opac.allow_pending_user') && !ctx.user %]
+                        <li><a href="[% mkurl(ctx.opac_root _ '/register') %]">[% l('Request Library Card') %]</a></li>
+                        [% ELSE %]
+                        <li><a href="#">[% l('Example Link 1') %]</a></li>
+                        [% END %]
+                        <!--Link 2-->
+                        [% IF ctx.get_org_setting(footer_org_id, 'opac.ecard_verification_enabled') %]
+                        <li><a href="[% mkurl(ctx.opac_root _ '/ecard/verify') %]">[% l('Verify Electronic Card') %]</a></li>
+                        [% ELSE %]
+                        <li><a href="#">[% l('Example Link 2') %]</a></li>
+                        [% END %]
+                        <!--Link 3-->
+                        <li><a href="#">[% l('Example Link 3') %]</a></li>
+                        <!--Link 4-->
+                        <li><a href="#">[% l('Example Link 4') %]</a></li>
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+
+        [%# ---------- Utility bar ---------- %]
+        <div class="footer-bottom">
+            <div class="footer-locale">
+                [%- INCLUDE 'opac/parts/pref_locale_picker.tt2' %]
+            </div>
+
+            <div id="copyright_text" class="footer-legal">
+                <p class="mb-1">[% l('Copyright &copy; 2006-[_1] Georgia Public Library Service, and others', date.format(date.now, '%Y')) %]</p>
+                <p id="footer_logo" class="mb-0">
+                    [% l('Powered by') %]
+                    <a href="http://evergreen-ils.org">
+                        <img id="footer_logo_image" src="[% ctx.media_prefix %]/images/evergreen-logo-white.svg[% ctx.cache_key %]"
+                            alt="[% l('Evergreen') %]" class="eg-logo" role="img"
+                        />
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        [% IF ctx.timing %]
+        <div id="timing">
+            [% FOR event IN ctx.timing %]
+            At <span class="timing-time">[% event.0 | format("%0.4f") %]</span>:
+            <span class="timing-event">[% event.1 %]</span><br />
             [% END %]
-            <li class="nav-item"><a class="nav-link" href="#">[% l('Example Link 3') %]</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">[% l('Example Link 4') %]</a></li>
-        </ul>
-    </nav>
-     [% IF ctx.timing %]
-    <div id="timing">
-        [% FOR event IN ctx.timing %]
-        At <span class="timing-time">[% event.0 | format("%0.4f") %]</span>:
-        <span class="timing-event">[% event.1 %]</span><br />
+        </div>
         [% END %]
-    </div>
-    [% END %]
-
-      <div id="copyright_text" class="mt-3">
-        [% l('Copyright &copy; 2006-[_1] Georgia Public Library Service, and others', date.format(date.now, '%Y')) %]
-    <div id="footer_logo">
-        [% l('Powered by') %]
-        <a href="http://evergreen-ils.org">
-            <img id="footer_logo_image" src="[% ctx.media_prefix %]/images/evergreen-logo-white.svg[% ctx.cache_key %]"
-                alt="[% l('Evergreen') %]" class="eg-logo" role="img"
-            />
-        </a>
-    </div>
-    </div>
-   
-</div>
- <div class="col-12 col-lg-3">[%- INCLUDE 'opac/parts/pref_locale_picker.tt2' %]</div>
 
     </div>
-    </footer>
+</footer>
 </div>
 [% END %]
