@@ -1,0 +1,22 @@
+# Example library identifier to physical location map, for use with an
+# Apache RewriteMap.  See the "Apache Rewrite Tricks" chapter of the
+# Evergreen documentation, the commented example virtual host in eg.conf,
+# and libid.txt.example.
+#
+# The value is the numeric actor.org_unit.id, not the org unit shortname.
+# List your own with:
+#
+#     SELECT id, shortname, name FROM actor.org_unit ORDER BY id;
+#
+# The ids below are those created by the Concerto sample data set.  Only
+# org units that a patron might browse to need an entry here.
+
+CONS    1
+SYS1    2
+SYS2    3
+BR1     4
+BR2     5
+BR3     6
+BR4     7
+SL1     8
+BM1     9

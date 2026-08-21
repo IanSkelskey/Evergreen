@@ -131,6 +131,68 @@ BRANCH3 6
 CONS 1
 ----
 
+The values in the lookup table are numeric `actor.org_unit.id` values, not org
+unit shortnames. You can find them in the staff client under *Administration
+-> Server Administration -> Organizational Units*, or with
+`SELECT id, shortname, name FROM actor.org_unit ORDER BY id;`.
+
+Two things to watch for: this RewriteRule consumes `%{ENV:eglibid}`, so it must
+come after the rule that sets `eglibid`; and `RewriteMap` may only be used in
+server or virtual host context, not inside a `<Directory>` block.
+
+Setting `physical_loc` affects the default search scope, org unit hiding, the
+order in which copies are sorted, and the library contact information and hours
+shown in the catalog footer. For the other ways Evergreen resolves the physical
+location, and for sites that serve a single library per virtual host, see
+xref:opac:new_skin_customizations.adoc[Creating a New Skin: the Bare Minimum].
+
+=== A Worked Example with the Concerto Sample Data ===
+
+Evergreen ships two sample lookup tables, `libid.txt.example` and
+`libphysloc.txt.example`, in `/openils/conf`. They are populated with the org
+unit shortnames and ids created by the Concerto sample data set, so they can be
+used as-is on a test system. `eg.conf` includes a matching commented-out virtual
+host that serves every `SHORTNAME.evergreen.local` hostname from one
+`ServerAlias`.
+
+Copy the tables into place and uncomment the virtual host:
+
+[source,sh]
+----
+cp /openils/conf/libid.txt.example /openils/conf/libid.txt
+cp /openils/conf/libphysloc.txt.example /openils/conf/libphysloc.txt
+----
+
+.Apache Config
+[source,conf]
+----
+ServerName evergreen.local
+ServerAlias *.evergreen.local
+
+RewriteEngine On
+RewriteMap lowercase int:tolower
+
+# Hostname -> library identifier, falling back to the consortium
+RewriteMap eglibid txt:/openils/conf/libid.txt
+RewriteRule . - [E=eglibid:${eglibid:${lowercase:%{HTTP_HOST}}|CONS}]
+
+# Library identifier -> org unit id
+RewriteMap eglibphysloc txt:/openils/conf/libphysloc.txt
+RewriteRule . - [E=physical_loc:${eglibphysloc:%{ENV:eglibid}|1}]
+----
+
+With `*.evergreen.local` resolving to the server, `br1.evergreen.local` then
+opens the catalog scoped to Example Branch 1 (org unit 4) and
+`br2.evergreen.local` scopes it to Example Branch 2 (org unit 5), while
+`evergreen.local` itself falls back to the Example Consortium. Because the
+Concerto data gives BR1 through BR4 addresses, hours, phone numbers and
+`lib.info_url` values, this is also a convenient way to see the catalog footer
+populated with real per-library data.
+
+A wildcard `ServerAlias` needs a matching wildcard SSL certificate to work over
+HTTPS. For local testing you can add the hostnames to `/etc/hosts` rather than
+configuring DNS.
+
 Going further, you could also replace files to be downloaded, such as images or
 stylesheets, on the fly:
 
@@ -141,7 +203,7 @@ stylesheets, on the fly:
 # Say, BRANCH1/opac/images/main_logo.png
 RewriteCond %{DOCUMENT_ROOT}/%{ENV:eglibid}%{REQUEST_URI} -f
 # Serve up the eglibid version of the file instead
-RewriteRule (.*) /%{ENG:eglibid}$1
+RewriteRule (.*) /%{ENV:eglibid}$1
 ----
 
 Note that template files themselves cannot be replaced in that manner.

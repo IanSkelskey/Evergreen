@@ -4,6 +4,26 @@
 # ----------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------
+# Default physical location
+# ----------------------------------------------------------------------------------
+# Uncomment and set this variable to the numeric id of the org unit that this
+# server physically serves.  It sets the default search scope, scopes org unit
+# hiding, influences the order in which copies are sorted, and supplies the
+# library contact information and hours shown in the OPAC footer.
+#
+# The value is actor.org_unit.id, not the org unit shortname:
+#     SELECT id, shortname, name FROM actor.org_unit ORDER BY id;
+#
+# Setting it here applies it to every virtual host that includes this file,
+# which is what you want when the whole server serves one library.  If your
+# virtual hosts serve different libraries, set physical_loc in the individual
+# <VirtualHost> blocks in eg.conf instead.  If a single virtual host serves
+# several libraries, derive it from an Apache RewriteMap; see the Apache
+# Rewrite Tricks chapter of the Evergreen documentation.
+#
+# SetEnv physical_loc 1
+
+# ----------------------------------------------------------------------------------
 # Point / to the opac - if you have a custom skin or locale, point at it here
 # ----------------------------------------------------------------------------------
 RewriteRule ^/$ %{REQUEST_SCHEME}://%{HTTP_HOST}/eg/opac/home [R=301,L]

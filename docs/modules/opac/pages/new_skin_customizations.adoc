@@ -24,13 +24,38 @@ PerlAddVar OILSWebDefaultLocale "fr-CA"
 ------------------------------------------------------------------------------
 +
 * `physical_loc` is an Apache environment variable that sets the default
-  physical location, used for setting search scopes and determining the order
-  in which copies should be sorted. The following example demonstrates the
-  default physical location being set to library ID 104:
+  physical location for the virtual host. It determines the default search
+  scope, scopes org unit hiding, influences the order in which copies should
+  be sorted, and supplies the library contact information and hours shown in
+  the catalog footer. The following example demonstrates the default physical
+  location being set to library ID 104:
 +
 ------------------------------------------------------------------------------
 SetEnv physical_loc 104
 ------------------------------------------------------------------------------
++
+The value is the numeric `actor.org_unit.id`, not the org unit shortname. You
+can look the id up in the staff client under *Administration -> Server
+Administration -> Organizational Units*, or query for it directly:
++
+------------------------------------------------------------------------------
+SELECT id, shortname, name FROM actor.org_unit ORDER BY id;
+------------------------------------------------------------------------------
++
+Evergreen resolves the physical location from three sources, in this order:
+the `physical_loc` Apache environment variable; a `physical_loc` URL
+parameter, which is then stored in an `eg_physical_loc` cookie; and that
+cookie on subsequent requests. The Apache variable takes precedence and
+cannot be overridden by the user, so sites that rely on org unit hiding
+should set it here rather than depending on the URL parameter or the cookie.
++
+Where you set `physical_loc` depends on your setup. If every virtual host on
+the server serves the same library, set it once in `eg_vhost.conf`, which all
+of them include. If your virtual hosts serve different libraries, set it in
+the individual `<VirtualHost>` blocks in `eg.conf`. If a single virtual host
+serves several libraries, derive the variable from an Apache RewriteMap
+instead; see xref:admin:apache_rewrite_tricks.adoc[Apache Rewrite Tricks] for
+a worked example.
 
 == Customizing templates ==
 When you install Evergreen, the TPAC templates include many placeholder images,

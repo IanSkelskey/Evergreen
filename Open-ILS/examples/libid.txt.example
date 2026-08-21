@@ -1,0 +1,22 @@
+# Example hostname to library identifier map, for use with an Apache
+# RewriteMap.  See the "Apache Rewrite Tricks" chapter of the Evergreen
+# documentation, the commented example virtual host in eg.conf, and
+# libphysloc.txt.example.
+#
+# Apache splits each line on whitespace: the first field is the key, the
+# second is the value.  Lines beginning with # are ignored.
+#
+# Look the hostname up in lower case (see the "lowercase" internal map in
+# the eg.conf example), so that the table needs only one entry per host.
+#
+# The identifiers below are org unit shortnames from the Concerto sample
+# data set.  Several hostnames may share an identifier.  Hostnames that are
+# not listed fall back to the default supplied by the RewriteRule, which in
+# the shipped example is the CONS consortium.
+
+br1.evergreen.local     BR1
+br2.evergreen.local     BR2
+br3.evergreen.local     BR3
+br4.evergreen.local     BR4
+sys1.evergreen.local    SYS1
+sys2.evergreen.local    SYS2
