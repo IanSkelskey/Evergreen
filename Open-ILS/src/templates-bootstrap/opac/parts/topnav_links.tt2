@@ -16,19 +16,28 @@
       [% END %]
       <!--Link 1-->
       <li class="nav-item">
-        <a class="nav-link" href="[% ctx.link_one %]">[% l('Example Link 1') %]<span class="sr-only">(current)</span></a>
+        <a class="nav-link" href="[% ctx.link_one %]">[% l('Example Link 1') %]</a>
       </li>
         <!--Link 2-->
       <li class="nav-item">
-        <a class="nav-link" href="[% ctx.link_two %]">[% ('Example Link 2') %]</a>
+        <a class="nav-link" href="[% ctx.link_two %]">[% l('Example Link 2') %]</a>
       </li>
         <!--Link 3-->
       <li class="nav-item">
         <a class="nav-link" href="[% ctx.link_three %]">[% l('Example Link 3') %]</a>
       </li>
-        <!--Link 4-->
-      <li class="nav-item">
-        <a class="nav-link" href="[% ctx.link_four %]">[% l('Example Link 4') %]</a>
+        <!--Example dropdown: a menu of related links.  Duplicate this
+            block, or replace it with a plain nav-item, as needed.-->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarExampleDropdown"
+           role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          [% l('Example Dropdown') %]
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarExampleDropdown">
+          <a class="dropdown-item" href="#">[% l('Example Dropdown Link 1') %]</a>
+          <a class="dropdown-item" href="#">[% l('Example Dropdown Link 2') %]</a>
+          <a class="dropdown-item" href="#">[% l('Example Dropdown Link 3') %]</a>
+        </div>
       </li>
     </ul>
     <!--Right Links-->
