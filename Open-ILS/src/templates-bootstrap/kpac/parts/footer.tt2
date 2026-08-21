@@ -1,5 +1,5 @@
-<div class="row footer_wrapper" role="contentinfo">
-    <div class="col-12 col-lg-3 mx-2 text-center text-lg-left">
+<div class="row footer_wrapper mt-auto mx-0" role="contentinfo">
+    <div class="col-12 col-lg-3 text-center text-lg-left">
         <a href="[% mkurl(ctx.opac_root _ '/home') %]">
             <i class="fas fa-backward" aria-hidden="true"></i> [% l('Back to Main Catalog') %]</a>
     </div>
@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-lg-2 mx-2">
+    <div class="col-12 col-lg-2">
         [%- INCLUDE 'opac/parts/pref_locale_picker.tt2' %]
     </div>
 </div>
