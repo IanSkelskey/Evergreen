@@ -450,6 +450,7 @@ export class VolEditComponent implements OnInit {
                 if (old !== newBarcode) {
                     copy.barcode(newBarcode);
                     copy.ischanged(true);
+                    copy._bad_barcode = !!newBarcode && !this.checkBarcode(newBarcode);
                     barcodeChanged = true;
                     this.barcodeChange.emit({ old, new: newBarcode });
                 }
@@ -468,10 +469,15 @@ export class VolEditComponent implements OnInit {
 
         copy.ischanged(true);
         copy._dupe_barcode = false;
+        copy._bad_barcode = !!barcode && !this.checkBarcode(barcode);
 
         if (!barcode) {
             this.emitSaveChange();
             return;
+        }
+
+        if (this.volcopy.defaults.values.use_checkdigit && copy._bad_barcode) {
+            this.canSaveChange.emit(false);
         }
 
         if (!this.autoBarcodeInProgress) {
@@ -487,12 +493,6 @@ export class VolEditComponent implements OnInit {
                     if (resp) { copy._dupe_barcode = true; }
                 }, error: (err: unknown) => {}, complete: () => this.emitSaveChange() }
             );
-
-            // Assume the barcode is good before checking if it's bad
-            copy._bad_barcode = false;
-            if (this.volcopy.defaults.values.use_checkdigit && this.checkBarcode(barcode) == false) {
-            copy._bad_barcode = true;
-            }
         }
     }
 
@@ -660,12 +660,12 @@ export class VolEditComponent implements OnInit {
 
         const badCopies = copies.filter(copy => {
 
-            if (copy._dupe_barcode || copy._bad_barcode
+            if (copy._dupe_barcode ||
+                (this.volcopy.defaults.values.use_checkdigit && copy._bad_barcode) ||
                 (!copy.isnew() && !copy.barcode())
             ) {
                 return true;
             } else {
-                console.log(copy.parts());
                 return false;
             }
         }).length > 0;
@@ -705,7 +705,7 @@ export class VolEditComponent implements OnInit {
         if (initialLoad && saveable) { return; }
 
         setTimeout(() => {
-            this.canSaveChange.emit(saveable);
+            this.canSaveChange.emit(this.canSave());
         });
     }
 

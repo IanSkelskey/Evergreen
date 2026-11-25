@@ -119,6 +119,8 @@ export class VolCopyComponent implements OnInit {
 
     @ViewChild('copyAttrs', {static: false}) copyAttrs: CopyAttrsComponent;
 
+    @ViewChild(VolEditComponent) volEdit: VolEditComponent;
+
     @ViewChild('permDialog') permDialog: VolCopyPermissionDialogComponent;
     @ViewChild('uneditableItemsDialog') uneditableItemsDialog: AlertDialogComponent;
 
@@ -729,6 +731,9 @@ export class VolCopyComponent implements OnInit {
     toggleCheckbox(field: string) {
         this.volcopy.defaults.values[field] =
             !this.volcopy.defaults.values[field];
+        if (field === 'use_checkdigit' && this.volEdit) {
+            this.volsCanSave = this.volEdit.canSave();
+        }
         this.volcopy.saveDefaults();
     }
 
